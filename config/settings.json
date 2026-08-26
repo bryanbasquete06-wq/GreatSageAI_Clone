@@ -1,0 +1,24 @@
+{
+  "assistant_name": "Grande Sabio",
+  "persona_title": "Grande Sabio AI System",
+  "user_name": "Mestre",
+  "language": "pt-BR",
+  "theme": "tensura_gold",
+  "llm_provider": "groq",
+  "groq_model": "openai/gpt-oss-120b",
+  "proactive_monitoring": true,
+  "communication_style": "anime_sage",
+  "setup_complete": true,
+  "voice": {
+    "enabled": true,
+    "auto_speak": true,
+    "listen_mode": "wake_word",
+    "wake_word": "grande sabio",
+    "tts_voice": "gisele_vinchin_-_great_sage",
+    "tts_rate": "+0%",
+    "language": "pt-BR",
+    "custom_voice": "gisele_vinchin_-_great_sage",
+    "voice_name": "Gisele Vinchin - Great Sage (Raphael)"
+  },
+  "assistant_voice": "gisele_vinchin_-_great_sage"
+}

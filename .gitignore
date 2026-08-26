@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Distribution
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Project-specific
+.env
+*.log
+temp/
+logs/
+backups/
+desktop_exes/
+ GreatSageTemp/
+.memory/
+browser_data/
+geckodriver.log
+
+# Freebuff
+.freebuff/
+
+# pytest
+.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Temp files
+_test_*.py
