@@ -128,24 +128,59 @@ _SENT_SPLIT = re.compile(r'(?<=[.!?…])\s+(?=[A-ZÁÉÍÓÚÂÊÔÃÕÇ0-9"“(
 
 _EMPHASIS_WORDS = frozenset({"sempre", "nunca", "absolutamente", "totalmente", "completamente",
                               "muito", "extremamente", "incrível", "fantástico", "perfeito",
-                              "impecável", "certeza", "exatamente", "precisamente", "definitivamente"})
-_HESITATION_WORDS = frozenset({"bem", "então", "entao", "pois", "ora"})
-_THANKS_WORDS = frozenset({"obrigado", "obrigada", "valeu", "agradeço", "brigado"})
-_GREETING_WORDS = frozenset({"olá", "oi", "bom dia", "boa tarde", "boa noite"})
-_EXCLAMATION_WORDS = frozenset({"incrível", "fantástico", "maravilhoso", "perfeito", "excelente"})
+                              "impecável", "certeza", "exatamente", "precisamente", "definitivamente",
+                              "importante", "fundamental", "essencial", "crucial", "impossível",
+                              "surpreendente", "extraordinário", "remarkable", "definitively"})
+_HESITATION_WORDS = frozenset({"bem", "então", "entao", "pois", "ora", "hmm", "hã",
+                               "olha", "sabe", "imagina", "tipo", "sei lá"})
+_THANKS_WORDS = frozenset({"obrigado", "obrigada", "valeu", "agradeço", "brigado", "muito obrigado",
+                           "thanks", "thx", "vlw"})
+_GREETING_WORDS = frozenset({"olá", "oi", "bom dia", "boa tarde", "boa noite", "e aí",
+                             "hey", "hello", "hi", "fala", "salve"})
+_EXCLAMATION_WORDS = frozenset({"incrível", "fantástico", "maravilhoso", "perfeito", "excelente",
+                               "genial", "brilhante", "sensacional", "impressionante", "wow"})
 _QUESTION_MARKERS = frozenset({"como", "por quê", "por que", "onde", "quando", "quem",
-                                "qual", "o quê", "quanto", "quantos", "quantas"})
+                                "qual", "o quê", "quanto", "quantos", "quantas",
+                                "será que", "exists", "possível"})
 _LIST_MARKERS = frozenset({"primeiro", "segundo", "terceiro", "além disso", "também",
-                            "por outro lado", "em resumo", "portanto", "ou seja"})
+                            "por outro lado", "em resumo", "portanto", "ou seja",
+                            "step", "etapa"})
+_EMOTION_WORDS_JOY = frozenset({"obrigado", "valeu", "show", "massa", "top", "genial",
+                               "perfeito", "incrível", "maravilhoso"})
+_EMOTION_WORDS_URGENCY = frozenset({"urgente", "agora", "rápido", "já", "imediato",
+                                   "depressa", "logo"})
+_EMPATHY_WORDS = frozenset({"triste", "difícil", "problema", "errado", "quebrou",
+                           "não funciona", "deu erro", "frustrado", "cansado"})
 
-# Breathing pause durations (seconds) — tuned for Great Sage's measured, analytical delivery
-# Raphael nunca tem pressa — pausas generosas entre frases
-_PAUSE_AFTER_PERIOD = 0.60
-_PAUSE_AFTER_EXCLAMATION = 0.50
-_PAUSE_AFTER_QUESTION = 0.55
-_PAUSE_BETWEEN_LONG = 0.80
-_PAUSE_BETWEEN_SHORT = 0.40
-_PAUSE_BREATH_INTRO = 0.70
+# Emotional prosody patterns — matched against full text for richer prosody
+_HAPPY_PATTERN = re.compile(r'(show|massa|top|genial|perfeito|incrível|maravilhoso|obrigado|valeu)', re.IGNORECASE)
+_URGENT_PATTERN = re.compile(r'(urgente|agora|rápido|já|imediato|depressa|pressa)', re.IGNORECASE)
+_EMPATHY_PATTERN = re.compile(r'(triste|difícil|problema|errado|quebrou|não funciona|deu erro|frustrado)', re.IGNORECASE)
+_EMPHASIS_PATTERN = re.compile(r'\b(nunca|sempre|absolutamente|totalmente|completamente|definitivamente|\d+%)\b', re.IGNORECASE)
+
+# Breathing pause durations (seconds) — tuned for natural, human-like delivery
+# Vary based on emotional context and sentence complexity
+_PAUSE_AFTER_PERIOD = 0.50
+_PAUSE_AFTER_EXCLAMATION = 0.40
+_PAUSE_AFTER_QUESTION = 0.50
+_PAUSE_BETWEEN_LONG = 0.70
+_PAUSE_BETWEEN_SHORT = 0.30
+_PAUSE_BREATH_INTRO = 0.60
+_PAUSE_EMPHASIS = 0.35    # after emphasis words — brief pause for dramatic effect
+_PAUSE_HESITATION = 0.45   # after hesitation words — slight pause for thinking
+_PAUSE_EMPATHY = 0.55      # after empathy words — longer, gentler pause
+_PAUSE_JOY = 0.25          # after joy words — shorter, energetic
+_PAUSE_URGENCY = 0.15      # after urgency words — minimal pause
+
+# Dynamic prosody: pitch/volume adjustments based on emotional content
+_PROSODY_BOOST = {
+    'joy': {'rate': '+8%', 'pitch': '+3Hz', 'volume': '+5%'},
+    'urgency': {'rate': '+12%', 'pitch': '+2Hz', 'volume': '+3%'},
+    'emphasis': {'rate': '-5%', 'pitch': '+1Hz', 'volume': '+8%'},
+    'hesitation': {'rate': '-8%', 'pitch': '-2Hz', 'volume': '-2%'},
+    'empathy': {'rate': '-10%', 'pitch': '-3Hz', 'volume': '-5%'},
+    'neutral': {'rate': '+0%', 'pitch': '+0Hz', 'volume': '+0%'},
+}
 
 _SYMBOL_SPEECH = [
     (r'https?://\S+', ' link '),
@@ -687,10 +722,12 @@ class SpeechEngine:
     def _calc_pause(self, sentence: str) -> float:
         """Calculate natural breathing pause after a sentence (seconds).
 
-        Raphael's delivery: measured, analytical, consistent rhythm.
+        Natural delivery: varied rhythm based on emotional content and sentence type.
+        Short sentences get shorter pauses, emotional ones get emotional pauses.
         """
         slen = len(sentence)
 
+        # Base pause from sentence length and punctuation
         if slen > 80:
             pause = _PAUSE_BETWEEN_LONG
         elif slen < 25:
@@ -702,20 +739,72 @@ class SpeechEngine:
         else:
             pause = _PAUSE_AFTER_PERIOD
 
-        # Raphael has very consistent delivery — minimal emotional variation
+        # Emotional prosody — varies pause based on detected tone
         tone = _detect_sentence_tone(sentence)
         if tone == 'emphasis':
-            pause += 0.05
+            pause = _PAUSE_EMPHASIS
         elif tone == 'hesitation':
-            pause += 0.08
+            pause = _PAUSE_HESITATION
+        elif tone in ('thanks', 'greeting'):
+            pause = _PAUSE_EMPATHY
+        elif tone == 'exclamation':
+            pause = _PAUSE_JOY
+
+        # Fine-tune by emotional pattern matching on full text
+        if _URGENT_PATTERN.search(sentence):
+            pause = min(pause, _PAUSE_URGENCY)
+        elif _EMPATHY_PATTERN.search(sentence):
+            pause = max(pause, _PAUSE_EMPATHY)
+        elif _HAPPY_PATTERN.search(sentence):
+            pause = min(pause, _PAUSE_JOY)
 
         return pause
+
+    def _get_prosody_adjustment(self, sentence: str) -> dict:
+        """Get dynamic prosody adjustments (rate, pitch, volume) for a sentence.
+
+        Returns dict with SSML-like adjustments that modify the voice preset
+        for this specific utterance, creating emotional variation.
+        """
+        if _URGENT_PATTERN.search(sentence):
+            return _PROSODY_BOOST['urgency']
+        elif _EMPATHY_PATTERN.search(sentence):
+            return _PROSODY_BOOST['empathy']
+        elif _EMPHASIS_PATTERN.search(sentence):
+            return _PROSODY_BOOST['emphasis']
+        elif any(w in sentence.lower() for w in _HESITATION_WORDS):
+            return _PROSODY_BOOST['hesitation']
+        elif _HAPPY_PATTERN.search(sentence):
+            return _PROSODY_BOOST['joy']
+        return _PROSODY_BOOST['neutral']
+
+    def _apply_prosody(self, text: str, sentence: str) -> str:
+        """Apply emotional prosody to text for edge-tts synthesis.
+
+        Returns modified text with emphasis markers that edge-tts interprets
+        naturally through its neural voice engine.
+        """
+        prosody = self._get_prosody_adjustment(sentence)
+        # edge-tts doesn't support SSML directly, but we can influence prosody
+        # through text preprocessing: emphasis words get caps, pauses via commas
+        if prosody['rate'].startswith('+'):
+            # Energetic: add emphasis to key words
+            for word in _EMPHASIS_WORDS:
+                if word in text.lower():
+                    # Capitalize emphasis word for neural voice stress
+                    text = re.sub(r'\b' + re.escape(word) + r'\b',
+                                 lambda m: m.group(0).upper() if m.group(0).islower() else m.group(0).title(),
+                                 text, count=1)
+                    break
+        return text
 
     def _enqueue(self, sentence: str):
         s = clean_for_speech(sentence)
         if not s:
             return
         pause = self._calc_pause(s)
+        # Apply emotional prosody to text
+        s = self._apply_prosody(s, sentence)
         with self._lock:
             self._seq += 1
             u = _Utterance(seq=self._seq, text=s, pause_after=pause)
@@ -726,8 +815,11 @@ class SpeechEngine:
             try:
                 path = _TMP_DIR / f"gs_{gen}_{u.seq}.mp3"
 
-                # Synthesize with edge-tts
-                asyncio.run(self._synthesize(s, path))
+                # Get dynamic prosody for this sentence
+                prosody = self._get_prosody_adjustment(sentence)
+
+                # Synthesize with edge-tts (applies emotional prosody)
+                asyncio.run(self._synthesize(s, path, prosody=prosody))
                 if not path.exists() or path.stat().st_size == 0:
                     logger.error(f"TTS synth produced empty/missing file: {path}")
                     u.canceled = True
@@ -747,14 +839,33 @@ class SpeechEngine:
 
         threading.Thread(target=_synth_one, daemon=True).start()
 
-    async def _synthesize(self, text: str, out_path: Path):
-        logger.debug(f"TTS synth: voice={self.preset.voice_id} rate={self.preset.rate} pitch={self.preset.pitch}")
+    async def _synthesize(self, text: str, out_path: Path, prosody: dict = None):
+        """Synthesize text with dynamic prosody adjustments.
+
+        Applies emotional prosody (rate, pitch, volume) per-sentence for
+        natural, human-like variation in delivery.
+        """
+        # Apply dynamic prosody from emotional analysis
+        rate = self.preset.rate
+        pitch = self.preset.pitch
+        volume = self.preset.volume
+
+        if prosody:
+            # Merge dynamic prosody with base preset
+            if prosody.get('rate') and prosody['rate'] != '+0%':
+                rate = prosody['rate']
+            if prosody.get('pitch') and prosody['pitch'] != '+0Hz':
+                pitch = prosody['pitch']
+            if prosody.get('volume') and prosody['volume'] != '+0%':
+                volume = prosody['volume']
+
+        logger.debug(f"TTS synth: voice={self.preset.voice_id} rate={rate} pitch={pitch} vol={volume}")
         communicate = edge_tts.Communicate(
             text,
             self.preset.voice_id,
-            rate=self.preset.rate,
-            pitch=self.preset.pitch,
-            volume=self.preset.volume,
+            rate=rate,
+            pitch=pitch,
+            volume=volume,
         )
         await communicate.save(str(out_path))
 

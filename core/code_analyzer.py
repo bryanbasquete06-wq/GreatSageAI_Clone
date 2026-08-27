@@ -541,7 +541,7 @@ def quick_analyze(filepath: str) -> str:
 
 
 def generate_improvement_plan(analysis: ProjectAnalysis) -> list[dict]:
-    """Gera plano priorizado de melhorias para o projeto."""
+    """Gera plano priorizado de melhorias para o projeto — com scoring e estimativa."""
     plan = []
     sev_weight = {"critical": 3, "warning": 2, "info": 1}
 
@@ -552,13 +552,17 @@ def generate_improvement_plan(analysis: ProjectAnalysis) -> list[dict]:
 
     for category, smells in sorted(by_cat.items(), key=lambda x: -sum(sev_weight.get(s.severity, 0) for s in x[1])):
         priority = max(sev_weight.get(s.severity, 0) for s in smells)
+        affected = list(set(s.file for s in smells))
         plan.append({
             "category": category,
             "count": len(smells),
             "priority": priority,
-            "affected_files": list(set(s.file for s in smells)),
+            "score": len(smells) * priority,  # impact score
+            "affected_files": affected,
+            "affected_count": len(affected),
             "worst_example": smells[0].message if smells else "",
             "suggestion": smells[0].suggestion if smells else "",
+            "estimated_effort": _estimate_effort(category, len(smells)),
         })
 
     # Add structural improvements
@@ -567,9 +571,12 @@ def generate_improvement_plan(analysis: ProjectAnalysis) -> list[dict]:
             "category": "modularization",
             "count": analysis.total_functions,
             "priority": 1,
+            "score": 10,
             "affected_files": [],
+            "affected_count": 0,
             "worst_example": f"{analysis.total_functions} funcoes no projeto",
             "suggestion": "Considere agrupar funcoes relacionadas em classes ou modulos.",
+            "estimated_effort": "alto",
         })
 
     # Dependency cycle detection
@@ -581,10 +588,80 @@ def generate_improvement_plan(analysis: ProjectAnalysis) -> list[dict]:
                     "category": "circular_dependency",
                     "count": 2,
                     "priority": 3,
+                    "score": 6,
                     "affected_files": [mod, dep],
+                    "affected_count": 2,
                     "worst_example": f"Ciclo: {mod} <-> {dep}",
                     "suggestion": "Quebre a dependencia circular com injecao de dependencia ou interface.",
+                    "estimated_effort": "medio",
                 })
                 break
 
+    # Sort by total impact score descending
+    plan.sort(key=lambda p: p.get("score", 0), reverse=True)
     return plan
+
+
+def _estimate_effort(category: str, count: int) -> str:
+    """Estima esforço de correção baseado na categoria."""
+    effort_map = {
+        "bare_except": "baixo",
+        "missing_docstring": "baixo",
+        "missing_type_hints": "baixo",
+        "too_many_args": "medio",
+        "long_function": "alto",
+        "deep_nesting": "alto",
+        "high_complexity": "alto",
+        "high_cognitive": "alto",
+        "god_class": "muito alto",
+        "long_file": "medio",
+        "too_many_methods": "medio",
+        "star_import": "baixo",
+        "circular_dependency": "alto",
+    }
+    base = effort_map.get(category, "medio")
+    if count > 10:
+        if base == "baixo":
+            return "medio"
+        if base == "medio":
+            return "alto"
+    return base
+
+
+def project_health_score(analysis: ProjectAnalysis) -> dict:
+    """Calcula score de saúde do projeto (0-100)."""
+    score = 100.0
+    # Deduct for smells
+    for smell in analysis.top_issues:
+        if smell.severity == "critical":
+            score -= 5
+        elif smell.severity == "warning":
+            score -= 1
+        else:
+            score -= 0.3
+    # Deduct for large files
+    for fa in analysis.files:
+        if fa.lines > 800:
+            score -= 3
+        elif fa.lines > 500:
+            score -= 1
+    # Deduct for high complexity functions
+    for fa in analysis.files:
+        for fn in fa.functions:
+            if fn.complexity > 15:
+                score -= 2
+            elif fn.complexity > 10:
+                score -= 1
+    score = max(0, min(100, score))
+    grade = "A" if score >= 80 else "B" if score >= 60 else "C" if score >= 40 else "D" if score >= 20 else "F"
+    return {
+        "score": round(score, 1),
+        "grade": grade,
+        "total_smells": analysis.total_smells,
+        "critical_count": sum(1 for s in analysis.top_issues if s.severity == "critical"),
+        "warning_count": sum(1 for s in analysis.top_issues if s.severity == "warning"),
+        "files_count": len(analysis.files),
+        "avg_complexity": round(sum(
+            fn.complexity for fa in analysis.files for fn in fa.functions
+        ) / max(analysis.total_functions, 1), 1),
+    }

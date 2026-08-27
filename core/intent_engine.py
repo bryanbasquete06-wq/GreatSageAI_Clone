@@ -61,6 +61,17 @@ class IntentEngine:
         "take_screenshot": [r'\b(print|screenshot|captura|capturar)\b', r'\b(tela|print)\b'],
         "get_active_window": [r'\b(janela)\b', r'\b(ativa|foco|focada)\b'],
         "list_notes": [r'\b(notas|anotacoes|anotações)\b', r'\b(minhas|ver|listar)\b'],
+        # Browser intents
+        "browser_open": [r'\b(abrir|abra|abre|abrindo)\b', r'\b(navegador|browser|chrome|firefox|edge)\b'],
+        "browser_search": [r'\b(pesquis|busca|busc|procurar|procur|googl)\b', r'\b(no google|no navegador|na web|online)\b'],
+        "browser_youtube": [r'\b(youtube|video|vídeo|tocar|reproduz|assitir)\b', r'\b(no youtube|youtub)\b'],
+        "browser_click": [r'\b(clica|clicar|clique|pressionar)\b', r'\b(botão|link|no )\b'],
+        "browser_type": [r'\b(digit|escrev|escreva|digitar)\b', r'\b(no campo|na busca|no formulário)\b'],
+        "browser_text": [r'\b(texto|conteúdo|conteudo|leia|ler)\b', r'\b(da página|da tela|do site|da web)\b'],
+        "browser_screenshot": [r'\b(screenshot|print|captura|capturar)\b', r'\b(da página|do navegador|do site)\b'],
+        "browser_scroll": [r'\b(scroll|rolar|role|descer|subir)\b', r'\b(página|tela|site)\b'],
+        "browser_close": [r'\b(fechar|fecha|feche)\b', r'\b(navegador|browser|aba)\b'],
+        "browser_back": [r'\b(voltar|volte)\b', r'\b(página|tela|no navegador)\b'],
         # Exige indicador de hora/data ATUAL — "que horas o jogo começa" NÃO casa (pat2)
         "get_datetime": [
             r'\b(que horas|que dia|as horas|a hora|a data|data e hora|horario atual|horário atual)\b',

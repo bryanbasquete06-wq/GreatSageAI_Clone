@@ -30,7 +30,7 @@ temp/
 logs/
 backups/
 desktop_exes/
- GreatSageTemp/
+GreatSageTemp/
 .memory/
 browser_data/
 geckodriver.log
@@ -49,5 +49,36 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
-# Temp files
+# Temp / backup files
 _test_*.py
+*.clone_backup
+*.new_backup
+*.minimal_backup
+*.clone_backup.*
+*.new_backup.*
+
+# Secrets & credentials
+config/.key
+config/secrets.enc
+
+# Personal / user data
+memory/memory_store.json
+memory/chat_history.json
+memory/learned_preferences.json
+memory/backup_*.json
+config/settings.json
+config/memory.db
+config/conversation_history.json
+config/emotional_memory.json
+config/learning_data.json
+config/user_memory.json
+config/raphael_profile.json
+config/rpg_save.json
+config/agent_memory/
+
+# Large binaries (audio)
+config/custom_voices/*.mp3
+config/raphael_ref.mp3
+
+# Audit logs
+config/audit/

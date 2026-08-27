@@ -107,7 +107,7 @@ class DesktopAutomation:
                 capture_output=True, text=True, timeout=5,
             )
             return result.stdout.splitlines()[:30]
-        except:
+        except Exception:
             return []
 
     def kill_process(self, name: str) -> bool:
@@ -118,7 +118,7 @@ class DesktopAutomation:
             else:
                 subprocess.run(["pkill", name], capture_output=True)
             return True
-        except:
+        except Exception:
             return False
 
     # ─── Sistema ──────────────────────────────────────────────────
@@ -147,9 +147,9 @@ class DesktopAutomation:
                         "free": f"{usage.free / (1024**3):.1f} GB",
                         "percent": f"{usage.percent}%",
                     })
-                except:
+                except Exception:
                     pass
-        except:
+        except Exception:
             pass
         return info
 
@@ -162,7 +162,7 @@ class DesktopAutomation:
                     capture_output=True, text=True, timeout=5,
                 )
                 return result.stdout.strip()
-        except:
+        except Exception:
             pass
         return ""
 
@@ -174,7 +174,7 @@ class DesktopAutomation:
                     ["powershell", "-command", f"Set-Clipboard -Value '{text}'"],
                     capture_output=True, timeout=5,
                 )
-        except:
+        except Exception:
             pass
 
     def screenshot(self, save_path: str = None) -> Optional[str]:
@@ -218,7 +218,7 @@ class DesktopAutomation:
                 trash = shell.NameSpace(0x0a)  # lixeira
                 trash.InvokeVerb("empty")
                 return True
-        except:
+        except Exception:
             pass
         return False
 
@@ -228,5 +228,5 @@ class DesktopAutomation:
             import requests
             resp = requests.get("https://api.ipify.org", timeout=5)
             return resp.text
-        except:
+        except Exception:
             return "Não foi possível obter o IP"

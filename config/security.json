@@ -1,0 +1,8 @@
+{
+  "admin_mode": true,
+  "require_confirmation": false,
+  "audit_enabled": true,
+  "max_shutdown_delay": 10,
+  "protected_paths": [],
+  "note": "Full admin mode enabled - AI can execute ANY command without asking permission"
+}

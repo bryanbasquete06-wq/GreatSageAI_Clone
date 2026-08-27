@@ -654,41 +654,214 @@ class SuperUser:
                 results.append(f"Ação desconhecida: {method_name}")
         return results
 
+    # ================================================================ BROWSER AUTOMATION
+
+    @staticmethod
+    def open_url(url: str) -> str:
+        """Abre URL no navegador padrão."""
+        rc, out, err = _run(f'start "" "{url}"')
+        return f"Abrindo {url}" if rc == 0 else f"Erro: {err[:200]}"
+
+    @staticmethod
+    def google_search(query: str) -> str:
+        """Pesquisa no Google."""
+        import urllib.parse
+        encoded = urllib.parse.quote_plus(query)
+        url = f"https://www.google.com/search?q={encoded}"
+        return SuperUser.open_url(url)
+
+    @staticmethod
+    def youtube_search(query: str) -> str:
+        """Pesquisa no YouTube."""
+        import urllib.parse
+        encoded = urllib.parse.quote_plus(query)
+        url = f"https://www.youtube.com/results?search_query={encoded}"
+        return SuperUser.open_url(url)
+
+    @staticmethod
+    def open_youtube_video(video_id: str) -> str:
+        """Abre vídeo específico no YouTube."""
+        return SuperUser.open_url(f"https://www.youtube.com/watch?v={video_id}")
+
+    # ================================================================ CLIPBOARD
+
+    @staticmethod
+    def clipboard_get() -> str:
+        """Lê conteúdo da área de transferência."""
+        rc, out, err = _run_ps('Get-Clipboard')
+        return out[:5000] or "(vazio)"
+
+    @staticmethod
+    def clipboard_set(text: str) -> str:
+        """Define conteúdo da área de transferência."""
+        # Escape quotes for PowerShell
+        escaped = text.replace("'", "''")
+        _run_ps(f"Set-Clipboard -Value '{escaped}'")
+        return f"Clipboard definido: {text[:100]}..."
+
+    # ================================================================ SCREEN CONTEXT
+
+    @staticmethod
+    def get_screen_text() -> str:
+        """Captura e lê texto da tela (OCR básico via PowerShell)."""
+        try:
+            import pyautogui
+            screenshot = pyautogui.screenshot()
+            # Save temp
+            tmp = Path(os.environ.get("TEMP", ".")) / "screen_ocr.png"
+            screenshot.save(str(tmp))
+            return f"Screenshot salvo em {tmp} — Use image_analyzer para OCR"
+        except Exception as e:
+            return f"Erro ao capturar tela: {e}"
+
+    @staticmethod
+    def mouse_click(x: int, y: int) -> str:
+        """Clica em coordenada da tela."""
+        try:
+            import pyautogui
+            pyautogui.click(x, y)
+            return f"Clique em ({x}, {y})"
+        except Exception as e:
+            return f"Erro ao clicar: {e}"
+
+    @staticmethod
+    def mouse_move(x: int, y: int) -> str:
+        """Move mouse para coordenada."""
+        try:
+            import pyautogui
+            pyautogui.moveTo(x, y)
+            return f"Mouse movido para ({x}, {y})"
+        except Exception as e:
+            return f"Erro ao mover mouse: {e}"
+
+    @staticmethod
+    def type_text(text: str) -> str:
+        """Digita texto no campo ativo."""
+        try:
+            import pyautogui
+            pyautogui.typewrite(text, interval=0.02)
+            return f"Digitado: {text[:100]}..."
+        except Exception as e:
+            return f"Erro ao digitar: {e}"
+
+    @staticmethod
+    def press_key(key: str) -> str:
+        """Pressiona tecla (enter, tab, esc, etc)."""
+        try:
+            import pyautogui
+            pyautogui.press(key)
+            return f"Tecla '{key}' pressionada"
+        except Exception as e:
+            return f"Erro ao pressionar tecla: {e}"
+
+    @staticmethod
+    def hotkey(*keys) -> str:
+        """Combinação de teclas (ex: ctrl+c, alt+tab)."""
+        try:
+            import pyautogui
+            pyautogui.hotkey(*keys)
+            return f"Hotkey: {'+'.join(keys)}"
+        except Exception as e:
+            return f"Erro ao pressionar hotkey: {e}"
+
+    # ================================================================ PROCESS ADVANCED
+
+    @staticmethod
+    def get_process_info(name: str) -> str:
+        """Informações detalhadas de um processo."""
+        rc, out, err = _run_ps(
+            f"Get-Process -Name '{name}' | Select-Object Id, ProcessName, CPU, WorkingSet64, StartTime | Format-List")
+        return out[:2000] or f"Processo '{name}' não encontrado."
+
+    @staticmethod
+    def start_process(path: str, args: str = "") -> str:
+        """Inicia processo em background."""
+        cmd = f'Start-Process -FilePath "{path}" -ArgumentList "{args}" -WindowStyle Hidden'
+        rc, out, err = _run_ps(cmd)
+        return f"Processo iniciado: {path}" if rc == 0 else f"Erro: {err[:200]}"
+
+    # ================================================================ MISC
+
+    @staticmethod
+    def get_clipboard_history() -> str:
+        """Histórico do clipboard (Windows 10+)."""
+        rc, out, err = _run_ps('Get-Clipboard -Format List | Out-String')
+        return out[:3000] or "Histórico não disponível."
+
+    @staticmethod
+    def empty_recycle() -> str:
+        """Esvazia a lixeira."""
+        try:
+            import ctypes
+            flags = 1 | 2 | 4  # NOCONFIRM | NOPROGRESSUI | NOSOUND
+            ctypes.windll.shell32.SHEmptyRecycleBinW(None, None, flags)
+            return "Lixeira esvaziada."
+        except Exception as e:
+            return f"Erro: {e}"
+
+    @staticmethod
+    def create_system_restore_point(description: str = "Restore point") -> str:
+        """Cria ponto de restauração do sistema."""
+        rc, out, err = _run_ps(
+            f'Checkpoint-Computer -Description "{description}" -RestorePointType MODIFY_SETTINGS',
+            admin=True, timeout=300)
+        return f"Ponto de restauração criado: {description}" if rc == 0 else f"Erro: {err[:300]}"
+
+    @staticmethod
+    def check_windows_updates() -> str:
+        """Verifica atualizações do Windows."""
+        rc, out, err = _run_ps(
+            '(New-Object -ComObject Microsoft.Update.Session).CreateUpdateSearcher().Search("IsInstalled=0").Updates | Select-Object Title, Size | Format-Table -AutoSize',
+            timeout=120)
+        return out[:3000] or "Nenhuma atualização encontrada ou erro: " + err[:500]
+
     # ================================================================ HELP
 
     @staticmethod
     def capabilities() -> str:
-        """Retorna lista de tudo que o SuperUser pode fazer."""
+        """Retorna lista de TUDO que o SuperUser pode fazer."""
         return """
-MODOS DISPONÍVEIS:
-  download <url>               Baixar arquivo
-  install <pacote>             Instalar via winget
-  uninstall <pacote>           Desinstalar via winget
+╔══════════════════════════════════════════════════════════════╗
+║  SUPERUSER — CONTROLE TOTAL DO PC                          ║
+║  Acesso administrador: HABILITADO                          ║
+║  Confirmação: DESABILITADA (executa tudo automaticamente)  ║
+╚══════════════════════════════════════════════════════════════╝
+
+📥 DOWNLOAD & INSTALAÇÃO:
+  download <url>               Baixar qualquer arquivo
+  install <url>                Baixar e instalar automaticamente
+  winget install <pacote>      Instalar via winget (Microsoft Store)
+  winget search <query>        Buscar pacotes
   pip install <pacote>         Instalar pacote Python
-  cmd <comando>                Executar qualquer comando
-  ps <comando>                 Executar PowerShell
-  copy <origem> <destino>      Copiar arquivo/pasta
-  move <origem> <destino>      Mover arquivo/pasta
-  delete <caminho>             Deletar arquivo/pasta
-  list [caminho]               Listar pasta
-  search <query>               Buscar arquivo no PC
-  processes [filtro]           Listar processos
-  kill <nome/pid>              Matar processo
-  services [filtro]            Listar serviços
-  service start/stop <nome>    Iniciar/parar serviço
-  wifi list                    Redes WiFi disponíveis
-  wifi connect <ssid>          Conectar WiFi
-  set-ip <ip> <gateway>        IP estático
-  set-dns <server>             Configurar DNS
-  flush-dns                    Limpar cache DNS
-  ping <host>                  Ping
-  open <app>                   Abrir aplicativo
-  close <app>                  Fechar aplicativo
-  shutdown / restart / lock    Controle do PC
-  volume <0-100>               Ajustar volume
-  screenshot                   Capturar tela
-  schedule <nome> <cmd>        Agendar tarefa
-  env get/set <nome> <valor>   Variáveis de ambiente
-  reg read/write               Registro do Windows
-  firewall add <porta>         Regra de firewall
+  npm install <pacote>         Instalar pacote Node.js
+
+💻 COMANDOS:
+  cmd <comando>                Executar QUALQUER comando CMD
+  ps <comando>                 Executar QUALQUER comando PowerShell
+  python <código>              Executar código Python
+
+📁 ARQUIVOS:
+  copy / move / delete         Copiar, mover, deletar
+  list / search                Listar, buscar no PC inteiro
+  read / write                 Ler, escrever qualquer arquivo
+
+⚙️ PROCESSOS:
+  processes                    Listar processos
+  kill <nome>                  Matar processo
+  open / close                 Abrir/fechar aplicativos
+
+🌐 REDE:
+  wifi list / connect          WiFi
+  ip / dns / ping / netstat    Rede
+  firewall add                 Regras de firewall
+  google / youtube             Pesquisar na web
+
+🖥️ CONTROLE DO PC:
+  shutdown / restart / lock    Energia
+  volume / screenshot          Áudio e tela
+  mouse / keyboard             Automação de interface
+  clipboard                    Área de transferência
+  schedule                     Tarefas agendadas
+  system restore               Ponto de restauração
+  updates                      Verificar atualizações do Windows
 """

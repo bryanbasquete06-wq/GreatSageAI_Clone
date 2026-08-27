@@ -125,6 +125,8 @@ from GreatSageAI_Clone.core.video_analyzer import analyzer as video_analyzer
 from GreatSageAI_Clone.core.link_analyzer import analyzer as link_analyzer
 from GreatSageAI_Clone.core.autonomous_planner import AutonomousPlanner
 from GreatSageAI_Clone.core.code_analyzer import analyze_file, analyze_project, quick_analyze
+from GreatSageAI_Clone.core.nine_router import NineRouterBridge
+from GreatSageAI_Clone.modules.browser_agent import BrowserAgent
 
 
 # ---------------------------------------------------------------------------
@@ -149,6 +151,7 @@ class GreatSageApp:
         # --- engines
         self.persona = PersonaManager()
         self.llm = GreatSageLLM()
+        self.nine_router = NineRouterBridge(llm_engine=self.llm)  # Tokens infinitos via rotação
         self.bridge = MarkLBridge()
         self.speech = SpeechEngine(voice_key="raphael")
         self.pipeline = VoicePipeline()
@@ -347,18 +350,40 @@ class GreatSageApp:
         event_bus.emit("llm.query", {"command": cmd[:200]})
         state.set("app_state", "thinking")
 
+        # 9Router: rota inteligente entre providers para tokens infinitos
         from GreatSageAI_Clone.core.request_router import RequestRouter
+        from GreatSageAI_Clone.core.nine_router import NineRouterBridge
         route = RequestRouter.analyze(
             cmd,
             recent_history=MemoryManager.get_recent_turns(limit=4),
         )
+
+        # Determine task type for 9Router routing
+        task_type = "chat"
+        if route.kind.value in ("code", "debug"):
+            task_type = "code"
+        elif route.kind.value == "explain":
+            task_type = "chat"
+        elif route.complexity.value == "simple":
+            task_type = "fast"
+
+        # Get 9Router decision
+        routing_decision = self.nine_router.router.route(task_type=task_type)
+        self.log.info(f"9Router: {routing_decision.provider} ({routing_decision.model}) — {routing_decision.reason}")
 
         collected: list[str] = []
         full_response = [""]
 
         def _tee():
             try:
-                for delta in self.llm.query_stream(cmd, route=route):
+                # Use 9Router for streaming with automatic fallback
+                for delta in self.nine_router.route_and_stream(
+                    [{"role": "user", "content": cmd}],
+                    system=self.persona.get_system_prompt(),
+                    task_type=task_type,
+                    max_tokens=route.max_tokens,
+                    temperature=0.7,
+                ):
                     collected.append(delta)
                     self.signals.sig_sage_delta.emit(delta)
                     yield delta
@@ -375,6 +400,7 @@ class GreatSageApp:
                             importance=0.6,
                             tags=["conversation", "llm"]
                         )
+                        self.signals.sig_sage_full.emit(full_response[0])  # ← enviar resposta completa para UI
                         state.set("app_state", "idle")
                         event_bus.emit("response.llm", {"cmd": cmd[:100], "resp_len": len(full_response[0])})
                 except Exception:
@@ -527,6 +553,121 @@ class GreatSageApp:
                 return SuperUser.set_volume(50)
         if intent_action == "system_info":
             return SuperUser.get_system_info()
+
+        # --- Download & Instalação ---
+        if intent_action == "download_file":
+            url = params.get("target", "") or params.get("query", "")
+            if url:
+                return SuperUser.download_file(url)
+            return "Forneça a URL para download."
+        if intent_action == "install_app":
+            target = params.get("target", "") or params.get("query", "")
+            if target:
+                if target.startswith("http"):
+                    return SuperUser.download_and_install(target)
+                return SuperUser.winget_install(target)
+            return "Forneça o nome do programa ou URL para instalar."
+        if intent_action == "uninstall_app":
+            target = params.get("target", "") or params.get("query", "")
+            if target:
+                return SuperUser.winget_uninstall(target)
+            return "Forneça o nome do programa para desinstalar."
+        if intent_action == "run_command":
+            cmd = params.get("target", "") or params.get("query", "")
+            if cmd:
+                return SuperUser.run_cmd(cmd)
+            return "Forneça o comando para executar."
+        if intent_action == "copy_file":
+            target = params.get("target", "")
+            if target:
+                parts = target.split(None, 1)
+                if len(parts) == 2:
+                    return SuperUser.copy(parts[0], parts[1])
+            return "Forneça origem e destino."
+        if intent_action == "move_file":
+            target = params.get("target", "")
+            if target:
+                parts = target.split(None, 1)
+                if len(parts) == 2:
+                    return SuperUser.move(parts[0], parts[1])
+            return "Forneça origem e destino."
+        if intent_action == "delete_file_admin":
+            target = params.get("target", "") or params.get("query", "")
+            if target:
+                return SuperUser.delete(target)
+            return "Forneça o caminho para deletar."
+        if intent_action == "list_processes":
+            return SuperUser.list_processes()
+        if intent_action == "kill_process_admin":
+            target = params.get("target", "")
+            if target:
+                return SuperUser.kill_process(target)
+            return "Forneça o nome ou PID do processo."
+        if intent_action == "list_services":
+            return SuperUser.service_list()
+        if intent_action == "wifi_list":
+            return SuperUser.wifi_list()
+        if intent_action == "wifi_connect":
+            ssid = params.get("target", "")
+            if ssid:
+                return SuperUser.wifi_connect(ssid)
+            return "Forneça o nome da rede WiFi."
+        if intent_action == "set_ip":
+            target = params.get("target", "")
+            if target:
+                parts = target.split()
+                if len(parts) >= 2:
+                    return SuperUser.set_static_ip(parts[0], parts[1], parts[2] if len(parts) > 2 else "192.168.1.1")
+            return "Forneça interface IP gateway."
+        if intent_action == "shutdown_pc":
+            return SuperUser.shutdown()
+        if intent_action == "restart_pc":
+            return SuperUser.restart()
+        if intent_action == "lock_pc":
+            return SuperUser.lock_pc()
+        if intent_action == "set_volume":
+            try:
+                return SuperUser.set_volume(int(params.get("target", "50")))
+            except ValueError:
+                return SuperUser.set_volume(50)
+
+        # --- Navegador ---
+        if intent_action == "browser_open":
+            target = params.get("target", "") or params.get("query", "")
+            if target and (target.startswith("http") or "." in target):
+                return BrowserAgent.open(target)
+            return BrowserAgent.open()
+        if intent_action == "browser_search":
+            query = params.get("target", "") or params.get("query", "")
+            if query:
+                return BrowserAgent.search_google(query)
+            return BrowserAgent.search_google(params.get("text", ""))
+        if intent_action == "browser_youtube":
+            query = params.get("target", "") or params.get("query", "")
+            if query:
+                return BrowserAgent.search_youtube(query)
+            return "Forneça o que pesquisar no YouTube."
+        if intent_action == "browser_click":
+            target = params.get("target", "") or params.get("text", "")
+            if target:
+                return BrowserAgent.click(target)
+            return "Forneça o elemento para clicar."
+        if intent_action == "browser_type":
+            target = params.get("target", "")
+            text = params.get("text", "")
+            if target and text:
+                return BrowserAgent.type_in(target, text)
+            return "Forneça o campo e o texto."
+        if intent_action == "browser_text":
+            return BrowserAgent.get_text()
+        if intent_action == "browser_screenshot":
+            return BrowserAgent.screenshot()
+        if intent_action == "browser_scroll":
+            return BrowserAgent.scroll_down()
+        if intent_action == "browser_close":
+            return BrowserAgent.close()
+        if intent_action == "browser_back":
+            return BrowserAgent.back()
 
         # --- Analise de imagem, video e links ---
         if intent_action == "analyze_image":

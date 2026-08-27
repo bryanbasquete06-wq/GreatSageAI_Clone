@@ -13,6 +13,7 @@ Raciocínio em cadeia com:
 """
 import logging
 import json
+import time
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -277,16 +278,23 @@ ONDE QUEBRA: [limites da analogia — onde ela deixa de ser útil]"""
         return chain
 
     def _learn_pattern(self, question: str, chain: ReasoningChain):
-        """Aprende padrões de raciocínio bem-sucedidos."""
+        """Aprende padrões de raciocínio bem-sucedidos com meta-calibração."""
+        pattern = {
+            "question_type": self._classify_question(question),
+            "confidence": chain.final_confidence,
+            "perspectives": [s.perspective for s in chain.steps],
+            "biases_found": len(chain.biases_detected),
+            "analogies_used": len(chain.analogies_found),
+            "has_verification": bool(chain.verification),
+            "ts": time.time(),
+        }
         if chain.final_confidence >= 0.7:
-            self._patterns["successful"].append({
-                "question_type": self._classify_question(question),
-                "confidence": chain.final_confidence,
-                "perspectives": [s.perspective for s in chain.steps],
-            })
-            # Mantém apenas os últimos 100 padrões
+            self._patterns["successful"].append(pattern)
             self._patterns["successful"] = self._patterns["successful"][-100:]
-            self._save_patterns()
+        else:
+            self._patterns["failed"].append(pattern)
+            self._patterns["failed"] = self._patterns["failed"][-50:]
+        self._save_patterns()
 
     def _classify_question(self, question: str) -> str:
         """Classifica o tipo de pergunta para aprendizado."""
@@ -301,4 +309,45 @@ ONDE QUEBRA: [limites da analogia — onde ela deixa de ser útil]"""
             return "howto"
         elif any(w in q for w in ["opinião", "melhor", "pior", "recomenda"]):
             return "opinion"
+        elif any(w in q for w in ["debug", "corrige", "conserta", "funcionar"]):
+            return "debugging"
+        elif any(w in q for w in ["refatora", "melhora", "otimiza", "limpa"]):
+            return "refactoring"
         return "general"
+
+    def get_learning_stats(self) -> dict:
+        """Retorna estatísticas de aprendizado de raciocínio."""
+        successful = self._patterns.get("successful", [])
+        failed = self._patterns.get("failed", [])
+        if not successful and not failed:
+            return {"total": 0, "success_rate": 0}
+        total = len(successful) + len(failed)
+        success_rate = len(successful) / total if total > 0 else 0
+        # Type distribution
+        type_counts = {}
+        for p in successful:
+            t = p.get("question_type", "unknown")
+            type_counts[t] = type_counts.get(t, 0) + 1
+        # Average confidence
+        avg_conf = (sum(p.get("confidence", 0) for p in successful) /
+                    max(len(successful), 1))
+        return {
+            "total": total,
+            "successful": len(successful),
+            "failed": len(failed),
+            "success_rate": round(success_rate, 2),
+            "avg_confidence": round(avg_conf, 2),
+            "type_distribution": type_counts,
+            "common_biases": self._most_common_bias(),
+        }
+
+    def _most_common_bias(self) -> str:
+        """Retorna o viés mais comum detectado."""
+        all_biases = []
+        for p in self._patterns.get("successful", []) + self._patterns.get("failed", []):
+            all_biases.extend(p.get("biases_found", []))
+        if not all_biases:
+            return "none"
+        from collections import Counter
+        most = Counter(all_biases).most_common(1)
+        return most[0][0] if most else "none"
