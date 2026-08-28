@@ -140,7 +140,7 @@ class LLMProvider:
         return self._client is not None and self.config.api_key != "" or self.config.provider == Provider.OLLAMA
 
     def chat(self, messages: List[Dict], system: str = "", **kwargs) -> LLMResponse:
-        """Envia mensagem e retorna resposta."""
+        """Envia mensagem e retorna resposta — com usage tracking."""
         if not self.available:
             return LLMResponse(
                 text="", provider=self.name, model=self.config.model,
@@ -150,47 +150,91 @@ class LLMProvider:
         t0 = time.time()
         try:
             if self.config.provider == Provider.GROQ:
-                return self._chat_groq(messages, system, **kwargs)
+                result = self._chat_groq(messages, system, **kwargs)
             elif self.config.provider == Provider.GEMINI:
-                return self._chat_gemini(messages, system, **kwargs)
+                result = self._chat_gemini(messages, system, **kwargs)
             elif self.config.provider == Provider.OPENROUTER:
-                return self._chat_openrouter(messages, system, **kwargs)
+                result = self._chat_openrouter(messages, system, **kwargs)
             elif self.config.provider == Provider.OLLAMA:
-                return self._chat_ollama(messages, system, **kwargs)
+                result = self._chat_ollama(messages, system, **kwargs)
             else:
                 return LLMResponse(
                     text="", provider=self.name, model=self.config.model,
                     success=False, error=f"Provider {self.name} não implementado"
                 )
+            # Record successful usage
+            try:
+                from core.usage_tracker import UsageTracker
+                UsageTracker().record_request(
+                    provider=self.name,
+                    input_tokens=result.tokens_used // 2 if result.tokens_used else len(str(messages)) // 4,
+                    output_tokens=result.tokens_used // 2 if result.tokens_used else len(result.text) // 4,
+                    latency_ms=result.latency_ms or (time.time() - t0) * 1000,
+                )
+            except Exception:
+                pass
+            return result
         except Exception as e:
             latency = (time.time() - t0) * 1000
             logger.error(f"Erro no {self.name}: {e}")
+            # Record failed request
+            try:
+                from core.usage_tracker import UsageTracker
+                UsageTracker().record_request(
+                    provider=self.name, latency_ms=latency, error=True,
+                )
+            except Exception:
+                pass
             return LLMResponse(
                 text="", provider=self.name, model=self.config.model,
                 latency_ms=latency, success=False, error=str(e)
             )
 
     def stream(self, messages: List[Dict], system: str = "", **kwargs) -> Generator[str, None, None]:
-        """Stream de resposta token a token."""
+        """Stream de resposta token a token — com usage tracking."""
         if not self.available:
             yield f"[ERRO] Provider {self.name} não disponível"
             return
 
+        t0 = time.time()
+        full_text = ""
         try:
             if self.config.provider == Provider.GROQ:
-                yield from self._stream_groq(messages, system, **kwargs)
+                for delta in self._stream_groq(messages, system, **kwargs):
+                    full_text += delta
+                    yield delta
             elif self.config.provider == Provider.GEMINI:
-                yield from self._stream_gemini(messages, system, **kwargs)
+                for delta in self._stream_gemini(messages, system, **kwargs):
+                    full_text += delta
+                    yield delta
             elif self.config.provider == Provider.OPENROUTER:
                 resp = self._chat_openrouter(messages, system, **kwargs)
+                full_text = resp.text
                 yield resp.text
             elif self.config.provider == Provider.OLLAMA:
-                yield from self._stream_ollama(messages, system, **kwargs)
+                for delta in self._stream_ollama(messages, system, **kwargs):
+                    full_text += delta
+                    yield delta
             else:
                 resp = self.chat(messages, system, **kwargs)
+                full_text = resp.text
                 yield resp.text
         except Exception as e:
             yield f"\n[ERRO {self.name}] {e}"
+        finally:
+            # Record usage for dashboard
+            try:
+                from core.usage_tracker import UsageTracker
+                _est_tokens = len(full_text) // 4  # ~4 chars per token
+                UsageTracker().record_request(
+                    provider=self.name,
+                    input_tokens=len(str(messages)) // 4,
+                    output_tokens=_est_tokens,
+                    latency_ms=(time.time() - t0) * 1000,
+                    error="[ERRO" in full_text,
+                )
+            except Exception:
+                pass
 
     def _chat_groq(self, messages: List[Dict], system: str, **kwargs) -> LLMResponse:
         t0 = time.time()

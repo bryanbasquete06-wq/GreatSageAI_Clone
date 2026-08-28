@@ -1194,8 +1194,9 @@ class GreatSageMainWindow(QMainWindow):
 
         self.btn_theme = QPushButton("🎨 Tema")
         self.btn_voice = QPushButton("🗣 Voz")
+        self.btn_usage = QPushButton("📊 Uso")
         self.btn_config = QPushButton("⚙")
-        for b, w in [(self.btn_theme, 90), (self.btn_voice, 200), (self.btn_config, 34)]:
+        for b, w in [(self.btn_theme, 90), (self.btn_voice, 200), (self.btn_usage, 70), (self.btn_config, 34)]:
             b.setFont(font_mono(8))
             b.setFixedWidth(w)
             b.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -1206,6 +1207,7 @@ class GreatSageMainWindow(QMainWindow):
             hdr.addWidget(b)
         self.btn_theme.clicked.connect(self._cycle_theme)
         self.btn_voice.clicked.connect(self._cycle_voice)
+        self.btn_usage.clicked.connect(self._open_usage)
         self.btn_config.clicked.connect(self._open_config)
         self._refresh_voice_btn()
 
@@ -1580,6 +1582,17 @@ Comandos de Voz:
             except Exception:
                 pass
         self.add_sage_message(f"Aviso. Interface recalibrada para o tema {THEMES[self.theme_key]['name']}.")
+
+    def _open_usage(self):
+        """Abre o Usage Dashboard em janela flutuante."""
+        from GreatSageAI_Clone.ui.usage_dashboard import UsageDashboard
+        if not getattr(self, '_usage_win', None) or not self._usage_win.isVisible():
+            self._usage_win = UsageDashboard()
+            self._usage_win.setWindowTitle("Usage Tracker - Great Sage AI")
+            self._usage_win.resize(500, 700)
+        self._usage_win.show()
+        self._usage_win.raise_()
+        self._usage_win.activateWindow()
 
     def _refresh_voice_btn(self):
         if self.speech:

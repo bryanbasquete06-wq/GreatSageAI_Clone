@@ -136,6 +136,7 @@ from GreatSageAI_Clone.core.autonomous_planner import AutonomousPlanner
 from GreatSageAI_Clone.core.code_analyzer import analyze_file, analyze_project, quick_analyze
 from GreatSageAI_Clone.core.nine_router import NineRouterBridge
 from GreatSageAI_Clone.modules.browser_agent import BrowserAgent
+from GreatSageAI_Clone.core.usage_tracker import UsageTracker
 
 
 # ---------------------------------------------------------------------------
@@ -220,6 +221,9 @@ class GreatSageApp:
         self.knowledge_graph = KnowledgeGraph()
         self.smart_aliases = SmartAliases()
         self.health_monitor = HealthMonitor()
+
+        # Usage tracker — real-time provider monitoring
+        self.usage_tracker = UsageTracker()
 
         self.cot = ChainOfThought(llm=self.llm)
         self.autonomous_planner = AutonomousPlanner(llm=self.llm)
