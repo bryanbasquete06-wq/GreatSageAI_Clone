@@ -692,7 +692,9 @@ class TestCodeAnalyzerHealth(unittest.TestCase):
 
     def test_project_health_score(self):
         from GreatSageAI_Clone.core.code_analyzer import analyze_project, project_health_score
-        analysis = analyze_project(str(PROJECT_ROOT))
+        # Analyze just a single file to keep test fast (<2s)
+        target = str(PROJECT_ROOT / "core" / "persona.py")
+        analysis = analyze_project(target)
         health = project_health_score(analysis)
         self.assertIn("score", health)
         self.assertIn("grade", health)
@@ -702,12 +704,11 @@ class TestCodeAnalyzerHealth(unittest.TestCase):
 
     def test_improvement_plan_sorted_by_score(self):
         from GreatSageAI_Clone.core.code_analyzer import analyze_project, generate_improvement_plan
-        analysis = analyze_project(str(PROJECT_ROOT))
+        target = str(PROJECT_ROOT / "core" / "persona.py")
+        analysis = analyze_project(target)
         plan = generate_improvement_plan(analysis)
-        # Should be sorted by score descending
         for i in range(len(plan) - 1):
             self.assertGreaterEqual(plan[i].get("score", 0), plan[i+1].get("score", 0))
-        # Each item should have estimated_effort
         for item in plan:
             self.assertIn("estimated_effort", item)
 

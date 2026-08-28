@@ -62,6 +62,7 @@ DESTRUCTIVE_ACTIONS = {
 
 # Comandos BLOQUEADOS (nunca executam)
 BLOCKED_COMMANDS = [
+    # ── Windows destructive ──────────────────────
     r"format\s+[a-z]:",
     r"Remove-Item\s+-[Rr]ecurse.*-Force",
     r"rd\s+/[Ss]\s+/[Qq]",
@@ -70,12 +71,51 @@ BLOCKED_COMMANDS = [
     r"bcdedit",
     r"cipher\s+/w:",
     r"diskpart",
+    r"sc\s+delete",
+    r"taskkill\s+/F",
+    r"reg\s+add",
+    r"net\s+user\s+\S+\s+\S+\s+/add",
+    r"net\s+localgroup\s+Administrators",
+    r"wmic\s+process\s+call\s+create",
+    # ── PowerShell injection ─────────────────────
+    r"Invoke-Expression",
     r"Invoke-Expression.*Invoke-WebRequest",
     r"iwr.*iex",
+    r"iex\s*\(",
     r"DownloadString.*Invoke-Expression",
     r"New-Object.*Net\.WebClient.*DownloadFile",
     r"certutil.*-urlcache",
     r"bitsadmin.*transfer",
+    r"powershell\s+-[Ee][Nn][Cc]",
+    r"powershell\s+-[Ee]\s",
+    r"-Command\s+.*frombase64",
+    # ── Linux destructive ────────────────────────
+    r"rm\s+.*-rf\s+/?\*?",
+    r"rm\s+.*-fr\s+/?\*?",
+    r"rm\s+-rf\s+/",
+    r"rm\s+.*--no-preserve-root",
+    # ── Privilege escalation ─────────────────────
+    r"sudo\s+su",
+    r"sudo\s+-s",
+    r"sudo\s+su\s+-",
+    r"chmod\s+777",
+    r"chmod\s+666\s+/etc",
+    # ── System config ────────────────────────────
+    r"iptables\s+-F",
+    r"ufw\s+disable",
+    r"passwd\s+root",
+    r"cat\s+/etc/shadow",
+    r"cat\s+/etc/passwd.*>/",
+    # ── Pipe to shell (critical!) ────────────────
+    r"\|\s*(ba)?sh",
+    r"\|\s*(ba)?sh\s*$",
+    r"curl\s+.*\|",
+    r"wget\s+.*\|",
+    r"wget\s+.*-O\s*-",
+    # ── Code injection ───────────────────────────
+    r"eval\s*\(",
+    r"exec\s*\(",
+    r"__import__\s*\(",
 ]
 
 # Caminhos PROTEGIDOS padrão (nunca deletam/movem).
@@ -261,9 +301,9 @@ class SecurityGuard:
         """Verifica se um comando é seguro para executar."""
         cmd_lower = command.lower().strip()
 
-        # Verifica comandos bloqueados
+        # Verifica comandos bloqueados (case-insensitive)
         for pattern in BLOCKED_COMMANDS:
-            if re.search(pattern, cmd_lower):
+            if re.search(pattern, cmd_lower, re.IGNORECASE):
                 return False, f"Comando bloqueado por segurança: {pattern}"
 
         # Verifica whitelist
@@ -293,9 +333,45 @@ class SecurityGuard:
 
     @classmethod
     def check_url(cls, url: str) -> tuple[bool, str]:
-        """Verifica se uma URL é acessível — acesso total."""
-        # Aceita qualquer URL (HTTP e HTTPS)
+        """Verifica se uma URL é segura para acessar."""
+        if not url or not isinstance(url, str):
+            return False, "URL vazia ou invalida"
+        url_lower = url.strip().lower()
+
+        # Bloqueia protocolos perigosos
+        DANGEROUS_SCHEMES = ("javascript:", "data:", "file:", "ftp:")
+        for scheme in DANGEROUS_SCHEMES:
+            if url_lower.startswith(scheme):
+                return False, f"Protocolo bloqueado: {scheme}"
+
+        # Bloqueia URLs sem protocolo (pode ser injection)
+        if not url_lower.startswith(("http://", "https://")):
+            return False, "URL deve usar HTTP ou HTTPS"
+
         return True, ""
+
+    @classmethod
+    def create_restricted_env(cls) -> dict:
+        """Retorna copia do environ com chaves sensiveis removidas."""
+        env = os.environ.copy()
+        # Exatas
+        exact_sensitive = {
+            "AWS_SECRET_ACCESS_KEY", "AWS_ACCESS_KEY_ID",
+            "GITHUB_TOKEN", "OPENAI_API_KEY",
+            "GOOGLE_API_KEY", "GROQ_API_KEY",
+            "DATABASE_URL", "REDIS_URL",
+            "SMTP_PASSWORD",
+        }
+        # Prefixed — remove QUALQUER env var que comece com esses prefixos
+        prefixes = ("SECRET", "TOKEN", "PRIVATE", "PASSWORD", "CREDENTIAL")
+        to_remove = [
+            k for k in env
+            if k in exact_sensitive
+            or any(k.startswith(p) for p in prefixes)
+        ]
+        for key in to_remove:
+            env.pop(key, None)
+        return env
 
     @classmethod
     def require_confirmation(cls, action: str, details: str = "") -> bool:

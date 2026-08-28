@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """Test all providers."""
 import os, sys, time
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+_here = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(_here)
+sys.path.insert(0, _project_root)
 from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
+load_dotenv(os.path.join(_project_root, ".env"))
 from core.providers import ALL_FREE_PROVIDERS, _key
 
 results = []
