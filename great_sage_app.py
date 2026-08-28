@@ -224,7 +224,9 @@ class GreatSageApp:
         self.log.debug(f"transcript ({source}): {text}")
         self.signals.sig_master_text.emit(text)
         self._check_ambiance(text)
-        self.handle_command(text)
+        # Prefix [AUDIO] so LLM knows this came from the microphone
+        voice_text = f"[AUDIO] {text}" if source == "voice" else text
+        self.handle_command(voice_text)
 
     def _check_ambiance(self, text: str):
         """Analisa humor, saudacao temporal, insights proativos."""

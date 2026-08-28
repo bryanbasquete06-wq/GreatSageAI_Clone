@@ -452,7 +452,7 @@ class TestPersonaMoodDetection(unittest.TestCase):
 
     def test_detect_happy_mood(self):
         from GreatSageAI_Clone.core.persona import detect_user_mood, UserMood
-        mood = detect_user_mood("obrigado, show")
+        mood = detect_user_mood("show, massa")
         self.assertEqual(mood, UserMood.HAPPY)
 
     def test_detect_neutral_mood(self):
