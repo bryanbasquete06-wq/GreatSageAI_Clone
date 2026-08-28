@@ -31,6 +31,8 @@ CATEGORY_DECAY_DAYS = {
     "summary": 120,
     "error_log": 14,
     "learning": 45,
+    "correction": 365,  # Correções duram 1 ano (nunca esquece)
+    "user_pattern": 90,  # Padrões de uso
 }
 DEFAULT_DECAY_DAYS = 30
 
@@ -316,3 +318,72 @@ class PersistentMemory:
             else:
                 conn.execute("DELETE FROM memories")
             conn.commit()
+
+    # ------------------------------------------------------------------
+    # Learning from Corrections (v3)
+    # ------------------------------------------------------------------
+
+    def record_correction(self, wrong_answer: str, correct_answer: str,
+                          topic: str = "") -> int:
+        """Registra quando o usuário corrige a IA — ela NUNCA esquece."""
+        content = (f"CORREÇÃO: Quando o usuário perguntou sobre '{topic}', "
+                   f"eu errei. Resposta errada: {wrong_answer[:200]}. "
+                   f"Resposta correta: {correct_answer[:200]}")
+        return self.add(
+            category="correction",
+            content=content,
+            importance=0.95,  # Máxima importância — correções são ouro
+            tags=["correction", topic] if topic else ["correction"],
+            metadata={"wrong": wrong_answer[:500], "correct": correct_answer[:500], "topic": topic},
+        )
+
+    def get_corrections_for_prompt(self, query: str, max_tokens: int = 600) -> str:
+        """Busca correções relevantes para injetar no prompt do LLM."""
+        entries = self.search(query, category="correction", limit=3, min_importance=0.5)
+        if not entries:
+            return ""
+        parts = ["═══ CORREÇÕES ANTERIORES (NÃO REPITA ESTES ERROS) ═══"]
+        for e in entries:
+            parts.append(f"• {e.content[:300]}")
+        context = "\n".join(parts)
+        if len(context) > max_tokens:
+            context = context[:max_tokens] + "..."
+        return context
+
+    def record_user_pattern(self, action: str, details: str = ""):
+        """Registra padrão de uso do usuário para sugestões proativas."""
+        content = f"Padrão: {action} — {details}" if details else f"Padrão: {action}"
+        return self.add(
+            category="user_pattern",
+            content=content,
+            importance=0.4,
+            tags=["pattern", action],
+            metadata={"action": action, "details": details},
+        )
+
+    def get_user_patterns(self, limit: int = 10) -> List[MemoryEntry]:
+        """Retorna padrões de uso recentes do usuário."""
+        return self.get_recent(category="user_pattern", limit=limit)
+
+    def get_correction_stats(self) -> Dict:
+        """Estatísticas de aprendizado por correções."""
+        with sqlite3.connect(str(self.db_path)) as conn:
+            total = conn.execute(
+                "SELECT COUNT(*) FROM memories WHERE category = 'correction'").fetchone()[0]
+            topics = conn.execute(
+                "SELECT tags FROM memories WHERE category = 'correction'"
+            ).fetchall()
+            topic_counts = {}
+            for row in topics:
+                try:
+                    tags = json.loads(row[0])
+                    for t in tags:
+                        if t != "correction":
+                            topic_counts[t] = topic_counts.get(t, 0) + 1
+                except Exception:
+                    pass
+        return {
+            "total_corrections": total,
+            "topics_learned": topic_counts,
+            "most_corrected": max(topic_counts, key=topic_counts.get) if topic_counts else "none",
+        }

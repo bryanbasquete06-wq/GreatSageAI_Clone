@@ -120,6 +120,7 @@ from GreatSageAI_Clone.core.audit_log import audit, ActionLevel
 from GreatSageAI_Clone.core.secret_manager import secrets
 from GreatSageAI_Clone.core.memory_persistent import PersistentMemory
 from GreatSageAI_Clone.core.chain_of_thought import ChainOfThought
+from GreatSageAI_Clone.core.proactive_engine import ProactiveEngine
 from GreatSageAI_Clone.core.image_analyzer import analyzer as image_analyzer
 from GreatSageAI_Clone.core.video_analyzer import analyzer as video_analyzer
 from GreatSageAI_Clone.core.link_analyzer import analyzer as link_analyzer
@@ -189,6 +190,7 @@ class GreatSageApp:
         self.log = get_logger("greatsage.app")
         self.log.info("Great Sage AI inicializando")
         self.persistent_memory = PersistentMemory()
+        self.proactive = ProactiveEngine(memory=self.persistent_memory)
         self.cot = ChainOfThought(llm=self.llm)
         self.autonomous_planner = AutonomousPlanner(llm=self.llm)
         # Code analyzer uses functions directly
@@ -301,6 +303,32 @@ class GreatSageApp:
         if not cmd_clean:
             return
 
+        # Record user pattern for proactive suggestions
+        try:
+            action = "voice_command" if cmd_clean.startswith("[AUDIO]") else "text_command"
+            self.persistent_memory.record_user_pattern(action, cmd_clean[:100])
+        except Exception:
+            pass
+
+        # Detect user corrections — "não", "errado", "isso está errado", etc.
+        correction_markers = [
+            "não é isso", "está errado", "errado", "isso está errado",
+            "não", "incorreto", "você errou", "não foi isso",
+            "errado isso", "não era isso", "sla", "não era",
+        ]
+        if any(marker in cmd_clean.lower() for marker in correction_markers):
+            # Try to find what the user is correcting
+            recent = self.persistent_memory.get_recent(category="conversation", limit=2)
+            if recent:
+                last_ai_response = recent[0].content.split("AI: ")[-1][:200] if "AI: " in recent[0].content else ""
+                if last_ai_response:
+                    self.persistent_memory.record_correction(
+                        wrong_answer=last_ai_response,
+                        correct_answer=cmd_clean,
+                        topic=cmd_clean[:50],
+                    )
+                    self.log.info(f"Correction recorded: {cmd_clean[:80]}")
+
         # Multi-step compound commands — apenas quando TODAS as partes parecem
         # comandos de sistema reais; frases conversacionais com "depois"
         # (ex.: "o que acontece depois da morte?") seguem para o LLM.
@@ -378,10 +406,20 @@ class GreatSageApp:
 
         def _tee():
             try:
+                # Build system prompt with corrections and proactive context
+                base_prompt = self.persona.get_system_prompt()
+                corrections = self.persistent_memory.get_corrections_for_prompt(cmd)
+                proactive = self.proactive.get_suggestion_text()
+                full_system = base_prompt
+                if corrections:
+                    full_system += "\n\n" + corrections
+                if proactive:
+                    full_system += "\n\n" + proactive
+
                 # Use 9Router for streaming with automatic fallback
                 for delta in self.nine_router.route_and_stream(
                     [{"role": "user", "content": cmd}],
-                    system=self.persona.get_system_prompt(),
+                    system=full_system,
                     task_type=task_type,
                     max_tokens=route.max_tokens,
                     temperature=0.7,

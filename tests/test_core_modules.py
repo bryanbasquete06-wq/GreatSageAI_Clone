@@ -930,5 +930,130 @@ class TestSpeechProsody(unittest.TestCase):
         self.assertIn("neutral", _PROSODY_BOOST)
 
 
+# ====================================================================
+# Tests: Correction Learning
+# ====================================================================
+
+class TestCorrectionLearning(unittest.TestCase):
+    """Tests for learning from user corrections."""
+
+    def test_record_correction(self):
+        import tempfile, os, gc
+        from GreatSageAI_Clone.core.memory_persistent import PersistentMemory
+        db = Path(tempfile.mktemp(suffix=".db"))
+        try:
+            mem = PersistentMemory(db_path=db)
+            mid = mem.record_correction(
+                wrong_answer="Python é uma linguagem deJavaScript",
+                correct_answer="Python é uma linguagem de programação",
+                topic="python",
+            )
+            self.assertGreater(mid, 0)
+            entries = mem.search("python", category="correction")
+            self.assertEqual(len(entries), 1)
+            self.assertIn("CORREÇÃO", entries[0].content)
+            self.assertAlmostEqual(entries[0].importance, 0.95, places=1)
+        finally:
+            del mem
+            gc.collect()
+            try: db.unlink(missing_ok=True)
+            except Exception: pass
+
+    def test_corrections_for_prompt(self):
+        import tempfile, gc
+        from GreatSageAI_Clone.core.memory_persistent import PersistentMemory
+        db = Path(tempfile.mktemp(suffix=".db"))
+        try:
+            mem = PersistentMemory(db_path=db)
+            mem.record_correction("errado", "certo", topic="docker")
+            context = mem.get_corrections_for_prompt("docker")
+            self.assertIn("CORREÇÕES", context)
+            self.assertIn("docker", context.lower())
+        finally:
+            del mem
+            gc.collect()
+            try: db.unlink(missing_ok=True)
+            except Exception: pass
+
+    def test_correction_stats(self):
+        import tempfile, gc
+        from GreatSageAI_Clone.core.memory_persistent import PersistentMemory
+        db = Path(tempfile.mktemp(suffix=".db"))
+        try:
+            mem = PersistentMemory(db_path=db)
+            mem.record_correction("a", "b", topic="python")
+            mem.record_correction("c", "d", topic="python")
+            mem.record_correction("e", "f", topic="docker")
+            stats = mem.get_correction_stats()
+            self.assertEqual(stats["total_corrections"], 3)
+            self.assertIn("python", stats["topics_learned"])
+            self.assertEqual(stats["topics_learned"]["python"], 2)
+        finally:
+            del mem
+            gc.collect()
+            try: db.unlink(missing_ok=True)
+            except Exception: pass
+
+
+# ====================================================================
+# Tests: Proactive Engine
+# ====================================================================
+
+class TestProactiveEngine(unittest.TestCase):
+    """Tests for proactive suggestions engine."""
+
+    def test_engine_initializes(self):
+        from GreatSageAI_Clone.core.proactive_engine import ProactiveEngine
+        engine = ProactiveEngine()
+        self.assertIsNotNone(engine)
+        self.assertEqual(len(engine._suggestions), 0)
+
+    def test_analyze_with_memory(self):
+        import tempfile, gc
+        from GreatSageAI_Clone.core.proactive_engine import ProactiveEngine
+        from GreatSageAI_Clone.core.memory_persistent import PersistentMemory
+        db = Path(tempfile.mktemp(suffix=".db"))
+        try:
+            mem = PersistentMemory(db_path=db)
+            mem.record_correction("errado1", "certo1", topic="python")
+            mem.record_correction("errado2", "certo2", topic="python")
+            engine = ProactiveEngine(memory=mem)
+            suggestions = engine.analyze_and_suggest()
+            python_suggestions = [s for s in suggestions if "python" in s.text.lower()]
+            self.assertGreater(len(python_suggestions), 0)
+        finally:
+            del mem, engine
+            gc.collect()
+            try: db.unlink(missing_ok=True)
+            except Exception: pass
+
+    def test_suggestion_text(self):
+        from GreatSageAI_Clone.core.proactive_engine import ProactiveEngine
+        engine = ProactiveEngine()
+        text = engine.get_suggestion_text()
+        self.assertEqual(text, "")
+
+    def test_accept_dismiss(self):
+        import tempfile, gc
+        from GreatSageAI_Clone.core.proactive_engine import ProactiveEngine, Suggestion
+        from GreatSageAI_Clone.core.memory_persistent import PersistentMemory
+        db = Path(tempfile.mktemp(suffix=".db"))
+        try:
+            mem = PersistentMemory(db_path=db)
+            engine = ProactiveEngine(memory=mem)
+            suggestion = Suggestion(text="Test suggestion", category="test")
+            engine.accept_suggestion(suggestion)
+            engine.dismiss_suggestion(suggestion)
+            patterns = mem.get_user_patterns(limit=5)
+            actions = [p.metadata.get("action", "") for p in patterns]
+            self.assertIn("accepted_suggestion", actions)
+            self.assertIn("dismissed_suggestion", actions)
+        finally:
+            del mem, engine
+            gc.collect()
+            try: db.unlink(missing_ok=True)
+            except Exception: pass
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
