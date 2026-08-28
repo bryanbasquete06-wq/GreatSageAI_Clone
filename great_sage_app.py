@@ -121,6 +121,14 @@ from GreatSageAI_Clone.core.secret_manager import secrets
 from GreatSageAI_Clone.core.memory_persistent import PersistentMemory
 from GreatSageAI_Clone.core.chain_of_thought import ChainOfThought
 from GreatSageAI_Clone.core.proactive_engine import ProactiveEngine
+from GreatSageAI_Clone.core.smart_improvements import (
+    SessionMemory, LearningDashboard, ErrorLearner, CodePatternLearner,
+    VoiceCommandLearner, SmartReminders, ConversationSummarizer,
+    MoodTracker, ResponseFeedback, SmartDefaults, CodeSnippetCache,
+    ConversationBranching, ProactiveCodeReview, SmartFileRecommendations,
+    AdaptiveResponseLength, PersonalityLearning, KnowledgeGraph,
+    SmartAliases, HealthMonitor,
+)
 from GreatSageAI_Clone.core.image_analyzer import analyzer as image_analyzer
 from GreatSageAI_Clone.core.video_analyzer import analyzer as video_analyzer
 from GreatSageAI_Clone.core.link_analyzer import analyzer as link_analyzer
@@ -191,6 +199,28 @@ class GreatSageApp:
         self.log.info("Great Sage AI inicializando")
         self.persistent_memory = PersistentMemory()
         self.proactive = ProactiveEngine(memory=self.persistent_memory)
+
+        # --- Smart Improvements (20 features) ---
+        self.session_mem = SessionMemory()
+        self.learning_dashboard = LearningDashboard(memory=self.persistent_memory)
+        self.error_learner = ErrorLearner(memory=self.persistent_memory)
+        self.code_patterns = CodePatternLearner(memory=self.persistent_memory)
+        self.voice_learner = VoiceCommandLearner(memory=self.persistent_memory)
+        self.smart_reminders = SmartReminders(memory=self.persistent_memory)
+        self.summarizer = ConversationSummarizer(memory=self.persistent_memory)
+        self.mood_tracker = MoodTracker(memory=self.persistent_memory)
+        self.response_feedback = ResponseFeedback(memory=self.persistent_memory)
+        self.smart_defaults = SmartDefaults(memory=self.persistent_memory)
+        self.snippet_cache = CodeSnippetCache()
+        self.conversation_branching = ConversationBranching()
+        self.code_review = ProactiveCodeReview(memory=self.persistent_memory)
+        self.file_recs = SmartFileRecommendations()
+        self.adaptive_length = AdaptiveResponseLength()
+        self.personality_learner = PersonalityLearning()
+        self.knowledge_graph = KnowledgeGraph()
+        self.smart_aliases = SmartAliases()
+        self.health_monitor = HealthMonitor()
+
         self.cot = ChainOfThought(llm=self.llm)
         self.autonomous_planner = AutonomousPlanner(llm=self.llm)
         # Code analyzer uses functions directly
@@ -310,6 +340,39 @@ class GreatSageApp:
         except Exception:
             pass
 
+        # Session memory
+        try:
+            self.session_mem.add_turn("user", cmd_clean)
+        except Exception:
+            pass
+
+        # Smart aliases — resolve shortcuts
+        try:
+            cmd_clean = self.smart_aliases.resolve(cmd_clean)
+        except Exception:
+            pass
+
+        # Smart reminders — detect and set
+        try:
+            if self.smart_reminders.detect_reminder(cmd_clean):
+                self.smart_reminders.add_reminder(cmd_clean)
+        except Exception:
+            pass
+
+        # Mood tracking
+        try:
+            from core.persona import detect_user_mood
+            mood = detect_user_mood(cmd_clean)
+            self.mood_tracker.record_mood(mood.value, cmd_clean[:50])
+        except Exception:
+            pass
+
+        # Learn user preferences
+        try:
+            self.smart_defaults.learn_from_interaction(cmd_clean)
+        except Exception:
+            pass
+
         # Detect user corrections — "não", "errado", "isso está errado", etc.
         correction_markers = [
             "não é isso", "está errado", "errado", "isso está errado",
@@ -357,6 +420,14 @@ class GreatSageApp:
     def _answer_local(self, cmd: str, response: str):
         self.signals.sig_sage_full.emit(response)
         event_bus.emit("response.local", {"cmd": cmd[:100], "resp_len": len(response)})
+
+        # Track response in session memory
+        try:
+            self.session_mem.add_turn("assistant", response[:200])
+            self.response_feedback.record_good_response(len(response))
+            self.adaptive_length.record_response(len(response))
+        except Exception:
+            pass
         try:
             MemoryManager.archive_turn(cmd, response)
         except Exception:
@@ -406,15 +477,29 @@ class GreatSageApp:
 
         def _tee():
             try:
-                # Build system prompt with corrections and proactive context
+                # Build system prompt with all smart context
                 base_prompt = self.persona.get_system_prompt()
                 corrections = self.persistent_memory.get_corrections_for_prompt(cmd)
                 proactive = self.proactive.get_suggestion_text()
+                session_ctx = self.session_mem.to_prompt_context()
+                defaults_ctx = self.smart_defaults.to_prompt_context()
+                mood_ctx = f"Humor do usuário: {self.mood_tracker.get_mood_trend()}"
+                reminders = self.smart_reminders.check_reminders()
+                reminders_text = "\n".join(reminders) if reminders else ""
+
                 full_system = base_prompt
                 if corrections:
                     full_system += "\n\n" + corrections
                 if proactive:
                     full_system += "\n\n" + proactive
+                if session_ctx:
+                    full_system += "\n\n" + session_ctx
+                if defaults_ctx:
+                    full_system += "\n\n" + defaults_ctx
+                if mood_ctx:
+                    full_system += "\n\n" + mood_ctx
+                if reminders_text:
+                    full_system += "\n\n" + reminders_text
 
                 # Use 9Router for streaming with automatic fallback
                 for delta in self.nine_router.route_and_stream(

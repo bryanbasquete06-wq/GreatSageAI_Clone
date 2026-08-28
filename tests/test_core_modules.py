@@ -1055,5 +1055,127 @@ class TestProactiveEngine(unittest.TestCase):
             except Exception: pass
 
 
+# ====================================================================
+# Tests: Smart Improvements (20 features)
+# ====================================================================
+
+class TestSmartImprovements(unittest.TestCase):
+    """Tests for the 20 smart improvement features."""
+
+    def test_session_memory(self):
+        from GreatSageAI_Clone.core.smart_improvements import SessionMemory
+        sm = SessionMemory()
+        sm.add_turn("user", "Olá, tudo bem?")
+        sm.add_turn("assistant", "Tudo bem, Mestre!")
+        self.assertEqual(len(sm.turns), 2)
+        ctx = sm.to_prompt_context()
+        self.assertIn("trocas", ctx)
+
+    def test_learning_dashboard(self):
+        from GreatSageAI_Clone.core.smart_improvements import LearningDashboard
+        ld = LearningDashboard()
+        d = ld.get_dashboard()
+        self.assertIn("corrections", d)
+        self.assertIn("memory", d)
+
+    def test_error_learner(self):
+        import tempfile, gc, json
+        from GreatSageAI_Clone.core.smart_improvements import ErrorLearner, DATA_DIR
+        from GreatSageAI_Clone.core.memory_persistent import PersistentMemory
+        db = Path(tempfile.mktemp(suffix=".db"))
+        log_file = DATA_DIR / f"test_error_{id(db)}.jsonl"
+        try:
+            mem = PersistentMemory(db_path=db)
+            el = ErrorLearner(memory=mem)
+            el._error_log = log_file  # Use unique log file
+            el.record_error("ImportError", "module not found", "test.py", "pip install x")
+            errors = el.get_recent_errors()
+            self.assertEqual(len(errors), 1)
+            self.assertEqual(errors[0]["type"], "ImportError")
+        finally:
+            del mem, el
+            gc.collect()
+            try: db.unlink(missing_ok=True)
+            except Exception: pass
+            try: log_file.unlink(missing_ok=True)
+            except Exception: pass
+
+    def test_code_pattern_learner(self):
+        from GreatSageAI_Clone.core.smart_improvements import CodePatternLearner
+        cpl = CodePatternLearner()
+        cpl.learn_from_code("def hello(): pass", "python")
+        cpl.learn_from_code("def world(): pass", "python")
+        self.assertEqual(cpl.get_preferred_language(), "python")
+
+    def test_voice_command_learner(self):
+        from GreatSageAI_Clone.core.smart_improvements import VoiceCommandLearner
+        vcl = VoiceCommandLearner()
+        vcl.record_success("abre o chrome", "open_app")
+        vcl.record_success("abre o chrome", "open_app")
+        freq = vcl.get_frequent_commands()
+        self.assertGreater(len(freq), 0)
+        self.assertEqual(freq[0]["intent"], "open_app")
+
+    def test_smart_reminders(self):
+        import tempfile, gc
+        from GreatSageAI_Clone.core.smart_improvements import SmartReminders
+        reminders_file = Path(tempfile.mktemp(suffix=".json"))
+        try:
+            sr = SmartReminders()
+            sr._reminders_file = reminders_file
+            sr._reminders = []
+            detected = sr.detect_reminder("Lembra de me avisar amanhã")
+            self.assertIsNotNone(detected)
+            sr.add_reminder("Teste de lembrete")
+            active = sr.get_active_reminders()
+            self.assertEqual(len(active), 1)
+        finally:
+            try: reminders_file.unlink(missing_ok=True)
+            except Exception: pass
+
+    def test_mood_tracker(self):
+        from GreatSageAI_Clone.core.smart_improvements import MoodTracker
+        mt = MoodTracker()
+        mt.record_mood("happy", "teste")
+        mt.record_mood("happy", "teste")
+        mt.record_mood("frustrated", "teste")
+        trend = mt.get_mood_trend()
+        self.assertEqual(trend, "happy")
+
+    def test_smart_defaults(self):
+        from GreatSageAI_Clone.core.smart_improvements import SmartDefaults
+        sd = SmartDefaults()
+        sd.set("favorite_language", "python")
+        self.assertEqual(sd.get("favorite_language"), "python")
+        sd.learn_from_interaction("resposta curto por favor")
+        self.assertEqual(sd.get("verbosity"), "short")
+
+    def test_knowledge_graph(self):
+        from GreatSageAI_Clone.core.smart_improvements import KnowledgeGraph
+        kg = KnowledgeGraph()
+        kg.add_relation("python", "django")
+        kg.add_relation("django", "postgresql")
+        related = kg.get_related("python")
+        self.assertIn("django", related)
+
+    def test_smart_aliases(self):
+        from GreatSageAI_Clone.core.smart_improvements import SmartAliases
+        sa = SmartAliases()
+        sa.add_alias("oi", "olá, tudo bem?")
+        resolved = sa.resolve("oi")
+        self.assertEqual(resolved, "olá, tudo bem?")
+
+    def test_health_monitor(self):
+        from GreatSageAI_Clone.core.smart_improvements import HealthMonitor
+        hm = HealthMonitor()
+        hm.check_provider("groq", True, 150.0)
+        hm.check_mic(True, "Realtek")
+        report = hm.get_health_report()
+        self.assertIn("groq", report)
+        self.assertIn("microphone", report)
+        health = hm.get_overall_health()
+        self.assertEqual(health, 1.0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
