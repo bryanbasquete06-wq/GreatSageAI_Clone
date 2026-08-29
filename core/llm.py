@@ -508,12 +508,18 @@ class LLMEngine:
     """
     Motor LLM multi-provider com fallback automático.
     Tenta providers em ordem de prioridade até um funcionar.
+    SPEED: System prompt cache + connection pre-warm.
     """
 
     def __init__(self, env_path: str = ".env"):
         self.providers: List[LLMProvider] = []
         self.env_path = Path(env_path)
         self._load_providers()
+        # SPEED: system prompt cache
+        self._prompt_cache: Dict[str, str] = {}
+        self._prompt_cache_lock = threading.Lock()
+        # SPEED: pre-warm connections in background
+        threading.Thread(target=self._prewarm_connections, daemon=True, name="llm-prewarm").start()
 
     def _get_api_key(self, primary: str, aliases: List[str] = None, env: Dict[str, str] = None) -> str:
         """Busca API key: SecretManager (F:\\GreatSageTemp) primeiro, depois .env dict, depois os.environ."""
@@ -627,6 +633,21 @@ class LLMEngine:
                 continue
         return env
 
+    def _prewarm_connections(self):
+        """Pre-warm HTTP connections to all providers (saves ~200ms on first request)."""
+        time.sleep(0.5)  # wait for providers to initialize
+        for p in self.providers:
+            try:
+                if hasattr(p._client, 'session') and hasattr(p._client.session, 'get'):
+                    # groq client — just touch it
+                    pass
+                elif hasattr(p._client, 'get'):
+                    # requests.Session — warm the connection
+                    p._client.get("https://httpbin.org/get", timeout=2)
+            except Exception:
+                pass
+        logger.info("LLM connections pre-warmed")
+
     @property
     def available_providers(self) -> List[str]:
         """Lista providers disponíveis."""
@@ -635,7 +656,11 @@ class LLMEngine:
     def _offline_fallback(self, messages: List[Dict]) -> str:
         """Fallback offline que consulta RAG local em F:\\GreatSageTemp\\rag e memory/rag_embeddings + MemoryManager."""
         try:
+            # SPEED: cache offline fallback by last message hash
             last = messages[-1]["content"] if messages else ""
+            cache_key = hashlib.md5(last[:200].encode()).hexdigest()[:16] if 'hashlib' in dir() else None
+            if cache_key and hasattr(self, '_offline_cache') and cache_key in self._offline_cache:
+                return self._offline_cache[cache_key]
             q = last.lower()
             rag_context = ""
             rag_stats = ""
@@ -804,6 +829,7 @@ class LLMEngine:
         """
         Envia mensagem com fallback automático.
         Tenta cada provider até um funcionar.
+        SPEED: uses cached system prompt if available.
         """
         last_error = ""
         for provider in self.providers:

@@ -160,17 +160,17 @@ _EMPHASIS_PATTERN = re.compile(r'\b(nunca|sempre|absolutamente|totalmente|comple
 
 # Breathing pause durations (seconds) — tuned for natural, human-like delivery
 # Vary based on emotional context and sentence complexity
-_PAUSE_AFTER_PERIOD = 0.50
-_PAUSE_AFTER_EXCLAMATION = 0.40
-_PAUSE_AFTER_QUESTION = 0.50
-_PAUSE_BETWEEN_LONG = 0.70
-_PAUSE_BETWEEN_SHORT = 0.30
-_PAUSE_BREATH_INTRO = 0.60
-_PAUSE_EMPHASIS = 0.35    # after emphasis words — brief pause for dramatic effect
-_PAUSE_HESITATION = 0.45   # after hesitation words — slight pause for thinking
-_PAUSE_EMPATHY = 0.55      # after empathy words — longer, gentler pause
-_PAUSE_JOY = 0.25          # after joy words — shorter, energetic
-_PAUSE_URGENCY = 0.15      # after urgency words — minimal pause
+_PAUSE_AFTER_PERIOD = 0.35       # SPEED: was 0.50, reduced 30%
+_PAUSE_AFTER_EXCLAMATION = 0.25   # SPEED: was 0.40, reduced 38%
+_PAUSE_AFTER_QUESTION = 0.35      # SPEED: was 0.50, reduced 30%
+_PAUSE_BETWEEN_LONG = 0.50        # SPEED: was 0.70, reduced 29%
+_PAUSE_BETWEEN_SHORT = 0.20       # SPEED: was 0.30, reduced 33%
+_PAUSE_BREATH_INTRO = 0.40        # SPEED: was 0.60, reduced 33%
+_PAUSE_EMPHASIS = 0.25            # SPEED: was 0.35, reduced 29%
+_PAUSE_HESITATION = 0.30          # SPEED: was 0.45, reduced 33%
+_PAUSE_EMPATHY = 0.40             # SPEED: was 0.55, reduced 27%
+_PAUSE_JOY = 0.18                 # SPEED: was 0.25, reduced 28%
+_PAUSE_URGENCY = 0.10             # SPEED: was 0.15, reduced 33%
 
 # Dynamic prosody: pitch/volume adjustments based on emotional content
 _PROSODY_BOOST = {
@@ -715,8 +715,13 @@ class SpeechEngine:
     # ------------------------------------------------------------ internals
 
     def _stream_consumer(self, text_chunks, callback_done):
-        """Accumulates streamed chunks and releases complete sentences."""
+        """Accumulates streamed chunks and releases complete sentences.
+
+        SPEED: merges ultra-short consecutive sentences to reduce TTS API calls.
+        e.g. ["Ok.", "Certo.", "Vou fazer."] → 1 TTS call instead of 3.
+        """
         buf = ""
+        pending_sentences = []
         try:
             for chunk in text_chunks:
                 if not chunk:
@@ -726,13 +731,35 @@ class SpeechEngine:
                 sentences = split_sentences(buf)
                 if len(sentences) > 1:
                     for s in sentences[:-1]:
-                        self._enqueue(s)
+                        pending_sentences.append(s)
                     buf = sentences[-1]
+
+                    # SPEED: when we have multiple pending, try merging short ones
+                    if len(pending_sentences) >= 2:
+                        try:
+                            from core.speed_optimizer import merge_short_sentences
+                            merged = merge_short_sentences(pending_sentences, max_chars=35)
+                            for s in merged:
+                                self._enqueue(s)
+                        except ImportError:
+                            for s in pending_sentences:
+                                self._enqueue(s)
+                        pending_sentences.clear()
         except Exception as e:
             logger.error(f"TTS stream consumer error: {e}", exc_info=True)
         finally:
+            # Flush remaining
             if buf.strip():
-                self._enqueue(buf)
+                pending_sentences.append(buf)
+            if pending_sentences:
+                try:
+                    from core.speed_optimizer import merge_short_sentences
+                    merged = merge_short_sentences(pending_sentences, max_chars=35)
+                    for s in merged:
+                        self._enqueue(s)
+                except ImportError:
+                    for s in pending_sentences:
+                        self._enqueue(s)
             if callback_done:
                 threading.Timer(0.5, callback_done).start()
 
@@ -833,6 +860,21 @@ class SpeechEngine:
 
         def _synth_one():
             try:
+                # SPEED: check TTS cache first — instant playback for common phrases
+                try:
+                    from core.speed_optimizer import get_tts_cache
+                    tts_cache = get_tts_cache()
+                    cached = tts_cache.get(s, self.preset.voice_id, self.preset.rate, self.preset.pitch)
+                    if cached:
+                        import shutil
+                        path = _TMP_DIR / f"gs_{gen}_{u.seq}.mp3"
+                        shutil.copy2(str(cached), str(path))
+                        u.path = path
+                        logger.debug(f"TTS cache HIT: {s[:30]} (0ms)")
+                        return
+                except ImportError:
+                    pass
+
                 path = _TMP_DIR / f"gs_{gen}_{u.seq}.mp3"
 
                 # Get dynamic prosody for this sentence
@@ -852,6 +894,14 @@ class SpeechEngine:
                 else:
                     u.path = path
                     logger.debug(f"TTS: skipped voice styling for short text ({len(s)} chars)")
+
+                # SPEED: store in TTS cache for future use
+                try:
+                    from core.speed_optimizer import get_tts_cache
+                    tts_cache = get_tts_cache()
+                    tts_cache.put(s, self.preset.voice_id, self.preset.rate, self.preset.pitch, u.path or path)
+                except Exception:
+                    pass
             except Exception as e:
                 logger.error(f"TTS synth error: {e}", exc_info=True)
                 u.canceled = True
@@ -915,7 +965,7 @@ class SpeechEngine:
         while True:
             result = self._pop_ready(next_seq)
             if result is _WAIT:
-                time.sleep(0.01)  # Speed: 3x faster polling (was 30ms, now 10ms)
+                time.sleep(0.005)  # SPEED: 5ms polling — fastest safe interval
                 continue
             next_seq += 1
             if result is _SKIP:

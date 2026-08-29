@@ -225,6 +225,20 @@ class GreatSageApp:
         # Usage tracker — real-time provider monitoring
         self.usage_tracker = UsageTracker()
 
+        # SPEED: pre-warm TTS cache + LLM connections
+        try:
+            from core.speed_optimizer import get_tts_cache, get_connection_pool
+            tts_cache = get_tts_cache()
+            tts_cache.preload(
+                self.speech.preset.voice_id,
+                self.speech.preset.rate,
+                self.speech.preset.pitch,
+            )
+            pool = get_connection_pool()
+            pool.warm_all(self.llm.providers)
+        except Exception:
+            pass
+
         self.cot = ChainOfThought(llm=self.llm)
         self.autonomous_planner = AutonomousPlanner(llm=self.llm)
         # Code analyzer uses functions directly
@@ -337,64 +351,37 @@ class GreatSageApp:
         if not cmd_clean:
             return
 
-        # Record user pattern for proactive suggestions
+        # SPEED: batch all pre-routing operations into one try block
         try:
+            # Record user pattern for proactive suggestions
             action = "voice_command" if cmd_clean.startswith("[AUDIO]") else "text_command"
             self.persistent_memory.record_user_pattern(action, cmd_clean[:100])
-        except Exception:
-            pass
-
-        # Session memory
-        try:
+            # Session memory
             self.session_mem.add_turn("user", cmd_clean)
-        except Exception:
-            pass
-
-        # Smart aliases — resolve shortcuts
-        try:
+            # Smart aliases — resolve shortcuts
             cmd_clean = self.smart_aliases.resolve(cmd_clean)
-        except Exception:
-            pass
-
-        # Smart reminders — detect and set
-        try:
-            if self.smart_reminders.detect_reminder(cmd_clean):
-                self.smart_reminders.add_reminder(cmd_clean)
-        except Exception:
-            pass
-
-        # Mood tracking
-        try:
+            # Smart reminders — detect and set
+            self.smart_reminders.detect_reminder(cmd_clean) and self.smart_reminders.add_reminder(cmd_clean)
+            # Mood tracking
             from core.persona import detect_user_mood
             mood = detect_user_mood(cmd_clean)
             self.mood_tracker.record_mood(mood.value, cmd_clean[:50])
-        except Exception:
-            pass
-
-        # Learn user preferences
-        try:
+            # Learn user preferences
             self.smart_defaults.learn_from_interaction(cmd_clean)
+            # Detect user corrections — "não", "errado", "isso está errado"
+            correction_markers = (
+                "não é isso", "está errado", "errado", "isso está errado",
+                "incorreto", "você errou", "não foi isso",
+            )
+            if any(m in cmd_clean.lower() for m in correction_markers):
+                recent = self.persistent_memory.get_recent(category="conversation", limit=2)
+                if recent:
+                    last_ai = recent[0].content.split("AI: ")[-1][:200] if "AI: " in recent[0].content else ""
+                    if last_ai:
+                        self.persistent_memory.record_correction(
+                            wrong_answer=last_ai, correct_answer=cmd_clean, topic=cmd_clean[:50])
         except Exception:
             pass
-
-        # Detect user corrections — "não", "errado", "isso está errado", etc.
-        correction_markers = [
-            "não é isso", "está errado", "errado", "isso está errado",
-            "não", "incorreto", "você errou", "não foi isso",
-            "errado isso", "não era isso", "sla", "não era",
-        ]
-        if any(marker in cmd_clean.lower() for marker in correction_markers):
-            # Try to find what the user is correcting
-            recent = self.persistent_memory.get_recent(category="conversation", limit=2)
-            if recent:
-                last_ai_response = recent[0].content.split("AI: ")[-1][:200] if "AI: " in recent[0].content else ""
-                if last_ai_response:
-                    self.persistent_memory.record_correction(
-                        wrong_answer=last_ai_response,
-                        correct_answer=cmd_clean,
-                        topic=cmd_clean[:50],
-                    )
-                    self.log.info(f"Correction recorded: {cmd_clean[:80]}")
 
         # Multi-step compound commands — apenas quando TODAS as partes parecem
         # comandos de sistema reais; frases conversacionais com "depois"
@@ -479,31 +466,45 @@ class GreatSageApp:
         collected: list[str] = []
         full_response = [""]
 
+        # SPEED: cache base prompt — only rebuild dynamic parts per request
+        if not hasattr(self, '_cached_base_prompt') or not hasattr(self, '_cached_prompt_mood'):
+            self._cached_base_prompt = ""
+            self._cached_prompt_mood = None
+        _current_mood = self.mood_tracker.get_mood_trend() if hasattr(self, 'mood_tracker') else "neutral"
+        if self._cached_base_prompt and self._cached_prompt_mood == _current_mood:
+            _base_prompt = self._cached_base_prompt
+        else:
+            _base_prompt = self.persona.get_system_prompt()
+            self._cached_base_prompt = _base_prompt
+            self._cached_prompt_mood = _current_mood
+
         def _tee():
             try:
-                # Build system prompt with all smart context
-                base_prompt = self.persona.get_system_prompt()
-                corrections = self.persistent_memory.get_corrections_for_prompt(cmd)
-                proactive = self.proactive.get_suggestion_text()
-                session_ctx = self.session_mem.to_prompt_context()
-                defaults_ctx = self.smart_defaults.to_prompt_context()
-                mood_ctx = f"Humor do usuário: {self.mood_tracker.get_mood_trend()}"
-                reminders = self.smart_reminders.check_reminders()
-                reminders_text = "\n".join(reminders) if reminders else ""
-
-                full_system = base_prompt
-                if corrections:
-                    full_system += "\n\n" + corrections
-                if proactive:
-                    full_system += "\n\n" + proactive
-                if session_ctx:
-                    full_system += "\n\n" + session_ctx
-                if defaults_ctx:
-                    full_system += "\n\n" + defaults_ctx
-                if mood_ctx:
+                # SPEED: only build dynamic context (skip if empty)
+                full_system = _base_prompt
+                try:
+                    corrections = self.persistent_memory.get_corrections_for_prompt(cmd)
+                    if corrections:
+                        full_system += "\n\n" + corrections
+                except Exception:
+                    pass
+                try:
+                    session_ctx = self.session_mem.to_prompt_context()
+                    if session_ctx:
+                        full_system += "\n\n" + session_ctx
+                except Exception:
+                    pass
+                try:
+                    defaults_ctx = self.smart_defaults.to_prompt_context()
+                    if defaults_ctx:
+                        full_system += "\n\n" + defaults_ctx
+                except Exception:
+                    pass
+                try:
+                    mood_ctx = f"Humor: {_current_mood}"
                     full_system += "\n\n" + mood_ctx
-                if reminders_text:
-                    full_system += "\n\n" + reminders_text
+                except Exception:
+                    pass
 
                 # Use 9Router for streaming with automatic fallback
                 for delta in self.nine_router.route_and_stream(
@@ -535,6 +536,15 @@ class GreatSageApp:
                 except Exception:
                     pass
                 self.signals.sig_sage_end.emit()
+                # SPEED: record timing metrics
+                try:
+                    from core.speed_optimizer import get_speed_tracker
+                    st = get_speed_tracker()
+                    st.record("ttft", self.llm.last_ttft_ms or 0, self.llm.last_model)
+                    if full_response[0]:
+                        st.record("response_len", len(full_response[0]))
+                except Exception:
+                    pass
                 self.signals.sig_telemetry.emit(
                     self.pipeline.last_stt_engine, self.pipeline.last_stt_ms,
                     self.llm.last_model, self.llm.last_ttft_ms)

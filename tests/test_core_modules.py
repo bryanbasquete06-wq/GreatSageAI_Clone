@@ -1137,6 +1137,8 @@ class TestSmartImprovements(unittest.TestCase):
     def test_mood_tracker(self):
         from GreatSageAI_Clone.core.smart_improvements import MoodTracker
         mt = MoodTracker()
+        mt._history = []  # isolate from persistent file
+        mt._save = lambda: None  # no-op save
         mt.record_mood("happy", "teste")
         mt.record_mood("happy", "teste")
         mt.record_mood("frustrated", "teste")

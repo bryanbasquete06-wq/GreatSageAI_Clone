@@ -409,8 +409,25 @@ class NineRouter:
 
         task_type: "chat" | "code" | "fast" | "reasoning" | "vision"
         prefer_tier: optionally prefer a specific quality tier
+
+        SPEED: caches routing decisions for 30s per task_type.
         """
         now = time.time()
+        # SPEED: check cache first
+        cache_key = f"{task_type}|{prefer_tier.value if prefer_tier else ''}"
+        if hasattr(self, '_route_cache') and cache_key in self._route_cache:
+            cached_time, cached_decision = self._route_cache[cache_key]
+            if now - cached_time < 30:  # 30s cache
+                # Verify provider is still available
+                p = self._providers.get(cached_decision.provider)
+                if p and now >= p.cooldown_until:
+                    key = getattr(p, '_api_key', '')
+                    is_local = p.tier == ProviderTier.LOCAL and cached_decision.provider == "ollama"
+                    if key or is_local:
+                        return cached_decision
+        if not hasattr(self, '_route_cache'):
+            self._route_cache: Dict[str, Tuple[float, RoutingDecision]] = {}
+
         candidates = []
 
         for name, profile in self._providers.items():
@@ -453,24 +470,24 @@ class NineRouter:
                 tier=ProviderTier.OFFLINE, task_type=task_type,
                 reason="All providers unavailable — offline mode",
                 budget_remaining=0, fallback_chain=[],
-            )
-
-        # Sort by score (higher = better)
+            )        # Sort by score (higher = better)
         candidates.sort(key=lambda x: x[0], reverse=True)
         best = candidates[0]
 
         # Build fallback chain from remaining candidates
         fallback_chain = [c[1] for c in candidates[1:4]]  # top 3 alternatives
 
-        return RoutingDecision(
-            provider=best[1],
-            model=best[2],
-            tier=self._providers[best[1]].tier,
+        decision = RoutingDecision(
+            provider=best[1], model=best[2], tier=self._providers[best[1]].tier,
             task_type=task_type,
             reason=self._routing_reason(best[1], task_type, len(candidates)),
-            budget_remaining=best[3],
-            fallback_chain=fallback_chain,
+            budget_remaining=best[3], fallback_chain=fallback_chain,
         )
+
+        # SPEED: cache this decision
+        self._route_cache[cache_key] = (now, decision)
+
+        return decision
 
     def _score_provider(self, profile: ProviderProfile, task_type: str,
                         budget: int, prefer_tier: ProviderTier = None) -> float:
