@@ -402,6 +402,18 @@ class GreatSageApp:
             self._answer_local(cmd_clean, response)
             return
 
+        # SPEED: PC Controller — smart actions (open app, launch game, media, window)
+        try:
+            from GreatSageAI_Clone.modules.pc_controller import PCController
+            pc_response = PCController.smart_action(cmd_clean)
+            if pc_response:
+                self._answer_local(cmd_clean, pc_response)
+                return
+        except ImportError:
+            pass
+        except Exception:
+            pass
+
         self._answer_llm_stream(cmd_clean)
 
     # ---------------------------------------------------------- RPG mode
