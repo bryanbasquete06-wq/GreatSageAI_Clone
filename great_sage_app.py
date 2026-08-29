@@ -225,6 +225,18 @@ class GreatSageApp:
         # Usage tracker — real-time provider monitoring
         self.usage_tracker = UsageTracker()
 
+        # Message Monitor — auto-reply to WhatsApp, Telegram, Discord, Email
+        try:
+            from GreatSageAI_Clone.modules.message_monitor import MessageMonitor, MonitorConfig
+            msg_config = MonitorConfig()
+            self.message_monitor = MessageMonitor(config=msg_config, llm_engine=self.llm)
+            self.message_monitor.on_message(self._on_incoming_message)
+            self.message_monitor.on_reply(self._on_auto_reply)
+            self.message_monitor.start()
+            self.log.info("MessageMonitor started — auto-reply active")
+        except Exception as e:
+            self.log.debug(f"MessageMonitor init skipped: {e}")
+
         # SPEED: pre-warm TTS cache + LLM connections
         try:
             from core.speed_optimizer import get_tts_cache, get_connection_pool
@@ -342,6 +354,28 @@ class GreatSageApp:
         threading.Thread(target=_worker, daemon=True).start()
 
     # =================================================================
+    # Message Monitor callbacks
+    # =================================================================
+
+    def _on_incoming_message(self, message):
+        """Called when a new message is detected."""
+        try:
+            source = message.source.value if hasattr(message.source, 'value') else str(message.source)
+            self.log.info(f"Incoming message [{source}] from {message.sender}: {message.content[:80]}")
+            self.signals.sig_sage_full.emit(
+                f"\U0001f4e2 Mensagem de {message.sender} ({source}):\n{message.content[:200]}")
+        except Exception:
+            pass
+
+    def _on_auto_reply(self, message, reply):
+        """Called when an auto-reply was sent."""
+        try:
+            source = message.source.value if hasattr(message.source, 'value') else str(message.source)
+            self.log.info(f"Auto-reply to {message.sender} ({source}): {reply[:80]}")
+        except Exception:
+            pass
+
+    # =================================================================
     # Command routing: local intents first, LLM streaming fallback
     # =================================================================
 
@@ -401,6 +435,42 @@ class GreatSageApp:
         if response is not None:
             self._answer_local(cmd_clean, response)
             return
+
+        # Message Monitor control commands
+        try:
+            cmd_lower = cmd_clean.lower()
+            if hasattr(self, 'message_monitor'):
+                if any(k in cmd_lower for k in ('ativa auto reply', 'ativa auto-resposta', 'auto reply on')):
+                    self.message_monitor.config.auto_reply_enabled = True
+                    self._answer_local(cmd_clean, "Auto-reply ativado. Vou responder mensagens automaticamente.")
+                    return
+                if any(k in cmd_lower for k in ('desativa auto reply', 'desativa auto-resposta', 'auto reply off')):
+                    self.message_monitor.config.auto_reply_enabled = False
+                    self._answer_local(cmd_clean, "Auto-reply desativado. Não vou mais responder automaticamente.")
+                    return
+                if any(k in cmd_lower for k in ('status das mensagens', 'status mensagens', 'message status')):
+                    stats = self.message_monitor.get_stats()
+                    reply = (f"Monitor de mensagens:\n"
+                             f"  Status: {'Ativo' if stats['running'] else 'Inativo'}\n"
+                             f"  Auto-reply: {'Ligado' if stats['auto_reply_enabled'] else 'Desligado'}\n"
+                             f"  Respostas esta hora: {stats['replies_this_hour']}/{stats['max_per_hour']}\n"
+                             f"  Total de respostas: {stats['total_replies']}\n"
+                             f"  Regras: {stats['rules_count']}\n"
+                             f"  Contatos rastreados: {stats['contacts_tracked']}")
+                    self._answer_local(cmd_clean, reply)
+                    return
+                if 'responda' in cmd_lower or 'responde pra' in cmd_lower or 'responde pro' in cmd_lower:
+                    # Extract contact name and message
+                    match = re.search(r'respond[ae]\s+(?:pra|pro|para)\s+(.+?)(?:\s+diz(?:endo)?\s+(.+))?$', cmd_lower)
+                    if match:
+                        contact = match.group(1).strip()
+                        msg = match.group(2) or "Recebi, vou ver isso."
+                        self.message_monitor.set_reply_to([contact])
+                        self.message_monitor.config.auto_reply_enabled = True
+                        self._answer_local(cmd_clean, f"Vou responder para {contact}: \"{msg}\"")
+                        return
+        except Exception:
+            pass
 
         # SPEED: PC Controller — smart actions (open app, launch game, media, window)
         try:
