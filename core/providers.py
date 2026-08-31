@@ -418,8 +418,8 @@ class OpenRouterProvider(CodeProvider):
                         f"{self.base_url}/chat/completions",
                         headers={"Authorization": f"Bearer {self.api_key}",
                                  "Content-Type": "application/json",
-                                 "HTTP-Referer": "https://greatsage.local",
-                                 "X-Title": "GreatSage CodeDock"},
+                                 "HTTP-Referer": "https://elvea.local",
+                                 "X-Title": "Elivea CodeDock"},
                         json=payload, timeout=120,
                     ))
                 latency = time.perf_counter() - t0

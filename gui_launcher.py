@@ -1,5 +1,5 @@
 """
-Great Sage AI - Standalone Desktop GUI Application
+Elivea - Standalone Desktop GUI Application
 Pops up immediately on screen when double-clicked on Desktop.
 
 ┌─────────────────────────────────────────────────────────────────┐
@@ -31,24 +31,24 @@ root_dir = Path(__file__).resolve().parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
-from GreatSageAI_Clone.core.persona import PersonaManager
-from GreatSageAI_Clone.core.llm import GreatSageLLM
-from GreatSageAI_Clone.core.mark_l_bridge import MarkLBridge
-from GreatSageAI_Clone.modules.system import SystemModule
-from GreatSageAI_Clone.modules.files import FileModule
-from GreatSageAI_Clone.modules.web import WebModule
+from core.persona import PersonaManager
+from core.llm import EliveaLLM
+from core.mark_l_bridge import MarkLBridge
+from modules.system import SystemModule
+from modules.files import FileModule
+from modules.web import WebModule
 
 
-class GreatSageGUI:
+class EliveaGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Great Sage - (by: bryan)")
+        self.root.title("Elivea - (by: bryan)")
         self.root.geometry("620x520")
         self.root.configure(bg="#0c0a02")
 
         # Persona & Engines
         self.persona = PersonaManager()
-        self.llm = GreatSageLLM()
+        self.llm = EliveaLLM()
         self.bridge = MarkLBridge()
 
         self._build_ui()
@@ -60,7 +60,7 @@ class GreatSageGUI:
 
         lbl_title = tk.Label(
             header,
-            text="GREAT SAGE AI",
+            text="Elívea",
             fg="#ffd700",
             bg="#211b05",
             font=("Consolas", 12, "bold")
@@ -101,9 +101,9 @@ class GreatSageGUI:
 
         # Initial greeting
         init_msg = (
-            "=== [ GREAT SAGE INITIALIZED ] ===\n"
+            "=== [ ELÍVEA INITIALIZED ] ===\n"
             "by: bryan | Core: Mark-L Compatible\n\n"
-            "[Notice] Great Sage system online and operating within optimal parameters.\n"
+            "[Notice] Elívea system online and operating within optimal parameters.\n"
             "Type your command below or use quick directives:\n"
             " - sys : Display hardware telemetry\n"
             " - help : List available protocols\n"
@@ -193,12 +193,12 @@ class GreatSageGUI:
         else:
             res = self.llm.query(cmd_clean)
 
-        self.root.after(0, self.append_text, f"Great Sage> {res}")
+        self.root.after(0, self.append_text, f"Elívea> {res}")
 
     def run(self):
         self.root.mainloop()
 
 
 if __name__ == "__main__":
-    app = GreatSageGUI()
+    app = EliveaGUI()
     app.run()

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — App Integration
+Elívea — App Integration
 ================================
 Integracao com aplicativos do sistema.
 """

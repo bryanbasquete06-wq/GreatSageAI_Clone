@@ -1,5 +1,5 @@
 """
-Great Sage AI — Deep Code Analyzer (AST-based)
+Elivea — Deep Code Analyzer (AST-based)
 ===============================================
 Análise profunda de código-fonte usando AST do Python:
   • Extração de funções, classes, métodos com métricas

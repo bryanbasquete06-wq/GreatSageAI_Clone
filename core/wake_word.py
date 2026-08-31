@@ -1,6 +1,6 @@
 """
-Great Sage AI - Continuous Wake Word Detection Engine
-Monitors background microphone audio using gapless InputStream for wake phrases ("Great Sage", "Grande Sábio", "Raphael", "Sábio").
+Elivea - Continuous Wake Word Detection Engine
+Monitors background microphone audio using gapless InputStream for wake phrases ("Elívea", "Elívea", "Elívea", "Sábio").
 """
 
 import os
@@ -14,7 +14,7 @@ import threading
 import numpy as np
 import sounddevice as sd
 from groq import Groq
-from GreatSageAI_Clone.core.mic_manager import get_best_input_device
+from core.mic_manager import get_best_input_device
 
 
 class WakeWordDetector:
@@ -131,7 +131,7 @@ class WakeWordDetector:
                                 found_wake = any(w in text_lower for w in self.WAKE_PHRASES)
                                 if found_wake:
                                     try:
-                                        print("[WakeWord] WAKE WORD DETECTADA! 'Great Sage' reconhecido com sucesso!")
+                                        print("[WakeWord] WAKE WORD DETECTADA! 'Elívea' reconhecido com sucesso!")
                                     except Exception:
                                         pass
 

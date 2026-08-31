@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Voice Cloner
+Elívea — Voice Cloner
 ==============================
 Permite upload de audio para clonar voz customizada.
 """

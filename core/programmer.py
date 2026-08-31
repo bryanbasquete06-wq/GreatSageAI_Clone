@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Assistente de Programação
+Elívea — Assistente de Programação
 ==========================================
 Geração, análise, refatoração e debug de código.
 """
@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Optional, List, Dict
 from dataclasses import dataclass
 
-logger = logging.getLogger("greatsage.programmer")
+logger = logging.getLogger("elvea.programmer")
 
 
 @dataclass

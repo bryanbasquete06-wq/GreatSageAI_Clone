@@ -23,11 +23,11 @@ echo Iniciando sem console...
 where pythonw >nul 2>&1
 if %errorlevel% equ 0 (
     if exist "%~dp0python\pythonw.exe" (
-        start "" "%~dp0python\pythonw.exe" great_sage_app.py
+        start "" "%~dp0python\pythonw.exe" elvea_app.py
     ) else (
-        start "" pythonw great_sage_app.py
+        start "" pythonw elvea_app.py
     )
     exit /b 0
 )
-"%PY%" great_sage_app.py
+"%PY%" elvea_app.py
 pause

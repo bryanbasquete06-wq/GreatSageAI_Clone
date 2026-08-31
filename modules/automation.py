@@ -1,5 +1,5 @@
 """
-Great Sage AI - PC Automation & Game Controller Module
+Elivea - PC Automation & Game Controller Module
 Provides desktop automation, game launching & gameplay inputs, and media controls.
 """
 

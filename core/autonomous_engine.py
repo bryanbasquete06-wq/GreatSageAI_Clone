@@ -1,5 +1,5 @@
 """
-Great Sage AI — Autonomous Self-Programming Engine
+Elivea — Autonomous Self-Programming Engine
 ====================================================
 Motor de auto-programação CONTÍNUA e PROATIVA que:
 
@@ -28,7 +28,7 @@ from typing import Callable, TYPE_CHECKING
 if TYPE_CHECKING:
     pass
 
-logger = logging.getLogger("greatsage.autonomous")
+logger = logging.getLogger("elvea.autonomous")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEMORY_DIR = BASE_DIR / "config" / "agent_memory"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Sistema de Plugins
+Elívea — Sistema de Plugins
 ===================================
 Plugins sob demanda: Calculadora, Conversor Moedas, QR Code, Tradutor, Resumidor.
 """
@@ -13,7 +13,7 @@ from typing import Dict, Any, Optional, List
 from pathlib import Path
 from dataclasses import dataclass
 
-logger = logging.getLogger("greatsage.plugins")
+logger = logging.getLogger("elvea.plugins")
 
 
 @dataclass

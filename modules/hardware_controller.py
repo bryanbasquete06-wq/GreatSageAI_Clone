@@ -1,5 +1,5 @@
 """
-Great Sage AI - Advanced Hardware & OS Automation Controller
+Elivea - Advanced Hardware & OS Automation Controller
 Enterprise-grade Windows hardware management, power, display, audio, process & desktop automation.
 """
 
@@ -153,7 +153,7 @@ class HardwareController:
 
         moved_count = 0
         for item in desktop_path.iterdir():
-            if item.is_file() and not item.name.startswith("Great Sage"):
+            if item.is_file() and not item.name.startswith("Elívea"):
                 ext = item.suffix.lower()
                 for cat, ext_list in categories.items():
                     if ext in ext_list:

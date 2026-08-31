@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Universal PC Controller
+Elívea — Universal PC Controller
 =========================================
 Controle TOTAL do PC: apps, jogos, mídia, janelas, tudo.
 
@@ -13,7 +13,7 @@ Controle TOTAL do PC: apps, jogos, mídia, janelas, tudo.
   - Tudo via voz ou texto — "abre o google", "joga valorant", "próxima música"
 
 Uso:
-    from GreatSageAI_Clone.modules.pc_controller import PCController
+    from modules.pc_controller import PCController
     PCController.open_app("google")        # abre Chrome com Google
     PCController.launch_game("valorant")   # lança Valorant
     PCController.media_play_pause()        # play/pause mídia
@@ -22,17 +22,20 @@ Uso:
 from __future__ import annotations
 
 import ctypes
+import ctypes.wintypes
 import json
 import os
 import re
 import subprocess
 import time
+import urllib.parse
 import webbrowser
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 from dataclasses import dataclass, field
 
-logger = __import__("logging").getLogger("greatsage.pc_controller")
+logger = __import__("logging").getLogger("elvea.pc_controller")
 
 
 # =========================================================================
@@ -403,7 +406,11 @@ class AppDiscovery:
             p = Path(game_dir)
             if not p.exists():
                 continue
-            for game_folder in p.iterdir():
+            try:
+                folders = list(p.iterdir())
+            except (PermissionError, OSError):
+                continue
+            for game_folder in folders:
                 if not game_folder.is_dir():
                     continue
                 # Look for .exe files in the game folder
@@ -1028,8 +1035,17 @@ class PCController:
         return WindowManager.minimize()
 
     @classmethod
+    def restore_window(cls) -> str:
+        return WindowManager.restore()
+
+    @classmethod
     def close_window(cls) -> str:
         return WindowManager.close_window()
+
+    @classmethod
+    def close_tab(cls) -> str:
+        """Close the current browser tab (Ctrl+W)."""
+        return cls._hotkey("ctrl", "w")
 
     @classmethod
     def snap_window(cls, side: str) -> str:
@@ -1104,15 +1120,16 @@ class PCController:
 
     @classmethod
     def shutdown_pc(cls) -> str:
-        """Shutdown the PC."""
-        os.system("shutdown /s /t 10")
-        return "PC desligando em 10 segundos..."
+        """Shutdown the PC — MIN 30s delay for safety."""
+        # SAFETY: use SuperUser which enforces 30s minimum
+        from modules.superuser import SuperUser
+        return SuperUser.shutdown(30)
 
     @classmethod
     def restart_pc(cls) -> str:
-        """Restart the PC."""
-        os.system("shutdown /r /t 10")
-        return "PC reiniciando em 10 segundos..."
+        """Restart the PC — MIN 30s delay for safety."""
+        from modules.superuser import SuperUser
+        return SuperUser.restart(30)
 
     @classmethod
     def sleep_pc(cls) -> str:
@@ -1122,81 +1139,1134 @@ class PCController:
 
     # =================================================================== SMART ROUTING
 
+    # ── Pattern tables for fast matching ──
+    _EXACT_MEDIA = {
+        # PT-BR
+        "proxima musica": "next", "próxima música": "next",
+        "proximo musica": "next",
+        "musica anterior": "prev", "música anterior": "prev",
+        "volta musica": "prev",
+        "pausa": "pause", "pause": "pause", "play": "pause",
+        "play pause": "pause", "pausa musica": "pause",
+        "para musica": "stop", "pare musica": "stop",
+        "stop music": "stop", "stop": "stop",
+        "reproduz": "pause", "reproduzir": "pause",
+        "retoma": "pause", "retomar": "pause",
+        # EN
+        "next song": "next", "next track": "next",
+        "previous song": "prev", "previous track": "prev",
+        "go back": "prev",
+    }
+
+    _EXACT_WINDOW = {
+        "maximiza": "max", "maximizar": "max", "maximize": "max",
+        "maximiza janela": "max", "maximizar janela": "max",
+        "tela cheia": "max", "fullscreen": "max", "full screen": "max",
+        "minimiza": "min", "minimizar": "min", "minimize": "min",
+        "minimiza janela": "min", "minimizar janela": "min",
+        "restaura": "restore", "restaurar": "restore", "restore": "restore",
+        "fecha janela": "close", "fechar janela": "close",
+        "fechar": "close", "close window": "close", "close": "close",
+        "fecha aba": "close_tab", "fechar aba": "close_tab",
+        "centraliza": "center", "centralizar": "center", "center": "center",
+        "no topo": "topmost", "sempre no topo": "topmost",
+        "always on top": "topmost", "fixa": "topmost",
+        "snap esquerda": "snap_left", "snap left": "snap_left",
+        "esquerda": "snap_left", "lado esquerdo": "snap_left",
+        "snap direita": "snap_right", "snap right": "snap_right",
+        "direita": "snap_right", "lado direito": "snap_right",
+        "snap cima esquerda": "snap_tl", "canto superior esquerdo": "snap_tl",
+        "snap cima direita": "snap_tr", "canto superior direito": "snap_tr",
+        "snap baixo esquerda": "snap_bl", "snap baixo direita": "snap_br",
+        "canto inferior esquerdo": "snap_bl", "canto inferior direito": "snap_br",
+        "metade esquerda": "snap_left", "metade direita": "snap_right",
+        "mover esquerda": "snap_left", "mover direita": "snap_right",
+    }
+
+    _EXACT_VOLUME = {
+        "aumenta volume": "up", "volume up": "up", "mais volume": "up",
+        "aumentar volume": "up", "sobe volume": "up", "mais": "up",
+        "diminui volume": "down", "volume down": "down", "menos volume": "down",
+        "diminuir volume": "down", "abaixa volume": "down", "menos": "down",
+        "mudo": "mute", "mute": "mute", "silencio": "mute",
+        "silêncio": "mute", "sem som": "mute", "mute on": "mute",
+        "desmutar": "unmute", "unmute": "mute",
+        "volume maximo": "100", "volume máximo": "100",
+        "volume zero": "0", "zera volume": "0",
+    }
+
+    _EXACT_SYSTEM = {
+        "bloqueia": "lock", "lock": "lock", "bloquear": "lock",
+        "bloquear pc": "lock", "trava pc": "lock", "travar": "lock",
+        "travar pc": "lock", "lock pc": "lock",
+        "dormir": "sleep", "sleep": "sleep", "hibernar": "sleep",
+        "hibernate": "sleep", "soneca": "sleep",
+        # REMOVED: shutdown/restart from exact matches — too dangerous
+        # These require explicit confirmation via SecurityGuard
+        "captura": "screenshot", "captura de tela": "screenshot",
+        "screenshot": "screenshot", "print screen": "screenshot",
+        "tira print": "screenshot", "tirar print": "screenshot",
+        "print": "screenshot", "screen": "screenshot",
+        "tela": "screenshot", "foto da tela": "screenshot",
+        "imagem da tela": "screenshot",
+    }
+
     @classmethod
     def smart_action(cls, text: str) -> Optional[str]:
         """Parse natural language and execute the right action.
 
-        Returns None if no smart action matched (let other handlers try).
+        Hundreds of patterns across 15+ categories.
+        Returns None if no smart action matched.
         """
         t = text.lower().strip()
 
-        # ── Open/launch patterns ──
-        if re.match(r'^(abra?|abre|abrir|open|start|inicie|iniciar|execute)\s+', t):
-            target = re.sub(r'^(abra?|abre|abrir|open|start|inicie|iniciar|execute)\s+', '', t).strip()
-            return cls.open_app(target)
+        # ══════════════════════════════════════════════════════════════════
+        # 1. EXACT MATCH TABLES (fastest path)
+        # ══════════════════════════════════════════════════════════════════
 
-        # ── Game patterns ──
-        if re.match(r'^(jog(o|ue|ar)|play|rod(e|ar)|inicie o jogo|start game)\s+', t):
-            target = re.sub(r'^(jog(o|ue|ar)|play|rod(e|ar)|inicie o jogo|start game)\s+', '', t).strip()
-            return cls.launch_game(target)
+        # Media (exact)
+        if t in cls._EXACT_MEDIA:
+            action = cls._EXACT_MEDIA[t]
+            if action == "next": return cls.media_next()
+            if action == "prev": return cls.media_prev()
+            if action == "pause": return cls.media_play_pause()
+            if action == "stop": return cls.media_stop()
 
-        # ── Media patterns ──
-        if t in ("próxima música", "proxima musica", "next song", "próxima", "next"):
-            return cls.media_next()
-        if t in ("música anterior", "musica anterior", "previous song", "volta", "previous"):
-            return cls.media_prev()
-        if t in ("pausa", "pause", "play", "play/pause", "pausa música", "para música"):
-            return cls.media_play_pause()
-        if t in ("para música", "pare música", "stop music", "stop"):
-            return cls.media_stop()
+        # Window (exact)
+        if t in cls._EXACT_WINDOW:
+            action = cls._EXACT_WINDOW[t]
+            if action == "max": return cls.maximize_window()
+            if action == "min": return cls.minimize_window()
+            if action == "restore": return cls.restore_window()
+            if action == "close": return cls.close_window()
+            if action == "close_tab": return cls.close_tab()
+            if action == "center": return WindowManager.center()
+            if action == "topmost": return WindowManager.always_on_top()
+            if action == "snap_left": return cls.snap_window("left")
+            if action == "snap_right": return cls.snap_window("right")
+            if action == "snap_tl": return WindowManager.snap_top_left()
+            if action == "snap_tr": return WindowManager.snap_top_right()
+            if action == "snap_bl": return WindowManager.snap_left()  # fallback
+            if action == "snap_br": return WindowManager.snap_right()  # fallback
 
-        # ── Volume patterns ──
-        vol_match = re.match(r'(volume|vol)\s+(up|down|mais|menos|mute|mudo|\d+)', t)
-        if vol_match:
-            return cls.volume(vol_match.group(1))
+        # Volume (exact)
+        if t in cls._EXACT_VOLUME:
+            return cls.volume(cls._EXACT_VOLUME[t])
 
-        if t in ("aumenta volume", "volume up", "mais volume", "mais"):
-            return cls.volume("up")
-        if t in ("diminui volume", "volume down", "menos volume", "menos"):
-            return cls.volume("down")
-        if t in ("mudo", "mute", "silêncio", "silencio"):
-            return cls.volume("mute")
+        # System (exact)
+        if t in cls._EXACT_SYSTEM:
+            action = cls._EXACT_SYSTEM[t]
+            if action == "lock": return cls.lock_pc()
+            if action == "sleep": return cls.sleep_pc()
+            if action == "shutdown": return cls.shutdown_pc()
+            if action == "restart": return cls.restart_pc()
+            if action == "screenshot": return cls.screenshot()
 
-        # ── Window patterns ──
-        if t in ("maximiza", "maximize", "maximizar", "tela cheia", "fullscreen"):
-            return cls.maximize_window()
-        if t in ("minimiza", "minimize", "minimizar", "minimiza janela"):
-            return cls.minimize_window()
-        if t in ("fecha janela", "close window", "fechar janela", "fechar"):
-            return cls.close_window()
-        if "snap" in t or "metade" in t:
-            if "esquerda" in t or "left" in t:
+        # ══════════════════════════════════════════════════════════════════
+        # 2. REGEX PATTERNS (flexible matching)
+        # ══════════════════════════════════════════════════════════════════
+
+        # ── 2.1 Open/launch apps ──
+        m = re.match(r'^(abra?|abre|abrir|open|start|inicie|iniciar|execute|roda|rode|rodar|executa|execute)\s+(.+)', t)
+        if m:
+            return cls.open_app(m.group(2).strip())
+
+        # ── 2.2 Close/kill apps ──
+        m = re.match(r'^(fecha|fechar|close|kill|mate|mata|encerrar|encerra|finalizar|finaliza|stop|pare|parar)\s+(o |a |o |a )?\s*(.+)', t)
+        if m:
+            return cls.close_app(m.group(3).strip())
+
+        # ── 2.3 Launch games ──
+        m = re.match(r'^(jog(o|ue|ar)|play|rod(e|ar)|inicie o jogo|start game|abre o jogo|abra o jogo|joga)\s+(.+)', t)
+        if m:
+            return cls.launch_game(m.group(4).strip())
+
+        # ── 2.4 Search Google ──
+        m = re.match(r'^(pesquis(a|e|ar)|search|google|busque|buscar|procure|procurar|ache|achar|look up|pesquisar|pesquise)\s+(.+)', t)
+        if m:
+            return cls.google(m.group(3).strip())
+
+        # ── 2.5 YouTube / Video ──
+        m = re.match(r'^(youtube|vídeo|video|toque|toca|toque|reproduza|reproduz|assista|assiste|video no youtube|filme|série|serie)\s+(.+)', t)
+        if m:
+            return cls.youtube(m.group(2).strip())
+
+        # ── 2.6 Volume with number ──
+        m = re.match(r'(volume|vol)\s*(\d+)', t)
+        if m:
+            return cls.volume(m.group(2))
+        m = re.match(r'^(define|defina|set|coloca|coloque)\s+volume\s+(para|to)?\s*(\d+)', t)
+        if m:
+            return cls.volume(m.group(4))
+
+        # ── 2.7 Set volume to number ──
+        m = re.match(r'volume\s+(para|to|em|at)\s*(\d+)', t)
+        if m:
+            return cls.volume(m.group(2))
+        m = re.match(r'(coloca|coloque|set|define|defina|ajusta|ajuste)\s+volume\s+(em|para|to|at)?\s*(\d+)', t)
+        if m:
+            return cls.volume(m.group(3))
+
+        # ── 2.8 Window snap with direction ──
+        if "snap" in t or "metade" in t or "dividir" in t:
+            if any(w in t for w in ("esquerda", "left", "esq")):
                 return cls.snap_window("left")
-            elif "direita" in t or "right" in t:
+            if any(w in t for w in ("direita", "right", "dir")):
                 return cls.snap_window("right")
-        if t in ("centraliza", "center", "centralizar"):
-            return WindowManager.center()
+            if any(w in t for w in ("cima", "top", "superior")):
+                return cls.snap_window("left")  # snap to top-left
 
-        # ── Search patterns ──
-        if re.match(r'^(pesquis(a|e|ar)|search|google|busque|buscar|procure)\s+', t):
-            query = re.sub(r'^(pesquis(a|e|ar)|search|google|busque|buscar|procure)\s+', '', t).strip()
-            return cls.google(query)
+        # ── 2.9 Navigate URL ──
+        m = re.match(r'^(abra?|abre|navegue|navegar|acesse|acessar|visite|visitar|va para|vá para|go to|ir para)\s+(https?://\S+)', t)
+        if m:
+            return cls.open_url(m.group(2))
+        m = re.match(r'^(abra?|abre|navegue|acesse|visite|va para|vá para|go to)\s+(\S+\.\S+)', t)
+        if m:
+            return cls.open_url(m.group(2))
 
-        if re.match(r'^(youtube|vídeo|video|toque|toca)\s+', t):
-            query = re.sub(r'^(youtube|vídeo|video|toque|toca)\s+', '', t).strip()
-            return cls.youtube(query)
+        # ── 2.10 Play music/artist on Spotify/YouTube ──
+        m = re.match(r'^(toque|toca|reproduza|reproduz|coloque|coloca|ponha|ponha|play)\s+(música|musica|song|music|de |do |da )?\s*(.+)', t)
+        if m:
+            query = m.group(3).strip()
+            if any(w in t for w in ("youtube", "vídeo", "video")):
+                return cls.youtube(query)
+            return MediaController.play_spotify(query)
 
-        # ── Screenshot ──
-        if t in ("screenshot", "captura de tela", "print screen", "tira print", "tirar print"):
+        # ── 2.11 Open specific websites ──
+        _WEBSITES = {
+            "google": "https://www.google.com",
+            "gmail": "https://mail.google.com",
+            "youtube": "https://www.youtube.com",
+            "facebook": "https://www.facebook.com",
+            "instagram": "https://www.instagram.com",
+            "twitter": "https://www.twitter.com",
+            "x": "https://www.x.com",
+            "tiktok": "https://www.tiktok.com",
+            "reddit": "https://www.reddit.com",
+            "linkedin": "https://www.linkedin.com",
+            "github": "https://www.github.com",
+            "stackoverflow": "https://stackoverflow.com",
+            "stack overflow": "https://stackoverflow.com",
+            "spotify": "https://open.spotify.com",
+            "netflix": "https://www.netflix.com",
+            "prime video": "https://www.primevideo.com",
+            "amazon": "https://www.amazon.com",
+            "mercado livre": "https://www.mercadolivre.com.br",
+            "mercadolivre": "https://www.mercadolivre.com.br",
+            "olx": "https://www.olx.com.br",
+            "uber": "https://www.uber.com",
+            "ifood": "https://www.ifood.com.br",
+            "rappi": "https://www.rappi.com.br",
+            "uber eats": "https://www.ubereats.com",
+            "reclame aqui": "https://www.reclameaqui.com.br",
+            "chatgpt": "https://chat.openai.com",
+            "openai": "https://chat.openai.com",
+            "gemini": "https://gemini.google.com",
+            "copilot": "https://copilot.microsoft.com",
+            "bing": "https://www.bing.com",
+            "yahoo": "https://www.yahoo.com",
+            "wikipedia": "https://www.wikipedia.org",
+            "maps": "https://maps.google.com",
+            "google maps": "https://maps.google.com",
+            "waze": "https://www.waze.com",
+            "twitch": "https://www.twitch.tv",
+            "discord web": "https://discord.com/app",
+            "slack": "https://slack.com",
+            "notion": "https://www.notion.so",
+            "trello": "https://trello.com",
+            "canva": "https://www.canva.com",
+            "figma": "https://www.figma.com",
+            "dribbble": "https://dribbble.com",
+            "behance": "https://www.behance.net",
+            "medium": "https://medium.com",
+            "dev.to": "https://dev.to",
+            "pypi": "https://pypi.org",
+            "npm": "https://www.npmjs.com",
+            "docker hub": "https://hub.docker.com",
+            "vercel": "https://vercel.com",
+            "netlify": "https://www.netlify.com",
+            "heroku": "https://www.heroku.com",
+            "aws console": "https://console.aws.amazon.com",
+            "firebase": "https://console.firebase.google.com",
+            "supabase": "https://supabase.com",
+            "pinterest": "https://www.pinterest.com",
+            "snapchat": "https://www.snapchat.com",
+            "whatsapp web": "https://web.whatsapp.com",
+            "telegram web": "https://web.telegram.org",
+            "teams": "https://teams.microsoft.com",
+            "zoom web": "https://zoom.us",
+            "onedrive": "https://onedrive.live.com",
+            "google drive": "https://drive.google.com",
+            "dropbox": "https://www.dropbox.com",
+            "mega": "https://mega.nz",
+            "mediafire": "https://www.mediafire.com",
+            "adobe": "https://www.adobe.com",
+            "canva": "https://www.canva.com",
+            "deezer": "https://www.deezer.com",
+            "tidal": "https://tidal.com",
+            "soundcloud": "https://soundcloud.com",
+            "shazam": "https://www.shazam.com",
+            "weather": "https://weather.com",
+            "clima": "https://weather.com",
+            "tempo": "https://weather.com",
+            "horario": "https://www.timeanddate.com",
+            "hora": "https://www.timeanddate.com",
+            "google tradutor": "https://translate.google.com",
+            "tradutor": "https://translate.google.com",
+            "calculator": "https://www.calculator.net",
+            "calculadora": "https://www.calculator.net",
+            "converter": "https://www.google.com/search?q=converter",
+            "moeda": "https://www.google.com/search?q=conversor+de+moeda",
+        }
+        for key, url in _WEBSITES.items():
+            if t == key or t == f"abra {key}" or t == f"abre {key}" or t == f"abra o {key}" or t == f"abre o {key}":
+                return cls.open_url(url)
+
+        # ── 2.12 Specific app shortcuts ──
+        _APP_SHORTCUTS = {
+            "calculadora": "calc", "calculator": "calc",
+            "paint": "mspaint", "paintbrush": "mspaint",
+            "bloco de notas": "notepad", "notepad": "notepad",
+            "explorador": "explorer", "explorer": "explorer",
+            "file explorer": "explorer", "gerenciador de arquivos": "explorer",
+            "gerenciador de tarefas": "taskmgr", "task manager": "taskmgr",
+            "taskmgr": "taskmgr", "tarefas": "taskmgr",
+            "prompt": "cmd", "cmd": "cmd", "command prompt": "cmd",
+            "terminal": "wt", "windows terminal": "wt",
+            "powershell": "powershell", "ps": "powershell",
+            "configuracoes": "ms-settings:", "settings": "ms-settings:",
+            "config": "ms-settings:", "opcoes": "ms-settings:",
+            "painel de controle": "control", "control panel": "control",
+            "gerenciador de dispositivos": "devmgmt.msc", "device manager": "devmgmt.msc",
+            "gerenciamento de disco": "diskmgmt.msc", "disk management": "diskmgmt.msc",
+            "registro": "regedit", "registry": "regedit", "regedit": "regedit",
+            "servicos": "services.msc", "services": "services.msc",
+            "event viewer": "eventvwr", "visualizador de eventos": "eventvwr",
+            "performance": "resmon", "resource monitor": "resmon",
+            "monitor de recursos": "resmon",
+            "informacoes do sistema": "msinfo32", "system info": "msinfo32",
+            "msinfo32": "msinfo32",
+            "firewall": "wf.msc", "firewall do windows": "wf.msc",
+            "limpeza de disco": "cleanmgr", "disk cleanup": "cleanmgr",
+            "cleanmgr": "cleanmgr",
+            "desfragmentar": "dfrgui", "defrag": "dfrgui",
+            "loja": "ms-windows-store:", "microsoft store": "ms-windows-store:",
+            "store": "ms-windows-store:", "app store": "ms-windows-store:",
+            "xbox": "xbox", "xbox app": "xbox",
+            "fotos": "ms-photos:", "photos": "ms-photos:",
+            "camera": "microsoft.windows.camera:",
+            "snipping tool": "SnippingTool", "snip": "ms-screenclip:",
+            "alarms": "ms-clock:", "relogio": "ms-clock:", "clock": "ms-clock:",
+            "notas": "ms-stickynotes:", "sticky notes": "ms-stickynotes:",
+            "mapas": "bingmaps:", "maps": "bingmaps:",
+            "3d viewer": "3dviewer:",
+            "mixed reality": "hololens:",
+            "accessibility": "ms-settings:easeofaccess",
+            "acessibilidade": "ms-settings:easeofaccess",
+            "wifi": "ms-settings:network-wifi",
+            "bluetooth": "ms-settings:bluetooth",
+            "display": "ms-settings:display",
+            "tela": "ms-settings:display",
+            "som": "ms-settings:sound", "sound": "ms-settings:sound",
+            "bateria": "ms-settings:batterysaver", "battery": "ms-settings:batterysaver",
+            "privacidade": "ms-settings:privacy", "privacy": "ms-settings:privacy",
+            "conta": "ms-settings:accounts", "account": "ms-settings:accounts",
+            "atualizacao": "ms-settings:windowsupdate", "update": "ms-settings:windowsupdate",
+            "windows update": "ms-settings:windowsupdate",
+            "antivirus": "ms-settings:windowsdefender",
+            "windows defender": "ms-settings:windowsdefender",
+        }
+        for key, cmd in _APP_SHORTCUTS.items():
+            if t == key or t == f"abra {key}" or t == f"abre {key}" or t == f"abra o {key}" or t == f"abre o {key}":
+                return cls.open_app(cmd)
+
+        # ══════════════════════════════════════════════════════════════════
+        # 3. COMPLEX PATTERNS (regex with context)
+        # ══════════════════════════════════════════════════════════════════
+
+        # ── 3.1 Window management ──
+        m = re.match(r'^(maximiza|maximizar|maximize|max|maximiza a janela|maximizar a janela)\s*(a janela|janela|window)?', t)
+        if m: return cls.maximize_window()
+        m = re.match(r'^(minimiza|minimizar|minimize|min|minimiza a janela|minimizar a janela)\s*(a janela|janela|window)?', t)
+        if m: return cls.minimize_window()
+        m = re.match(r'^(restaura|restaurar|restore)\s*(a janela|janela|window)?', t)
+        if m: return cls.restore_window()
+        m = re.match(r'^(fecha|fechar|close)\s+(a janela|janela|window|aba|tab|programa|app| aplicativo)', t)
+        if m: return cls.close_window()
+
+        # ── 3.2 Volume dynamic ──
+        m = re.match(r'^(aumenta|sobe|subir|increase|raise|up)\s+(o )?(volume|som|audio|sound)', t)
+        if m: return cls.volume("up")
+        m = re.match(r'^(diminui|abaixa|baixar|decrease|lower|down)\s+(o )?(volume|som|audio|sound)', t)
+        if m: return cls.volume("down")
+        m = re.match(r'^(muta|mutar|mude|mute|silencia|silenciar|silencie|desliga o som|sem som|no sound)\s*(o )?(volume|som|audio|sound)?', t)
+        if m: return cls.volume("mute")
+
+        # ── 3.3 Search patterns ──
+        m = re.match(r'^(pesquis(a|e|ar)|search|google|busque|buscar|procure|procurar|ache|achar|look up|pesquisar|pesquise|procure por|busque por|pesquise por)\s+(.+)', t)
+        if m: return cls.google(m.group(3).strip())
+
+        # ── 3.4 YouTube patterns ──
+        m = re.match(r'^(youtube|vídeo|video|toque|toca|toque|reproduza|reproduz|assista|assiste|video no youtube|filme|série|serie|ponha no youtube|coloque no youtube)\s+(.+)', t)
+        if m: return cls.youtube(m.group(2).strip())
+
+        # ── 3.5 Play music patterns ──
+        m = re.match(r'^(toque|toca|reproduza|reproduz|coloque|coloca|ponha|ponha|play)\s+(música|musica|song|music|de |do |da )?\s*(.+)', t)
+        if m:
+            query = m.group(3).strip()
+            if any(w in t for w in ("youtube", "vídeo", "video")):
+                return cls.youtube(query)
+            return MediaController.play_spotify(query)
+
+        # ── 3.6 Game launch patterns ──
+        m = re.match(r'^(jog(o|ue|ar)|play|rod(e|ar)|inicie o jogo|start game|abre o jogo|abra o jogo|joga)\s+(.+)', t)
+        if m:
+            target = m.group(4).strip()
+            # Check if it looks like a game
+            game_keywords = ("valorant", "fortnite", "minecraft", "cs2", "csgo", "gta", "apex",
+                           "league", "dota", "pubg", "roblox", "cyberpunk", "elden",
+                           "hogwarts", "red dead", "witcher", "skyrim", "doom",
+                           "diablo", "overwatch", "genshin", "starfield", "baldur",
+                           "halo", "forza", "fifa", "ea fc", "rainbow",
+                           "assassin", "metro", "resident", "silent hill",
+                           "palworld", "lethal company", "helldivers", "manor lords",
+                           "satisfactory", "deep rock", "factorio", "rimworld",
+                           "terraria", "stardew", "hollow knight", "cuphead",
+                           "disco elysium", "outer wilds", "hades", "valheim",
+                           "subnautica", "no man", "kerbal", "ark", "rust",
+                           "liar", "content warning")
+            if any(g in target for g in game_keywords):
+                return cls.launch_game(target)
+
+        # ══════════════════════════════════════════════════════════════════
+        # 4. SYSTEM COMMANDS (exact phrases)
+        # ══════════════════════════════════════════════════════════════════
+
+        # ── 4.1 Power ──
+        # Use word-boundary regex to avoid false positives like "não desligar o wifi"
+        # REMOVED: shutdown/restart from PCController smart_action
+        # These are handled ONLY through _local_answer with SecurityGuard confirmation
+        if re.search(r'\b(dormir|sleep|hibernar|hibernate|soneca)\b', t):
+            if not any(neg in t for neg in ("não", "nao", "don't")):
+                if len(t) <= 20 or any(w in t for w in ("o pc", "computador", "o computador", "pc")):
+                    return cls.sleep_pc()
+        if re.search(r'\b(bloquear?|lock|travar?)\b', t):
+            if not any(neg in t for neg in ("não", "nao", "don't")):
+                if len(t) <= 20 or any(w in t for w in ("o pc", "computador", "o computador", "pc", "tela")):
+                    return cls.lock_pc()
+
+        # ── 4.2 Screenshot ──
+        if any(w in t for w in ("screenshot", "captura de tela", "print screen",
+                                 "tira print", "tirar print", "print", "screen",
+                                 "foto da tela", "imagem da tela", "capture")):
             return cls.screenshot()
 
-        # ── Lock/sleep/shutdown ──
-        if t in ("bloqueia", "lock", "bloquear pc", "trava pc"):
-            return cls.lock_pc()
-        if t in ("dormir", "sleep", "hibernar", "hibernate"):
-            return cls.sleep_pc()
+        # ── 4.3 Clipboard ──
+        m = re.match(r'^(copiar|copie|copy)\s+(.+)', t)
+        if m: return cls._clipboard_copy(m.group(2))
+        m = re.match(r'^(colar|cole|paste)\s*(.+)?', t)
+        if m: return cls._clipboard_paste()
+        m = re.match(r'^(limpar|limpe|clear)\s*(clipboard|area de transferencia|area de transferência)?', t)
+        if m: return cls._clipboard_clear()
 
-        return None  # No smart action matched
+        # ── 4.4 Keyboard shortcuts ──
+        if any(w in t for w in ("ctrl c", "copiar selecionado", "copy selected")):
+            return cls._hotkey("ctrl", "c")
+        if any(w in t for w in ("ctrl v", "colar clipboard", "paste clipboard")):
+            return cls._hotkey("ctrl", "v")
+        if any(w in t for w in ("ctrl x", "recortar", "cut")):
+            return cls._hotkey("ctrl", "x")
+        if any(w in t for w in ("ctrl z", "desfazer", "undo")):
+            return cls._hotkey("ctrl", "z")
+        if any(w in t for w in ("ctrl y", "refazer", "redo")):
+            return cls._hotkey("ctrl", "y")
+        if any(w in t for w in ("ctrl s", "salvar", "save")):
+            return cls._hotkey("ctrl", "s")
+        if any(w in t for w in ("ctrl a", "selecionar tudo", "select all")):
+            return cls._hotkey("ctrl", "a")
+        if any(w in t for w in ("alt tab", "alternar janelas", "switch windows")):
+            return cls._hotkey("alt", "tab")
+        if any(w in t for w in ("alt f4", "fechar programa", "close program")):
+            return cls._hotkey("alt", "f4")
+        if any(w in t for w in ("ctrl w", "fechar aba", "close tab")):
+            return cls._hotkey("ctrl", "w")
+        if any(w in t for w in ("ctrl t", "nova aba", "new tab")):
+            return cls._hotkey("ctrl", "t")
+        if any(w in t for w in ("ctrl shift t", "restaurar aba", "reopen tab")):
+            return cls._hotkey("ctrl", "shift", "t")
+        if any(w in t for w in ("ctrl shift n", "aba anonima", "incognito")):
+            return cls._hotkey("ctrl", "shift", "n")
+        if any(w in t for w in ("ctrl l", "barra de endereco", "address bar")):
+            return cls._hotkey("ctrl", "l")
+        if any(w in t for w in ("ctrl r", "recarregar", "refresh", "reload")):
+            return cls._hotkey("ctrl", "r")
+        if any(w in t for w in ("f5", "recarregar pagina", "refresh page")):
+            return cls._hotkey("f5")
+        if any(w in t for w in ("ctrl shift esc", "abrir gerenciador de tarefas")):
+            return cls._hotkey("ctrl", "shift", "esc")
+        if any(w in t for w in ("win", "windows key", "menu inicio", "start menu")):
+            return cls._hotkey("win")
+        if any(w in t for w in ("win d", "mostrar desktop", "show desktop")):
+            return cls._hotkey("win", "d")
+        if any(w in t for w in ("win e", "explorador", "file explorer")):
+            return cls._hotkey("win", "e")
+        if any(w in t for w in ("win l", "bloquear pc", "lock pc")):
+            return cls._hotkey("win", "l")
+        if any(w in t for w in ("win i", "configuracoes", "settings")):
+            return cls._hotkey("win", "i")
+        if any(w in t for w in ("win r", "executar", "run dialog")):
+            return cls._hotkey("win", "r")
+        if any(w in t for w in ("win p", "projetar", "project display")):
+            return cls._hotkey("win", "p")
+        if any(w in t for w in ("win a", "centro de acoes", "action center")):
+            return cls._hotkey("win", "a")
+        if any(w in t for w in ("win v", "historico clipboard", "clipboard history")):
+            return cls._hotkey("win", "v")
+        if any(w in t for w in ("win shift s", "recorte", "snipping")):
+            return cls._hotkey("win", "shift", "s")
+
+        # ── 4.5 Browser navigation ──
+        if any(w in t for w in ("voltar", "back", "go back", "page back")):
+            return cls._hotkey("alt", "left")
+        if any(w in t for w in ("avancar", "forward", "go forward", "page forward")):
+            return cls._hotkey("alt", "right")
+        if any(w in t for w in ("recarregar pagina", "refresh page", "reload page", "atualizar pagina")):
+            return cls._hotkey("f5")
+        if any(w in t for w in ("aba anterior", "previous tab")):
+            return cls._hotkey("ctrl", "shift", "tab")
+        if any(w in t for w in ("proxima aba", "next tab")):
+            return cls._hotkey("ctrl", "tab")
+        if any(w in t for w in ("ir para cima", "scroll to top", "topo da pagina")):
+            return cls._hotkey("ctrl", "home")
+        if any(w in t for w in ("ir para baixo", "scroll to bottom", "fim da pagina")):
+            return cls._hotkey("ctrl", "end")
+        if any(w in t for w in ("zoom in", "ampliar", "aumentar zoom", "zoom +")):
+            return cls._hotkey("ctrl", "=")
+        if any(w in t for w in ("zoom out", "reduzir", "diminuir zoom", "zoom -")):
+            return cls._hotkey("ctrl", "-")
+        if any(w in t for w in ("zoom normal", "reset zoom", "100%")):
+            return cls._hotkey("ctrl", "0")
+
+        # ── 4.6 Text editing ──
+        if any(w in t for w in ("selecionar palavra", "select word")):
+            return cls._hotkey("ctrl", "shift", "right")
+        if any(w in t for w in ("ir para inicio da linha", "home")):
+            return cls._hotkey("home")
+        if any(w in t for w in ("ir para fim da linha", "end")):
+            return cls._hotkey("end")
+        if any(w in t for w in ("ir para inicio do documento", "ctrl home")):
+            return cls._hotkey("ctrl", "home")
+        if any(w in t for w in ("ir para fim do documento", "ctrl end")):
+            return cls._hotkey("ctrl", "end")
+        if any(w in t for w in ("delete", "deletar caractere", "apagar caractere")):
+            return cls._hotkey("delete")
+        if any(w in t for w in ("backspace", "apagar", "apagar para tras")):
+            return cls._hotkey("backspace")
+        if any(w in t for w in ("tab", "indentar", "tabular")):
+            return cls._hotkey("tab")
+        if any(w in t for w in ("enter", "pressionar enter", "nova linha")):
+            return cls._hotkey("enter")
+        if any(w in t for w in ("escape", "esc", "cancelar")):
+            return cls._hotkey("escape")
+
+        # ── 4.7 System info ──
+        if any(w in t for w in ("horas", "hora", "que horas sao", "que horas são",
+                                 "hora atual", "horario", "horário", "what time")):
+            now = datetime.now().strftime("%H:%M")
+            return f"São {now}."
+        if any(w in t for w in ("data", "dia", "que dia e", "que dia é",
+                                 "data atual", "what date", "what day")):
+            now = datetime.now().strftime("%d/%m/%Y")
+            return f"Hoje é {now}."
+        if any(w in t for w in ("data e hora", "data e horario", "data e horário",
+                                 "quando", "timestamp")):
+            now = datetime.now().strftime("%d/%m/%Y %H:%M")
+            return f"Data e hora: {now}."
+        if any(w in t for w in ("dia da semana", "que dia", "what day of week")):
+            days = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"]
+            day = days[datetime.now().weekday()]
+            return f"Hoje é {day}-feira."
+
+        # ── 4.8 Quick math ──
+        m = re.match(r'(quanto|calculate|calc|calcule|calcula|math)\s+(.+)', t)
+        if m:
+            expr = m.group(2).strip()
+            try:
+                # Safe eval for basic math only
+                allowed = set('0123456789+-*/().% ')
+                if all(c in allowed for c in expr):
+                    result = eval(expr)
+                    return f"{expr} = {result}"
+            except Exception:
+                pass
+        # Direct math expression
+        m = re.match(r'^([\d\s+\-*/().%]+)$', t)
+        if m and any(op in t for op in ('+', '-', '*', '/', '%')):
+            try:
+                result = eval(t)
+                return f"{t} = {result}"
+            except Exception:
+                pass
+
+        # ── 4.9 Translate hint ──
+        m = re.match(r'(traduz|translate|traduza|traduzir)\s+(.+)', t)
+        if m:
+            query = m.group(2).strip()
+            return cls.open_url(f"https://translate.google.com/?sl=auto&tl=pt&text={urllib.parse.quote_plus(query)}")
+
+        # ── 4.10 Weather ──
+        if any(w in t for w in ("clima", "tempo", "weather", "tempo hoje",
+                                 "como esta o tempo", "como está o tempo")):
+            return cls.open_url("https://weather.com")
+        m = re.match(r'(clima|tempo|weather)\s+(em|in|de|do|da)\s+(.+)', t)
+        if m:
+            city = m.group(3).strip()
+            return cls.open_url(f"https://weather.com/search?query={urllib.parse.quote_plus(city)}")
+
+        # ── 4.11 News ──
+        if any(w in t for w in ("noticias", "notícias", "news", "ultimas noticias",
+                                 "últimas notícias", "o que esta acontecendo")):
+            return cls.open_url("https://news.google.com")
+        m = re.match(r'(noticias|notícias|news)\s+(sobre|about|de|do|da)\s+(.+)', t)
+        if m:
+            query = m.group(3).strip()
+            return cls.google(f"noticias {query}")
+
+        # ── 4.12 Shopping ──
+        m = re.match(r'(comprar|buy|buy|loja|store|mercado|market)\s+(.+)', t)
+        if m:
+            query = m.group(2).strip()
+            return cls.google(f"comprar {query}")
+
+        # ── 4.13 Map/Directions ──
+        m = re.match(r'(como chegar|direcoes|direção|direções|route|mapa|map|ir para|vá para|como ir)\s+(.+)', t)
+        if m:
+            dest = m.group(2).strip()
+            return cls.open_url(f"https://www.google.com/maps/dir/?api=1&destination={urllib.parse.quote_plus(dest)}")
+
+        # ── 4.14 Timer/Alarm ──
+        m = re.match(r'(timer|cronometro|cronômetro|alarme|alarm|lembrete|reminder)\s+(\d+)\s*(minuto|minutos|segundo|segundos|hora|horas|s|m|h)?', t)
+        if m:
+            amount = int(m.group(2))
+            unit = m.group(3) or "minutos"
+            if "hora" in unit:
+                amount *= 3600
+            elif "minuto" in unit:
+                amount *= 60
+            return cls._set_timer(amount)
+
+        # ── 4.15 Open file/folder ──
+        m = re.match(r'(abra|abre|open|open folder)\s+(a pasta|pasta|folder|o arquivo|arquivo|file)\s+(.+)', t)
+        if m:
+            path = m.group(3).strip()
+            return cls._open_path(path)
+
+        # ── 4.16 Create file/folder ──
+        m = re.match(r'(crie|criar|create|nova|novo|new)\s+(pasta|folder|arquivo|file)\s+(.+)', t)
+        if m:
+            name = m.group(3).strip()
+            return cls._create_path(name, "folder" if "pasta" in t or "folder" in t else "file")
+
+        # ── 4.17 Delete file/folder ──
+        m = re.match(r'(delete|deletar|delete|excluir|exclua|remova|remover|apague|apagar)\s+(o |a )?\s*(arquivo|pasta|file|folder)?\s*(.+)', t)
+        if m:
+            path = m.group(4).strip()
+            return cls._delete_path(path)
+
+        # ── 4.18 Run command ──
+        m = re.match(r'(execute|executar|run|cmd|comando|command)\s+(.+)', t)
+        if m:
+            cmd = m.group(2).strip()
+            return cls._run_command(cmd)
+
+        # ── 4.19 Process management ──
+        if any(w in t for w in ("processos", "processes", "processos ativos", "tasklist")):
+            return cls._list_processes()
+        m = re.match(r'(matar|mate|kill|encerrar|encerra|finalizar|finaliza|fechar|close)\s+(o |a )?\s*(processo|process|programa|program|app)?\s*(.+)', t)
+        if m:
+            target = m.group(4).strip()
+            return cls._kill_process(target)
+
+        # ── 4.20 WiFi ──
+        if any(w in t for w in ("wifi list", "redes wifi", "wifi networks", "listar wifi")):
+            return cls._wifi_list()
+        m = re.match(r'(conectar|connect|conecta)\s+(wifi|rede|network|wi-fi)\s+(.+)', t)
+        if m:
+            ssid = m.group(3).strip()
+            return cls._wifi_connect(ssid)
+
+        # ── 4.21 Bluetooth ──
+        if any(w in t for w in ("bluetooth", "emparelhar", "pair bluetooth")):
+            return cls._open_bluetooth()
+
+        # ── 4.22 Display/Brightness ──
+        m = re.match(r'(brilho|brightness|luminosidade)\s+(\d+)', t)
+        if m:
+            level = int(m.group(2))
+            return cls._set_brightness(level)
+
+        # ── 4.23 Screensaver/Lock ──
+        if any(w in t for w in ("screensaver", "protetor de tela")):
+            return cls._start_screensaver()
+
+        # ── 4.24 Empty recycle bin ──
+        if any(w in t for w in ("esvaziar lixeira", "empty recycle", "limpar lixeira")):
+            return cls._empty_recycle()
+
+        # ── 4.25 System restore point ──
+        if any(w in t for w in ("ponto de restauracao", "restore point", "criar restore point")):
+            return cls._create_restore_point()
+
+        # ── 4.26 Windows updates ──
+        if any(w in t for w in ("atualizacoes", "updates", "windows update", "verificar atualizacoes")):
+            return cls._check_updates()
+
+        # ── 4.27 Disk space ──
+        if any(w in t for w in ("espaco em disco", "disk space", "armazenamento",
+                                 "quanto espaco", "espaço em disco", "storage")):
+            return cls._disk_info()
+
+        # ── 4.28 Network info ──
+        if any(w in t for w in ("meu ip", "my ip", "endereco ip", "ip address",
+                                 "ip publico", "public ip")):
+            return cls._get_ip()
+        if any(w in t for w in ("speed test", "teste de velocidade", "velocidade da internet",
+                                 "internet speed", "velocidade da rede")):
+            return cls.open_url("https://fast.com")
+
+        # ── 4.29 Battery ──
+        if any(w in t for w in ("bateria", "battery", "nivel da bateria", "battery level")):
+            return cls._battery_info()
+
+        # ── 4.30 Quick notes ──
+        m = re.match(r'(anotar|anote|nota|note|salvar nota|save note|escrever|escreva)\s+(.+)', t)
+        if m:
+            text = m.group(2).strip()
+            return cls._save_note(text)
+
+        # ── 4.31 Calculator (open) ──
+        if any(w in t for w in ("calculadora", "calculator", "calc", "abrir calculadora")):
+            return cls.open_app("calc")
+
+        # ── 4.32 Paint (open) ──
+        if any(w in t for w in ("paint", "desenhar", "draw")):
+            return cls.open_app("mspaint")
+
+        # ── 4.33 Notepad (open) ──
+        if any(w in t for w in ("bloco de notas", "notepad", "abrir notepad")):
+            return cls.open_app("notepad")
+
+        # ── 4.34 File Explorer (open) ──
+        if any(w in t for w in ("explorador", "explorer", "file explorer",
+                                 "gerenciador de arquivos", "abrir pasta")):
+            return cls.open_app("explorer")
+
+        # ── 4.35 Terminal/CMD (open) ──
+        if any(w in t for w in ("terminal", "cmd", "prompt", "command prompt",
+                                 "abrir terminal", "abrir cmd")):
+            return cls.open_app("wt")
+
+        # ── 4.36 PowerShell (open) ──
+        if any(w in t for w in ("powershell", "ps", "abrir powershell")):
+            return cls.open_app("powershell")
+
+        # ── 4.37 Task Manager (open) ──
+        if any(w in t for w in ("gerenciador de tarefas", "task manager",
+                                 "abrir tarefas", "tarefas ativas")):
+            return cls.open_app("taskmgr")
+
+        # ── 4.38 Settings (open) ──
+        if any(w in t for w in ("configuracoes", "configurações", "settings",
+                                 "abrir configuracoes", "opcoes")):
+            return cls.open_app("ms-settings:")
+
+        # ── 4.39 Control Panel (open) ──
+        if any(w in t for w in ("painel de controle", "control panel")):
+            return cls.open_app("control")
+
+        # ── 4.40 Device Manager (open) ──
+        if any(w in t for w in ("gerenciador de dispositivos", "device manager")):
+            return cls.open_app("devmgmt.msc")
+
+        # ── 4.41 Disk Management (open) ──
+        if any(w in t for w in ("gerenciamento de disco", "disk management")):
+            return cls.open_app("diskmgmt.msc")
+
+        # ── 4.42 Registry (open) ──
+        if any(w in t for w in ("registro", "registry", "regedit")):
+            return cls.open_app("regedit")
+
+        # ── 4.43 Services (open) ──
+        if any(w in t for w in ("servicos", "services", "abrir servicos")):
+            return cls.open_app("services.msc")
+
+        # ── 4.44 Event Viewer (open) ──
+        if any(w in t for w in ("event viewer", "visualizador de eventos")):
+            return cls.open_app("eventvwr")
+
+        # ── 4.45 Resource Monitor (open) ──
+        if any(w in t for w in ("monitor de recursos", "resource monitor", "performance")):
+            return cls.open_app("resmon")
+
+        # ── 4.46 System Info (open) ──
+        if any(w in t for w in ("informacoes do sistema", "system info", "msinfo32")):
+            return cls.open_app("msinfo32")
+
+        # ── 4.47 Firewall (open) ──
+        if any(w in t for w in ("firewall", "firewall do windows")):
+            return cls.open_app("wf.msc")
+
+        # ── 4.48 Disk Cleanup (open) ──
+        if any(w in t for w in ("limpeza de disco", "disk cleanup", "cleanmgr")):
+            return cls.open_app("cleanmgr")
+
+        # ── 4.49 Defragment (open) ──
+        if any(w in t for w in ("desfragmentar", "defrag", "otimizar drives")):
+            return cls.open_app("dfrgui")
+
+        # ── 4.50 Microsoft Store (open) ──
+        if any(w in t for w in ("loja", "microsoft store", "store", "app store")):
+            return cls.open_app("ms-windows-store:")
+
+        # ── 4.51 Photos (open) ──
+        if any(w in t for w in ("fotos", "photos", "abrir fotos")):
+            return cls.open_app("ms-photos:")
+
+        # ── 4.52 Camera (open) ──
+        if any(w in t for w in ("camera", "câmera", "abrir camera")):
+            return cls.open_app("microsoft.windows.camera:")
+
+        # ── 4.53 Snipping Tool (open) ──
+        if any(w in t for w in ("snipping tool", "ferramenta de captura", "recorte")):
+            return cls.open_app("ms-screenclip:")
+
+        # ── 4.54 Clock/Alarms (open) ──
+        if any(w in t for w in ("relogio", "relógio", "clock", "alarms", "alarmes")):
+            return cls.open_app("ms-clock:")
+
+        # ── 4.55 Sticky Notes (open) ──
+        if any(w in t for w in ("notas", "sticky notes", "notas adesivas")):
+            return cls.open_app("ms-stickynotes:")
+
+        # ── 4.56 Maps (open) ──
+        if any(w in t for w in ("mapas", "maps", "bing maps")):
+            return cls.open_app("bingmaps:")
+
+        # ── 4.57 3D Viewer (open) ──
+        if any(w in t for w in ("3d viewer", "visualizador 3d")):
+            return cls.open_app("3dviewer:")
+
+        # ── 4.58 Accessibility (open) ──
+        if any(w in t for w in ("acessibilidade", "accessibility")):
+            return cls.open_app("ms-settings:easeofaccess")
+
+        # ── 4.59 WiFi Settings (open) ──
+        if any(w in t for w in ("configurar wifi", "wifi settings", "config wifi")):
+            return cls.open_app("ms-settings:network-wifi")
+
+        # ── 4.60 Bluetooth Settings (open) ──
+        if any(w in t for w in ("configurar bluetooth", "bluetooth settings")):
+            return cls.open_app("ms-settings:bluetooth")
+
+        # ── 4.61 Display Settings (open) ──
+        if any(w in t for w in ("configurar tela", "display settings", "resolucao")):
+            return cls.open_app("ms-settings:display")
+
+        # ── 4.62 Sound Settings (open) ──
+        if any(w in t for w in ("configurar som", "sound settings", "config som")):
+            return cls.open_app("ms-settings:sound")
+
+        # ── 4.63 Battery Settings (open) ──
+        if any(w in t for w in ("configurar bateria", "battery settings")):
+            return cls.open_app("ms-settings:batterysaver")
+
+        # ── 4.64 Privacy Settings (open) ──
+        if any(w in t for w in ("privacidade", "privacy", "configurar privacidade")):
+            return cls.open_app("ms-settings:privacy")
+
+        # ── 4.65 Account Settings (open) ──
+        if any(w in t for w in ("conta", "account", "minha conta", "my account")):
+            return cls.open_app("ms-settings:accounts")
+
+        # ── 4.66 Windows Update (open) ──
+        if any(w in t for w in ("atualizacao", "atualização", "windows update", "update")):
+            return cls.open_app("ms-settings:windowsupdate")
+
+        # ── 4.67 Windows Defender (open) ──
+        if any(w in t for w in ("antivirus", "windows defender", "defender")):
+            return cls.open_app("ms-settings:windowsdefender")
+
+        # ══════════════════════════════════════════════════════════════════
+        # 5. HELPER METHODS (for complex actions)
+        # ══════════════════════════════════════════════════════════════════
+
+    # --- Helper methods for smart routing ---
+
+    @classmethod
+    def _hotkey(cls, *keys) -> str:
+        """Press a keyboard shortcut."""
+        try:
+            import pyautogui
+            pyautogui.hotkey(*keys)
+            return f"Hotkey: {'+'.join(keys)}"
+        except Exception as e:
+            return f"Erro ao pressionar {'+'.join(keys)}: {e}"
+
+    @classmethod
+    def _clipboard_copy(cls, text: str = "") -> str:
+        """Copy text to clipboard."""
+        try:
+            import pyperclip
+            if text:
+                pyperclip.copy(text)
+            else:
+                import pyautogui
+                pyautogui.hotkey('ctrl', 'c')
+            return "Copiado para clipboard."
+        except ImportError:
+            try:
+                import pyautogui
+                pyautogui.hotkey('ctrl', 'c')
+                return "Copiado."
+            except Exception:
+                return "Erro ao copiar."
+
+    @classmethod
+    def _clipboard_paste(cls) -> str:
+        """Paste from clipboard."""
+        try:
+            import pyautogui
+            pyautogui.hotkey('ctrl', 'v')
+            return "Colado."
+        except Exception:
+            return "Erro ao colar."
+
+    @classmethod
+    def _clipboard_clear(cls) -> str:
+        """Clear clipboard."""
+        try:
+            import subprocess
+            subprocess.run(['powershell', '-Command', 'Set-Clipboard -Value $null'],
+                          capture_output=True, timeout=5)
+            return "Clipboard limpo."
+        except Exception:
+            return "Erro ao limpar clipboard."
+
+    @classmethod
+    def _set_timer(cls, seconds: int) -> str:
+        """Set a countdown timer."""
+        try:
+            # Open Windows Clock app with timer
+            os.system(f'start ms-clock:timer-0-{seconds}')
+            mins = seconds // 60
+            secs = seconds % 60
+            if mins > 0:
+                return f"Timer de {mins}m {secs}s iniciado."
+            return f"Timer de {secs}s iniciado."
+        except Exception:
+            return "Erro ao criar timer."
+
+    @classmethod
+    def _open_path(cls, path: str) -> str:
+        """Open a file or folder."""
+        try:
+            expanded = os.path.expandvars(path)
+            if os.path.exists(expanded):
+                os.startfile(expanded)
+                return f"Abrindo {path}..."
+            return f"Caminho não encontrado: {path}"
+        except Exception as e:
+            return f"Erro ao abrir {path}: {e}"
+
+    @classmethod
+    def _create_path(cls, name: str, kind: str) -> str:
+        """Create a file or folder."""
+        try:
+            downloads = Path.home() / "Downloads"
+            if kind == "folder":
+                (downloads / name).mkdir(exist_ok=True)
+                return f"Pasta '{name}' criada em Downloads."
+            else:
+                (downloads / name).touch()
+                return f"Arquivo '{name}' criado em Downloads."
+        except Exception as e:
+            return f"Erro ao criar {name}: {e}"
+
+    @classmethod
+    def _delete_path(cls, path: str) -> str:
+        """Delete a file or folder."""
+        try:
+            expanded = os.path.expandvars(path)
+            p = Path(expanded)
+            if p.is_dir():
+                import shutil
+                shutil.rmtree(str(p))
+            else:
+                p.unlink()
+            return f"Deletado: {path}"
+        except Exception as e:
+            return f"Erro ao deletar {path}: {e}"
+
+    @classmethod
+    def _run_command(cls, cmd: str) -> str:
+        """Run a system command."""
+        try:
+            result = subprocess.run(cmd, shell=True, capture_output=True,
+                                   text=True, timeout=30,
+                                   creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            output = result.stdout.strip()
+            if output:
+                return output[:2000]
+            return f"Comando executado (exit {result.returncode})."
+        except Exception as e:
+            return f"Erro ao executar comando: {e}"
+
+    @classmethod
+    def _list_processes(cls) -> str:
+        """List running processes."""
+        try:
+            result = subprocess.run('tasklist /FO CSV /NH', shell=True,
+                                   capture_output=True, text=True, timeout=10,
+                                   creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            lines = result.stdout.strip().split('\n')[:30]
+            return f"Processos ativos ({len(lines)}):\n" + '\n'.join(lines)
+        except Exception as e:
+            return f"Erro ao listar processos: {e}"
+
+    @classmethod
+    def _kill_process(cls, name: str) -> str:
+        """Kill a process."""
+        try:
+            result = subprocess.run(f'taskkill /F /IM {name}.exe', shell=True,
+                                   capture_output=True, text=True, timeout=10,
+                                   creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            if result.returncode == 0:
+                return f"Processo {name} finalizado."
+            return f"Não encontrei o processo {name}."
+        except Exception as e:
+            return f"Erro ao finalizar {name}: {e}"
+
+    @classmethod
+    def _wifi_list(cls) -> str:
+        """List WiFi networks."""
+        try:
+            result = subprocess.run('netsh wlan show networks', shell=True,
+                                   capture_output=True, text=True, timeout=10,
+                                   creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            return result.stdout[:2000] or "Nenhuma rede encontrada."
+        except Exception as e:
+            return f"Erro ao listar WiFi: {e}"
+
+    @classmethod
+    def _wifi_connect(cls, ssid: str) -> str:
+        """Connect to WiFi network."""
+        try:
+            result = subprocess.run(f'netsh wlan connect name="{ssid}"', shell=True,
+                                   capture_output=True, text=True, timeout=15,
+                                   creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            return f"Conectando a {ssid}..."
+        except Exception as e:
+            return f"Erro ao conectar: {e}"
+
+    @classmethod
+    def _open_bluetooth(cls) -> str:
+        """Open Bluetooth settings."""
+        return cls.open_app("ms-settings:bluetooth")
+
+    @classmethod
+    def _set_brightness(cls, level: int) -> str:
+        """Set display brightness."""
+        try:
+            import wmi
+            w = wmi.WMI(namespace='wmi')
+            w.WmiMonitorBrightnessMethods().WmiSetBrightness(level, 0)
+            return f"Brilho ajustado para {level}%."
+        except ImportError:
+            return f"Ajuste de brilho requer WMI. Use as teclas de brilho do teclado."
+        except Exception as e:
+            return f"Erro ao ajustar brilho: {e}"
+
+    @classmethod
+    def _start_screensaver(cls) -> str:
+        """Start screensaver."""
+        try:
+            ctypes.windll.user32.SendMessageW(0xFFFF, 0x0112, 0xF140, 0)  # SC_SCREENSAVE
+            return "Protetor de tela iniciado."
+        except Exception:
+            return "Erro ao iniciar protetor de tela."
+
+    @classmethod
+    def _empty_recycle(cls) -> str:
+        """Empty recycle bin."""
+        try:
+            flags = 1 | 2 | 4  # NOCONFIRM | NOPROGRESSUI | NOSOUND
+            ctypes.windll.shell32.SHEmptyRecycleBinW(None, None, flags)
+            return "Lixeira esvaziada."
+        except Exception as e:
+            return f"Erro ao esvaziar lixeira: {e}"
+
+    @classmethod
+    def _create_restore_point(cls) -> str:
+        """Create system restore point."""
+        try:
+            result = subprocess.run(
+                'powershell -Command "Checkpoint-Computer -Description \"Restore Point\" -RestorePointType MODIFY_SETTINGS"',
+                shell=True, capture_output=True, text=True, timeout=120,
+                creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            return "Ponto de restauração criado."
+        except Exception as e:
+            return f"Erro ao criar ponto de restauração: {e}"
+
+    @classmethod
+    def _check_updates(cls) -> str:
+        """Check Windows updates."""
+        return cls.open_app("ms-settings:windowsupdate")
+
+    @classmethod
+    def _disk_info(cls) -> str:
+        """Get disk space info."""
+        try:
+            result = subprocess.run('wmic logicaldisk get size,freespace,caption', shell=True,
+                                   capture_output=True, text=True, timeout=10,
+                                   creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            return result.stdout[:1500] or "Erro ao obter info do disco."
+        except Exception as e:
+            return f"Erro: {e}"
+
+    @classmethod
+    def _get_ip(cls) -> str:
+        """Get public IP address."""
+        try:
+            import urllib.request
+            ip = urllib.request.urlopen('https://api.ipify.org', timeout=5).read().decode()
+            return f"Seu IP público: {ip}"
+        except Exception:
+            return "Erro ao obter IP."
+
+    @classmethod
+    def _battery_info(cls) -> str:
+        """Get battery info."""
+        try:
+            result = subprocess.run(
+                'powershell -Command "Get-CimInstance Win32_Battery | Select-Object EstimatedChargeRemaining, BatteryStatus | Format-List"',
+                shell=True, capture_output=True, text=True, timeout=10,
+                creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            return result.stdout[:500] or "Desktop (sem bateria)."
+        except Exception:
+            return "Erro ao obter info da bateria."
+
+    @classmethod
+    def _save_note(cls, text: str) -> str:
+        """Save a quick note."""
+        try:
+            notes_dir = Path.home() / "Documents" / "GrandeSageNotes"
+            notes_dir.mkdir(exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            note_file = notes_dir / f"note_{timestamp}.txt"
+            note_file.write_text(text, encoding='utf-8')
+            return f"Nota salva: {note_file}"
+        except Exception as e:
+            return f"Erro ao salvar nota: {e}"
 
 
 # =========================================================================

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Screen Context
+Elívea — Screen Context
 ===============================
 Captura a tela e analisa o conteudo usando o LLM.
 """
@@ -159,7 +159,7 @@ class ScreenContext:
 
         # Try image analyzer first
         try:
-            from GreatSageAI_Clone.core.image_analyzer import analyzer as img_analyzer
+            from core.image_analyzer import analyzer as img_analyzer
             result = img_analyzer.analyze_image(
                 path,
                 prompt="Analise esta captura de tela. Descreva o que voce ve, identifique programas abertos, erros visiveis, e sugira acoes relevantes."

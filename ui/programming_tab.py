@@ -1,5 +1,5 @@
 """
-Great Sage AI — Programming Tab
+Elívea — Programming Tab
 ================================
 Aba integrada na janela principal com:
   • Mini-editor com syntax highlighting
@@ -134,8 +134,8 @@ class ProgrammingTab(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._agent_handler = None # set by GreatSageMainWindow
-        self._execute_handler = None # set by GreatSageMainWindow
+        self._agent_handler = None # set by EliveaMainWindow
+        self._execute_handler = None # set by EliveaMainWindow
         self._current_file = None
         self._build_ui()
 
@@ -340,7 +340,7 @@ class ProgrammingTab(QWidget):
                 with tempfile.NamedTemporaryFile(mode="w", suffix=".py", delete=False, encoding="utf-8") as f:
                     f.write(code)
                     tmp = f.name
-                from GreatSageAI_Clone.core.code_analyzer import quick_analyze
+                from core.code_analyzer import quick_analyze
                 result = quick_analyze(tmp)
                 QTimer.singleShot(0, lambda: self.output.append_line(result, "#c9d1d9"))
                 os.unlink(tmp)

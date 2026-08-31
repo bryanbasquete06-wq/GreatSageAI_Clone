@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Permite executar com: python -m GreatSageAI_Clone"""
-from GreatSageAI_Clone.main import main
+"""Permite executar com: python -m EliveaAI_Clone"""
+from main import main
 
 if __name__ == "__main__":
     main()

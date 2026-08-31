@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Optional, Callable
 from dataclasses import dataclass
 
-logger = logging.getLogger("greatsage.vision")
+logger = logging.getLogger("elvea.vision")
 
 @dataclass
 class ImageAnalysis:
@@ -34,7 +34,7 @@ class ImageAnalyzer:
             import google.genai as genai
             api_key = os.environ.get("GEMINI_API_KEY", "")
             if not api_key:
-                from GreatSageAI_Clone.core.secret_manager import secrets
+                from EliveaAI_Clone.core.secret_manager import secrets
                 api_key = secrets.get("GEMINI_API_KEY") or ""
             if not api_key:
                 return None
@@ -51,7 +51,7 @@ class ImageAnalyzer:
             import groq
             api_key = os.environ.get("GROQ_API_KEY", "")
             if not api_key:
-                from GreatSageAI_Clone.core.secret_manager import secrets
+                from EliveaAI_Clone.core.secret_manager import secrets
                 api_key = secrets.get("GROQ_API_KEY") or ""
             if not api_key:
                 return None
@@ -251,7 +251,7 @@ class ImageAnalyzer:
     def analyze_screenshot(self, prompt: str = None, region: str = None) -> Optional[ImageAnalysis]:
         """Captura e analisa screenshot."""
         try:
-            from GreatSageAI_Clone.modules.screen_context import ScreenContext
+            from EliveaAI_Clone.modules.screen_context import ScreenContext
             try:
                 tmp = Path(tempfile.gettempdir()) / "sage_screenshot.png"
                 ScreenContext.capture_screenshot(str(tmp), region=region or "full")

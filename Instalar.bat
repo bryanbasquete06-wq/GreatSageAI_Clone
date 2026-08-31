@@ -32,7 +32,7 @@ if not exist "main.py" (
     echo.
     echo ========================================
     echo   Arquivos do Grande Sabio nao encontrados.
-    echo   Execute o Instalador_Great_Sage.exe
+    echo   Execute o Instalador_Elivea.exe
     echo   para baixar a IA primeiro.
     echo ========================================
     pause

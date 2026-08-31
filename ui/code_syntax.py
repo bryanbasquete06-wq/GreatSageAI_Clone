@@ -1,8 +1,8 @@
 """
-Great Sage AI — CodeDock Syntax Highlighter Engine
+Elívea — CodeDock Syntax Highlighter Engine
 =====================================================
 Highlighter de sintaxe leve (QSyntaxHighlighter) usado pelo editor da Ala de
-Programação. As cores seguem a paleta viva do tema ＜大賢者＞ (ui.qt_ui.C),
+Programação. As cores seguem a paleta viva do tema ＜Elivea＞ (ui.qt_ui.C),
 então o editor muda junto com os 5 temas em tempo real.
 
 Linguagens: Python, Java, Kotlin, C, C++, C#, Rust, Go, SQL, JS, TS, HTML,
@@ -239,7 +239,7 @@ def _make_fmt(color: str, bold: bool = False, italic: bool = False) -> QTextChar
 
 
 class CodeHighlighter(QSyntaxHighlighter):
-    """Highlighter multi-linguagem com cores do tema do Grande Sábio.
+    """Highlighter multi-linguagem com cores do tema do Elívea.
 
     Estados por bloco: 1 → dentro de comentário em bloco (/* */ ou <!-- -->);
     2 → dentro de string tripla ('''''').
@@ -265,9 +265,9 @@ class CodeHighlighter(QSyntaxHighlighter):
 
     @staticmethod
     def _theme_colors() -> dict:
-        """Paleta viva do Grande Sábio (lazy import para evitar ciclos)."""
+        """Paleta viva do Elívea (lazy import para evitar ciclos)."""
         try:
-            from GreatSageAI_Clone.ui.qt_ui import C
+            from ui.qt_ui import C
         except Exception:
             C = None
         if C is None:

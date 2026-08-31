@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Multi-language Support
+Elívea — Multi-language Support
 =======================================
 Permite que a IA responda em varios idiomas.
 """
@@ -64,7 +64,7 @@ class MultiLang:
             return ""
         return (
             f"\n\nIMPORTANTE: O usuario esta escrevendo em {lang_name}. "
-            f"Responda em {lang_name}, mas mantenha sua personalidade como Grande Sabio. "
+            f"Responda em {lang_name}, mas mantenha sua personalidade como Elívea. "
             f"Se o usuario pedir para voltar ao portugues, obedeça."
         )
 

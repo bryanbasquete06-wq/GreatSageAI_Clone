@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Auto-Updater
+Elívea — Auto-Updater
 ==============================
 Verificacao automatica de atualizacoes.
 """
@@ -39,7 +39,7 @@ class AutoUpdater:
         repo = repo or cls._REPO_URL
         try:
             url = f"{cls._GITHUB_API}/{repo}/releases/latest"
-            req = urllib.request.Request(url, headers={"User-Agent": "GreatSageAI"})
+            req = urllib.request.Request(url, headers={"User-Agent": "Elívea"})
             with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
             latest = data.get("tag_name", "").lstrip("v")
@@ -64,4 +64,4 @@ class AutoUpdater:
     @classmethod
     def get_status(cls) -> str:
         current = cls.get_current_version()
-        return f"Great Sage AI v{current}"
+        return f"Elivea v{current}"

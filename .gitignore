@@ -30,7 +30,7 @@ temp/
 logs/
 backups/
 desktop_exes/
-GreatSageTemp/
+EliveaTemp/
 .memory/
 browser_data/
 geckodriver.log

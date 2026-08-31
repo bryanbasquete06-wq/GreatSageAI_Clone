@@ -1,10 +1,10 @@
 """
-Great Sage AI — Tensura Holographic Interface (＜大贤者＞)
+Elívea — Tensura Holographic Interface (＜Elivea＞)
 ==========================================================
 Interface inspirada no anime "Tensei Shitara Slime Daitaiken" (Tensura):
 
-  • Círculo mágico do Grande Sábio: anel de runas rotativo, arcos
-    contrarrotativos, heptagrama de Raphael e núcleo pulsante
+  • Círculo mágico do Elívea: anel de runas rotativo, arcos
+    contrarrotativos, heptagrama de Elivea e núcleo pulsante
   • Visualizador radial de voz (RMS do microfone) ao redor do círculo
   • Chat em painéis holográficos azuis estilo "Ability Panel" do anime
   • Sequência de boot animada com linhas digitadas
@@ -65,7 +65,7 @@ except ImportError:
 
 THEMES: dict[str, dict[str, str]] = {
     "tensura_gold": dict(
-        name="Tensura Dourado ＜大贤者＞",
+        name="Tensura Dourado ＜Elivea＞",
         BG="#060913", PANEL="#131008", PANEL2="#1d180c", GHOST="#332708",
         BORDER="#5c4708", BORDER_B="#a8801c", BORDER_A="#7a5e10",
         PRI="#ffd24a", ACC="#ffedb0", ACC2="#f5a623", GOLD="#ffe27a",
@@ -73,7 +73,7 @@ THEMES: dict[str, dict[str, str]] = {
         TEXT_MED="#e0c98a", WHITE="#ffffff",
     ),
     "tensura": dict(
-        name="Tensura Blue ＜大贤者＞",
+        name="Tensura Blue ＜Elivea＞",
         BG="#020817", PANEL="#06122b", PANEL2="#0a1c3d", GHOST="#0e2c55",
         BORDER="#0f3a6e", BORDER_B="#1e5fa8", BORDER_A="#16457e",
         PRI="#4fd8ff", ACC="#aef0ff", ACC2="#22b8f0", GOLD="#ffd76a",
@@ -159,10 +159,10 @@ def set_windows_autostart(enable: bool) -> bool:
     try:
         import winreg
         key_path = r"Software\Microsoft\Windows\CurrentVersion\Run"
-        app_name = "GreatSageAI_Raphael"
+        app_name = "Elívea"
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_ALL_ACCESS)
         if enable:
-            app_script = Path(__file__).resolve().parent.parent / "great_sage_app.py"
+            app_script = Path(__file__).resolve().parent.parent / "elvea_app.py"
             winreg.SetValueEx(key, app_name, 0, winreg.REG_SZ, f'"{sys.executable}" "{app_script}"')
         else:
             try:
@@ -177,14 +177,14 @@ def set_windows_autostart(enable: bool) -> bool:
 
 
 # ===========================================================================
-# ＜大贤者＞ Magic Circle — the centerpiece
+# ＜Elivea＞ Magic Circle — the centerpiece
 # ===========================================================================
 
 RUNES = list("ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ")
 
 
 class MagicCircleWidget(QWidget):
-    """Great Sage magic circle: rune ring, counter-rotating arcs, heptagram,
+    """Elivea magic circle: rune ring, counter-rotating arcs, heptagram,
     pulsing core and radial mic visualizer — all animated at 30 fps."""
 
     def __init__(self, parent=None):
@@ -428,7 +428,7 @@ class MagicCircleWidget(QWidget):
                 p.drawArc(rect, int(ang * 16), int(arc_len * 16))
                 ang += arc_len + gap
 
-        # ---- heptagram (7/3 star) — Raphael's sigil
+        # ---- heptagram (7/3 star) — Elivea's sigil
         star_r = R * 0.545
         rot = self._star_rot
         pts = []
@@ -548,10 +548,10 @@ class MagicCircleWidget(QWidget):
                 qp(cx + r2 * math.cos(ang), cy + r2 * math.sin(ang)),
             )
 
-        # ---- title ＜大贤者＞
+        # ---- title ＜Elivea＞
         p.setPen(QPen(qcol(C.ACC, 235), 1))
         p.setFont(font_cjk(17))
-        p.drawText(QRectF(0, cy + R * 1.02, W, 30), Qt.AlignmentFlag.AlignCenter, "＜大贤者＞")
+        p.drawText(QRectF(0, cy + R * 1.02, W, 30), Qt.AlignmentFlag.AlignCenter, "＜Elivea＞")
         p.setFont(font_mono(9))
         p.setPen(QPen(qcol(C.PRI, 200), 1))
         p.drawText(QRectF(0, cy + R * 1.02 + 28, W, 16), Qt.AlignmentFlag.AlignCenter, "G R E A T   S A G E   —   R A P H A E L")
@@ -782,12 +782,12 @@ class ChatBubble(QFrame):
             }}
         """)
         if sage:
-            self.lbl_header.setText("『Great Sage』 ＜大贤者＞")
+            self.lbl_header.setText("『Elivea』 ＜Elivea＞")
             self.lbl_header.setStyleSheet(f"color: {C.PRI}; background: transparent; border: none;")
             self.lbl_body.setStyleSheet(f"color: {C.TEXT}; background: transparent; border: none;")
         else:
             try:
-                from GreatSageAI_Clone.core.persona import _load_user_name
+                from core.persona import _load_user_name
                 user = _load_user_name()
             except Exception:
                 user = "Mestre"
@@ -905,26 +905,22 @@ class StatusChip(QLabel):
 # Boot overlay — anime system startup
 # ===========================================================================
 
-BOOT_LINES = [
-    "＜大贤者＞ GREAT SAGE AI — RAPHAEL CLASS v3.0",
-    "",
-    "▶ Núcleo neural ........................ ONLINE",
-    "▶ Síntese de voz neural ............... ONLINE",
-    "▶ Pipeline de áudio unificado .......... ONLINE",
-    "▶ Whisper V3 Turbo (STT) .............. ONLINE",
-    "▶ Conversor de voz (Gisele Vechin) ..... ONLINE",
-    "▶ Memória do usuário ................. CARREGADA",
-    "▶ Módulos de automação ............... CARREGADOS",
-    "▶ Agente de código inteligente ........ ONLINE",
-    "▶ Motor de busca DuckDuckGo ........... ONLINE",
-    "▶ Otimizador de performance ........... ONLINE",
-    "",
-    "＜大贤者＞ Todos os sistemas operacionais.",
-    "＜大贤者＞ Pronta para servir, Mestre.",
+BOOT_STATUS = [
+    ("Núcleo neural", "ONLINE"),
+    ("Síntese de voz neural", "ONLINE"),
+    ("Pipeline de áudio unificado", "ONLINE"),
+    ("Whisper V3 Turbo (STT)", "ONLINE"),
+    ("Conversor de voz", "ONLINE"),
+    ("Memória do usuário", "CARREGADA"),
+    ("Módulos de automação", "CARREGADOS"),
+    ("Agente de código", "ONLINE"),
+    ("Motor de busca", "ONLINE"),
+    ("Otimizador de performance", "ONLINE"),
 ]
 
 
 class BootOverlay(QWidget):
+    """Cinematic boot sequence — 2.5s total, golden particles, rune ring, status cascade."""
     done = pyqtSignal()
 
     def __init__(self, parent: None | QWidget):
@@ -933,45 +929,97 @@ class BootOverlay(QWidget):
             self.setGeometry(parent.rect())
         self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
 
-        self._lines_shown: list[str] = []
-        self._current = ""
-        self._line_idx = 0
-        self._char_idx = 0
-        self._lines_done_at: float | None = None
-        self._ring_r = 8.0
+        self._start_time = time.time()
+        self._ring_r = 0.0
+        self._particles: list[list[float]] = []  # [x, y, vx, vy, life, size, alpha]
+        self._status_idx = 0
+        self._status_shown: list[tuple[str, str, float]] = []  # (label, status, shown_at)
+        self._phase = 0  # 0=flash, 1=name, 2=status, 3=done
+        self._flash_alpha = 0.0
+        self._name_alpha = 0.0
+        self._subtitle_alpha = 0.0
+        self._rune_rot = 0.0
+        self._done_emitted = False
+
+        # Mini rune ring for preview
+        self._rune_ring_alpha = 0.0
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self._tick)
-        self._timer.start(30)
+        self._timer.start(20)  # 50 fps
 
         self._effect = QGraphicsOpacityEffect(self)
         self._effect.setOpacity(1.0)
         self.setGraphicsEffect(self._effect)
 
     def _tick(self):
-        # expanding ring on start
-        self._ring_r += 14
-        if self._line_idx < len(BOOT_LINES):
-            line = BOOT_LINES[self._line_idx]
-            if self._char_idx < len(line):
-                self._char_idx += 2
-                self._current = line[:self._char_idx]
-            else:
-                self._lines_shown.append(line)
-                self._current = ""
-                self._line_idx += 1
-                self._char_idx = 0
-                if self._line_idx >= len(BOOT_LINES):
-                    self._lines_done_at = time.time()
-        elif time.time() - (self._lines_done_at or time.time()) > 1.3:
-            self._timer.stop()
-            self.done.emit()
-            return
+        t = time.time() - self._start_time
+        self._ring_r += 18
+        self._rune_rot = (self._rune_rot + 0.6) % 360
+
+        # Phase management
+        if t < 0.3:
+            self._phase = 0
+            self._flash_alpha = min(1.0, t / 0.3)
+        elif t < 1.0:
+            self._phase = 1
+            self._flash_alpha = max(0.0, 1.0 - (t - 0.3) / 0.5)
+            self._name_alpha = min(1.0, (t - 0.3) / 0.5)
+            self._rune_ring_alpha = min(1.0, (t - 0.3) / 0.6)
+        elif t < 2.0:
+            self._phase = 2
+            self._name_alpha = 1.0
+            self._rune_ring_alpha = 1.0
+            # Cascade status lines
+            interval = 0.08
+            idx = int((t - 1.0) / interval)
+            if idx > self._status_idx and idx <= len(BOOT_STATUS):
+                self._status_idx = min(idx, len(BOOT_STATUS))
+                for i in range(len(self._status_shown), self._status_idx):
+                    self._status_shown.append((*BOOT_STATUS[i], time.time()))
+            if len(BOOT_STATUS) > 0:
+                self._subtitle_alpha = min(1.0, max(0.0, (t - 1.6) / 0.4))
+        else:
+            self._phase = 3
+            self._name_alpha = max(0.0, 1.0 - (t - 2.0) / 0.5)
+            self._rune_ring_alpha = max(0.0, 1.0 - (t - 2.0) / 0.5)
+            self._subtitle_alpha = max(0.0, 1.0 - (t - 2.0) / 0.4)
+            for i in range(len(self._status_shown)):
+                lbl, st, at = self._status_shown[i]
+                self._status_shown[i] = (lbl, st, at)  # keep as-is
+            if t > 2.5 and not self._done_emitted:
+                self._done_emitted = True
+                self._timer.stop()
+                self.done.emit()
+                return
+
+        # Spawn golden particles
+        if len(self._particles) < 60 and random.random() < 0.7:
+            cx, cy = self.width() / 2, self.height() * 0.38
+            ang = random.uniform(0, 2 * math.pi)
+            dist = random.uniform(20, min(self.width(), self.height()) * 0.45)
+            px = cx + dist * math.cos(ang)
+            py = cy + dist * math.sin(ang)
+            vx = random.uniform(-0.3, 0.3)
+            vy = random.uniform(-0.8, -0.2)
+            self._particles.append([px, py, vx, vy, 1.0, random.uniform(1.0, 3.0), random.uniform(100, 220)])
+
+        # Update particles
+        alive = []
+        for part in self._particles:
+            part[0] += part[2]
+            part[1] += part[3]
+            part[4] -= 0.012
+            part[3] -= 0.005  # gravity
+            if part[4] > 0:
+                alive.append(part)
+        self._particles = alive
+
         self.update()
 
     def fade_out(self):
         anim = QPropertyAnimation(self._effect, b"opacity", self)
-        anim.setDuration(700)
+        anim.setDuration(500)
         anim.setStartValue(1.0)
         anim.setEndValue(0.0)
         anim.setEasingCurve(QEasingCurve.Type.InOutCubic)
@@ -982,42 +1030,177 @@ class BootOverlay(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         W, H = self.width(), self.height()
+        cx, cy = W / 2, H * 0.38
+        R = min(W, H) * 0.18
+        t = time.time() - self._start_time
+
+        # ── Background ──
         p.fillRect(self.rect(), qcol(C.BG))
 
-        # expanding startup rings
-        cx, cy = W / 2, H * 0.40
-        for i in range(4):
-            r = (self._ring_r - i * 80) % (min(W, H) * 0.85)
+        # ── Starfield ──
+        rng = random.Random(77)
+        for _ in range(50):
+            sx, sy = rng.randint(0, W), rng.randint(0, H)
+            flicker = int(60 + 50 * math.sin(t * 2.5 + sx * 0.05))
+            p.setPen(QPen(qcol(GOLD_DIM, flicker), 1))
+            p.drawPoint(sx, sy)
+
+        # ── Expanding startup rings ──
+        for i in range(5):
+            r = (self._ring_r - i * 70) % (min(W, H) * 0.8)
             if r > 4:
-                alpha = max(0, 140 - int(r * 0.35))
-                p.setPen(QPen(qcol(C.PRI, alpha), 1.5))
+                alpha = max(0, int(120 * (1.0 - r / (min(W, H) * 0.8))))
+                p.setPen(QPen(qcol(GOLD, alpha), 1.2))
                 p.setBrush(Qt.BrushStyle.NoBrush)
                 p.drawEllipse(QRectF(cx - r, cy - r, r * 2, r * 2))
 
-        # ＜大贤者＞ emblem
-        p.setPen(QPen(qcol(C.ACC, 245), 1))
-        p.setFont(font_cjk(32))
-        p.drawText(QRectF(0, cy - 140, W, 60), Qt.AlignmentFlag.AlignCenter, "＜大贤者＞")
-        p.setFont(font_mono(10))
-        p.setPen(QPen(qcol(C.PRI, 220), 1))
-        p.drawText(QRectF(0, cy - 80, W, 20), Qt.AlignmentFlag.AlignCenter, "GREAT SAGE AI — RAPHAEL CLASS")
+        # ── Atmospheric halo ──
+        if self._rune_ring_alpha > 0.01:
+            halo_r = R * 2.5
+            halo = QRadialGradient(cx, cy, halo_r)
+            a = int(35 * self._rune_ring_alpha)
+            halo.setColorAt(0.0, qcol(GOLD, a))
+            halo.setColorAt(0.4, qcol(GOLD, int(a * 0.3)))
+            halo.setColorAt(1.0, qcol(GOLD, 0))
+            p.setBrush(QBrush(halo))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawEllipse(QRectF(cx - halo_r, cy - halo_r, halo_r * 2, halo_r * 2))
 
-        # typed boot log
-        log = self._lines_shown + ([self._current + "▊"] if self._current or self._line_idx < len(BOOT_LINES) else [])
-        p.setFont(font_mono(9))
-        y = cy
-        for line in log[-9:]:
-            is_final = line.startswith("＜")
-            is_blank = line.strip() == ""
-            if is_blank:
-                y += 8
-                continue
-            p.setPen(QPen(qcol(C.ACC if is_final else C.TEXT_MED, 240), 1))
-            p.drawText(QRectF(W / 2 - 320, y, 640, 18), Qt.AlignmentFlag.AlignLeft, line)
-            y += 19
+        # ── Mini Rune Ring Preview ──
+        if self._rune_ring_alpha > 0.01:
+            ra = int(200 * self._rune_ring_alpha)
+            # Outer ring
+            p.setPen(QPen(qcol(GOLD, ra), 2.0))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawEllipse(QRectF(cx - R, cy - R, R * 2, R * 2))
+            # Inner ring
+            p.setPen(QPen(qcol(GOLD, int(ra * 0.4)), 0.8))
+            p.drawEllipse(QRectF(cx - R * 0.88, cy - R * 0.88, R * 1.76, R * 1.76))
+            # Tick marks
+            p.setPen(QPen(qcol(GOLD, int(ra * 0.5)), 1))
+            for i in range(36):
+                ang = math.radians(i * 10)
+                big = i % 4 == 0
+                r1 = R * 1.0
+                r2 = R * (0.94 if big else 0.97)
+                p.drawLine(
+                    QPointF(cx + r1 * math.cos(ang), cy + r1 * math.sin(ang)),
+                    QPointF(cx + r2 * math.cos(ang), cy + r2 * math.sin(ang)),
+                )
+            # Rotating runes
+            rune_r = R * 0.82
+            p.save()
+            p.translate(cx, cy)
+            p.rotate(self._rune_rot)
+            rf = QFont("Microsoft YaHei UI", 8, QFont.Weight.Bold)
+            for i, rune in enumerate(RUNES):
+                ang = i * 360 / len(RUNES)
+                p.save()
+                p.rotate(ang)
+                p.translate(0, -rune_r)
+                p.rotate(180)
+                rune_a = int(ra * (0.6 + 0.4 * math.sin(t * 2.0 + i * 0.5)))
+                p.setPen(QPen(qcol(GOLD_BRIGHT, rune_a)))
+                p.setFont(rf)
+                p.drawText(QRectF(-10, -8, 20, 16), Qt.AlignmentFlag.AlignCenter, rune)
+                p.restore()
+            p.restore()
+            # Central cross
+            cross_a = int(ra * 0.6)
+            p.setPen(QPen(qcol(GOLD, cross_a), 1.5))
+            p.drawLine(QPointF(cx - R * 0.35, cy), QPointF(cx + R * 0.35, cy))
+            p.drawLine(QPointF(cx, cy - R * 0.35), QPointF(cx, cy + R * 0.35))
+            # Diagonal cross
+            p.setPen(QPen(qcol(GOLD, int(cross_a * 0.5)), 0.8))
+            d = R * 0.25
+            p.drawLine(QPointF(cx - d, cy - d), QPointF(cx + d, cy + d))
+            p.drawLine(QPointF(cx - d, cy + d), QPointF(cx + d, cy - d))
+            # Central glow
+            glow_r = R * 0.25
+            glow = QRadialGradient(cx, cy, glow_r)
+            ga = int(180 * self._rune_ring_alpha)
+            glow.setColorAt(0.0, qcol(GOLD_BRIGHT, ga))
+            glow.setColorAt(0.5, qcol(GOLD, int(ga * 0.4)))
+            glow.setColorAt(1.0, qcol(GOLD, 0))
+            p.setBrush(QBrush(glow))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawEllipse(QRectF(cx - glow_r, cy - glow_r, glow_r * 2, glow_r * 2))
+            # Inner white core
+            core_r = R * 0.06
+            p.setBrush(QBrush(qcol(GOLD_BRIGHT, int(220 * self._rune_ring_alpha))))
+            p.drawEllipse(QRectF(cx - core_r, cy - core_r, core_r * 2, core_r * 2))
+
+        # ── Flash effect ──
+        if self._flash_alpha > 0.01:
+            flash_r = min(W, H) * 0.8 * self._flash_alpha
+            flash = QRadialGradient(cx, cy, flash_r)
+            fa = int(180 * self._flash_alpha)
+            flash.setColorAt(0.0, qcol(GOLD_BRIGHT, fa))
+            flash.setColorAt(0.3, qcol(GOLD, int(fa * 0.5)))
+            flash.setColorAt(1.0, qcol(GOLD, 0))
+            p.setBrush(QBrush(flash))
+            p.setPen(Qt.PenStyle.NoPen)
+            p.drawEllipse(QRectF(cx - flash_r, cy - flash_r, flash_r * 2, flash_r * 2))
+
+        # ── Particles ──
+        for part in self._particles:
+            px, py, _, _, life, size, base_alpha = part
+            a = int(base_alpha * life * self._rune_ring_alpha)
+            if a > 5:
+                p.setPen(QPen(qcol(GOLD, a), size))
+                p.drawPoint(int(px), int(py))
+
+        # ── Title: ＜Elivea＞ ──
+        if self._name_alpha > 0.01:
+            na = int(255 * self._name_alpha)
+            p.setPen(QPen(qcol(GOLD_BRIGHT, na), 1))
+            p.setFont(QFont("Microsoft YaHei UI", 30, QFont.Weight.Bold))
+            p.drawText(QRectF(0, cy + R * 1.2, W, 50), Qt.AlignmentFlag.AlignCenter, "＜Elivea＞")
+            # Subtitle line
+            p.setFont(QFont("Consolas", 10, QFont.Weight.Bold))
+            p.setPen(QPen(qcol(GOLD, int(na * 0.85)), 1))
+            p.drawText(QRectF(0, cy + R * 1.2 + 48, W, 20), Qt.AlignmentFlag.AlignCenter, "A E T H E L I S   C L A S S")
+
+        # ── Status cascade ──
+        if self._status_shown:
+            start_y = cy + R * 1.2 + 90
+            p.setFont(QFont("Consolas", 8, QFont.Weight.Normal))
+            for i, (label, status, shown_at) in enumerate(self._status_shown):
+                age = time.time() - shown_at
+                alpha = min(1.0, age / 0.15)  # fade in fast
+                y = start_y + i * 17
+                if y > H - 40:
+                    break
+                # Status dot (green)
+                dot_a = int(220 * alpha)
+                is_online = status in ("ONLINE", "CARREGADA", "CARREGADOS")
+                dot_col = GREEN if is_online else GOLD
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(QBrush(qcol(dot_col, dot_a)))
+                p.drawEllipse(QRectF(W / 2 - 240, y + 3, 5, 5))
+                # Label
+                p.setPen(QPen(qcol(TEXT_MED, int(200 * alpha)), 1))
+                p.drawText(QRectF(W / 2 - 228, y, 280, 16), Qt.AlignmentFlag.AlignLeft, label)
+                # Status
+                p.setPen(QPen(qcol(dot_col, dot_a), 1))
+                dots = "." * (int(time.time() * 8) % 4)
+                status_txt = status + (" " + dots if age < 0.12 else "")
+                p.drawText(QRectF(W / 2 + 60, y, 160, 16), Qt.AlignmentFlag.AlignRight, status_txt)
+
+        # ── Subtitle ──
+        if self._subtitle_alpha > 0.01:
+            sa = int(200 * self._subtitle_alpha)
+            p.setPen(QPen(qcol(GOLD, sa), 1))
+            p.setFont(QFont("Microsoft YaHei UI", 10, QFont.Weight.Normal))
+            final_y = cy + R * 1.2 + 90 + len(BOOT_STATUS) * 17 + 20
+            if final_y < H - 30:
+                p.drawText(QRectF(0, final_y, W, 24), Qt.AlignmentFlag.AlignCenter, "Todos os sistemas nominais, Mestre.")
 
     def mousePressEvent(self, _):
         # click to skip boot
+        if self._done_emitted:
+            return
+        self._done_emitted = True
         self._timer.stop()
         self.done.emit()
 
@@ -1030,12 +1213,12 @@ class ConfigDialog(QWidget):
     def __init__(self, main_win, voices: list[str], current_voice: str, parent=None):
         super().__init__(parent)
         self.main_win = main_win
-        self.setWindowTitle("Configurações — Great Sage AI")
+        self.setWindowTitle("Configurações — Elivea")
         self.resize(560, 420)
         self.setStyleSheet(f"background-color: {C.PANEL}; color: {C.TEXT};")
 
         lay = QVBoxLayout(self)
-        title = QLabel("⚙ CONFIGURAÇÕES DO GRANDE SÁBIO")
+        title = QLabel("⚙ CONFIGURAÇÕES DO ELIVEA")
         title.setFont(font_mono(12))
         title.setStyleSheet(f"color: {C.PRI}; padding: 6px;")
         lay.addWidget(title)
@@ -1061,7 +1244,7 @@ class ConfigDialog(QWidget):
         box2 = QFrame()
         box2.setStyleSheet(f"background: {C.PANEL2}; border: 1px solid {C.BORDER}; border-radius: 8px;")
         l2 = QVBoxLayout(box2)
-        lbl2 = QLabel("🗣 VOZ NEURAL DO GRANDE SÁBIO")
+        lbl2 = QLabel("🗣 VOZ NEURAL DO ELIVEA")
         lbl2.setFont(font_mono(9))
         lbl2.setStyleSheet(f"color: {C.ACC2};")
         l2.addWidget(lbl2)
@@ -1112,7 +1295,7 @@ class ConfigDialog(QWidget):
 # Main window
 # ===========================================================================
 
-class GreatSageMainWindow(QMainWindow):
+class EliveaMainWindow(QMainWindow):
     voice_test_requested = pyqtSignal()
 
     def __init__(self,
@@ -1132,259 +1315,418 @@ class GreatSageMainWindow(QMainWindow):
         self.stop_speech_handler = stop_speech_handler
         self.mic_button_handler = mic_button_handler
 
-        self.theme_key = "tensura_gold"
+        self.theme_key = self._detect_theme_by_time()
+        apply_theme(self.theme_key)
+        # Dynamic theme timer — checks every 10 minutes for time-based theme switch
+        self._theme_timer = QTimer(self)
+        self._theme_timer.timeout.connect(self._check_theme_update)
+        self._theme_timer.start(600000)  # 10 minutes
         self._stream_bubble: ChatBubble | None = None
         self._t0_cmd = 0.0
         self._real_exit = False
 
-        self.setWindowTitle("＜大贤者＞ Great Sage AI — Raphael • Gisele Vechin [by: bryan]")
-        self.resize(1180, 780)
-        self.setMinimumSize(940, 640)
+        self.setWindowTitle("＜Elivea＞ Elívea — Elivea • Gisele Vechin [by: bryan]")
+        self.resize(1400, 850)
+        self.setMinimumSize(1100, 700)
         self.setStyleSheet(f"background-color: {C.BG}; color: {C.TEXT};")
 
         self._build_ui()
         self._start_telemetry()
 
-        # Boot overlay
-        self.boot = BootOverlay(self)
-        self.boot.done.connect(self._on_boot_done)
-        self.boot.show()
-        self.boot.raise_()
+        # Cinematic awakening overlay — anime-style ability awakening
+        from ui.professional_widgets import AbilityAwakeningOverlay, AwakeningSFX
+        self.awakening = AbilityAwakeningOverlay(self)
+        self.awakening.done.connect(self._on_awakening_done)
+        self.awakening.show()
+        self.awakening.raise_()
+        # SFX are played internally by the overlay's _tick
+        # Voice during overlay (2.0s from app start — during explosion phase)
+        QTimer.singleShot(2000, lambda: self._speak_awakening())
 
-        # Raphael companion orb (visible when the window leaves the screen)
-        from GreatSageAI_Clone.ui.orb_widget import RaphaelOrb
-        self.orb = RaphaelOrb(self)
+        # Elivea companion orb (visible when the window leaves the screen)
+        from ui.orb_widget import EliveaOrb
+        self.orb = EliveaOrb(self)
 
     # ------------------------------------------------------------------- UI
 
     def _build_ui(self):
+        from ui.professional_widgets import (
+            RuneCoreWidget, TopBarWidget, InputBarWidget,
+            CommandCenterDrawer, GlassPanel, BG,
+            SystemMonitorWidget, QuickActionsWidget, AIStatusWidget, RecentCommandsWidget,
+            CodeScratchpadWidget, CodeWorkspaceWidget, ConversationHistoryMap, HistoryDrawer,
+            AmbientParticles, StatusBar, NotificationToast, MicroInteractions
+        )
+        from ui.chat_panel import ChatSidebar
+        from ui.deep_dev_panel import DeepDevPanelWidget
         central = QWidget()
+        central.setStyleSheet(f"background: {BG};")
         self.setCentralWidget(central)
         root = QVBoxLayout(central)
-        root.setContentsMargins(12, 10, 12, 10)
-        root.setSpacing(8)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
 
-        # ============ HEADER ============
-        hdr = QHBoxLayout()
-        emblem = QLabel("＜大贤者＞")
-        emblem.setFont(font_cjk(17))
-        emblem.setStyleSheet(f"color: {C.ACC}; background: transparent;")
-        hdr.addWidget(emblem)
+        # ============ TOP BAR ============
+        self.top_bar = TopBarWidget()
+        root.addWidget(self.top_bar)
 
-        title = QLabel("GREAT SAGE AI")
-        title.setFont(font_mono(15))
-        title.setStyleSheet(f"color: {C.PRI}; background: transparent;")
-        hdr.addWidget(title)
+        # ============ MAIN CONTENT ============
+        body = QHBoxLayout()
+        body.setContentsMargins(0, 0, 0, 0)
+        body.setSpacing(0)
 
-        by = QLabel("[by: bryan]")
-        by.setFont(font_mono(9))
-        by.setStyleSheet(f"color: {C.GOLD}; background: transparent;")
-        hdr.addWidget(by)
-        hdr.addStretch()
+        # ---- Left: Chat Sidebar ----
+        self.chat_sidebar = ChatSidebar()
+        self.chat_sidebar.set_on_send(self.submit_command)
+        self.chat_sidebar.set_on_history_toggle(self.toggle_history_map)
+        body.addWidget(self.chat_sidebar, stretch=0)
 
-        # status chips
-        self.chip_state = StatusChip("◉", "EM ESPERA", C.TEXT_DIM)
-        self.chip_stt = StatusChip("🎙", "STT —")
-        self.chip_ttft = StatusChip("⚡", "TTFT —")
-        self.chip_model = StatusChip("◈", "LLM —")
-        hdr.addWidget(self.chip_state)
-        hdr.addWidget(self.chip_stt)
-        hdr.addWidget(self.chip_ttft)
-        hdr.addWidget(self.chip_model)
+        # ---- Center: RuneCore + Code Workspace (overlay) ----
+        center = QWidget()
+        center.setStyleSheet("background: transparent;")
+        center_layout = QVBoxLayout(center)
+        center_layout.setContentsMargins(0, 0, 0, 0)
+        center_layout.setSpacing(0)
+        self.rune_core = RuneCoreWidget()
+        center_layout.addWidget(self.rune_core, stretch=1)
+        # Code Workspace (hidden by default, overlay on top)
+        self.code_workspace = CodeWorkspaceWidget()
+        self.code_workspace.setParent(center)
+        self.code_workspace.hide()
+        self.code_workspace.set_on_close(self._close_code_workspace)
+        self.code_workspace.set_on_run(self._run_code)
+        self.code_workspace.set_on_generate(self._on_generate_code)
 
-        self.btn_theme = QPushButton("🎨 Tema")
-        self.btn_voice = QPushButton("🗣 Voz")
-        self.btn_usage = QPushButton("📊 Uso")
-        self.btn_config = QPushButton("⚙")
-        for b, w in [(self.btn_theme, 90), (self.btn_voice, 200), (self.btn_usage, 70), (self.btn_config, 34)]:
-            b.setFont(font_mono(8))
-            b.setFixedWidth(w)
-            b.setCursor(Qt.CursorShape.PointingHandCursor)
-            b.setStyleSheet(f"""
-                QPushButton {{ background: {C.PANEL2}; color: {C.PRI}; border: 1px solid {C.BORDER_B}; border-radius: 5px; }}
-                QPushButton:hover {{ background: {C.GHOST}; border: 1px solid {C.PRI}; }}
-            """)
-            hdr.addWidget(b)
-        self.btn_theme.clicked.connect(self._cycle_theme)
-        self.btn_voice.clicked.connect(self._cycle_voice)
-        self.btn_usage.clicked.connect(self._open_usage)
-        self.btn_config.clicked.connect(self._open_config)
-        self._refresh_voice_btn()
+        # Programming Panel (full IDE — hidden by default)
+        from ui.programming_panel import ProgrammingPanel
+        self.programming_panel = ProgrammingPanel()
+        self.programming_panel.setParent(center)
+        self.programming_panel.hide()
+        self.programming_panel.sig_close.connect(self._close_programming_panel)
+        self.programming_panel.set_generate_handler(self._on_programming_generate)
+        self.programming_panel.set_root_path(str(Path(__file__).resolve().parent.parent))
+        # Deep Dev Panel (floating overlay - hidden by default)
+        self.deep_dev_panel = DeepDevPanelWidget()
+        self.deep_dev_panel.setParent(center)
+        self.deep_dev_panel.hide()
+        self.deep_dev_panel.sig_close.connect(self._close_deep_dev_panel)
+        self.deep_dev_panel.sig_execute.connect(self._on_deep_dev_execute)
+        self.deep_dev_panel.sig_approve.connect(self._on_deep_dev_approve)
+        self.deep_dev_panel.sig_discard.connect(self._on_deep_dev_discard)
+        body.addWidget(center, stretch=2)
 
-        root.addLayout(hdr)
-
-        # ============ BODY ============
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.setStyleSheet(f"QSplitter::handle {{ background: {C.PANEL}; }}")
-
-        # ---- left: magic circle + telemetry
-        left = QWidget()
-        llay = QVBoxLayout(left)
-        llay.setContentsMargins(0, 0, 0, 0)
-        llay.setSpacing(6)
-
-        self.circle = MagicCircleWidget()
-        llay.addWidget(self.circle, stretch=5)
-
-        self.waveform = WaveformWidget()
-        llay.addWidget(self.waveform)
-
-        metrics = QHBoxLayout()
-        self.m_cpu = MetricBar("CPU")
-        self.m_ram = MetricBar("RAM")
-        self.m_mic = MetricBar("MIC", color=None)
-        for m in (self.m_cpu, self.m_ram, self.m_mic):
-            metrics.addWidget(m)
-        llay.addLayout(metrics)
-        splitter.addWidget(left)
-
-        # ---- right: chat + quick actions
+        # ---- Right: Useful panels ----
         right = QWidget()
-        rlay = QVBoxLayout(right)
-        rlay.setContentsMargins(0, 0, 0, 0)
-        rlay.setSpacing(8)
+        right.setFixedWidth(340)
+        right_scroll = QScrollArea()
+        right_scroll.setWidgetResizable(True)
+        right_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        right_scroll.setStyleSheet(f"QScrollArea {{ background: transparent; border: none; }} QScrollBar:vertical {{ width: 4px; }} QScrollBar::handle:vertical {{ background: rgba(255,215,0,0.15); border-radius: 2px; }}")
+        right_inner = QWidget()
+        right_inner.setStyleSheet("background: transparent;")
+        right_layout = QVBoxLayout(right_inner)
+        right_layout.setContentsMargins(4, 4, 4, 4)
+        right_layout.setSpacing(6)
 
-        self.chat = ChatFlow()
-        rlay.addWidget(self.chat, stretch=1)
+        # System Monitor
+        self.sys_monitor = SystemMonitorWidget()
+        self.sys_monitor.setFixedHeight(130)
+        right_layout.addWidget(self.sys_monitor)
 
-        quick = QHBoxLayout()
-        quick_btns = [
-            ("⚡ Status", "status"),
-            ("📡 Meu IP", "meu ip"),
-            ("💾 Discos", "meus discos"),
-            ("🚀 RAM", "otimizar ram"),
-            ("🧹 Lixeira", "limpar lixeira"),
-            ("📸 Print", "capturar tela"),
-            ("📝 Notas", "minhas notas"),
-            ("🕐 Hora", "que horas são"),
-            ("🧹 Chat", "limpar conversa"),
-            ("❓ Ajuda", "ajuda"),
-            ("⌨️ Programar", "programar"),
-        ]
-        for name, cmd in quick_btns:
-            b = QPushButton(name)
-            b.setFont(font_mono(8))
-            b.setCursor(Qt.CursorShape.PointingHandCursor)
-            b.setToolTip(cmd)
-            b.setStyleSheet(f"""
-                QPushButton {{ background: {C.PANEL2}; color: {C.PRI}; border: 1px solid {C.BORDER}; border-radius: 5px; padding: 6px 4px; }}
-                QPushButton:hover {{ background: {C.GHOST}; border: 1px solid {C.PRI}; color: {C.ACC}; }}
-            """)
-            b.clicked.connect(lambda _, c=cmd: self.submit_command(c))
-            quick.addWidget(b)
-        rlay.addLayout(quick)
-        splitter.addWidget(right)
-        splitter.setSizes([470, 660])
-        root.addWidget(splitter, stretch=1)
+        # AI Status
+        self.ai_status = AIStatusWidget()
+        self.ai_status.setFixedHeight(145)
+        right_layout.addWidget(self.ai_status)
 
-        # ============ INPUT ROW ============
-        inp = QHBoxLayout()
+        # Quick Actions
+        self.quick_actions = QuickActionsWidget()
+        self.quick_actions.setFixedHeight(115)
+        self.quick_actions.set_on_action(self._on_quick_action)
+        right_layout.addWidget(self.quick_actions)
 
-        self.btn_ptt = QPushButton(" 🎙 OUVIR ")
-        self.btn_ptt.setFont(font_mono(9))
-        self.btn_ptt.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_ptt.setStyleSheet(f"""
-            QPushButton {{ background: {C.PANEL2}; color: {C.ACC}; border: 1px solid {C.PRI}; border-radius: 6px; padding: 8px 12px; }}
-            QPushButton:hover {{ background: {C.GHOST}; }}
-        """)
-        self.btn_ptt.clicked.connect(self._push_to_talk)
-        inp.addWidget(self.btn_ptt)
+        # Recent Commands
+        self.recent_cmds = RecentCommandsWidget()
+        self.recent_cmds.setFixedHeight(120)
+        right_layout.addWidget(self.recent_cmds)
 
-        self.btn_mode = QPushButton(" 📡 SEMPRE OUVINDO ")
-        self.btn_mode.setFont(font_mono(9))
-        self.btn_mode.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_mode.setStyleSheet(f"""
-            QPushButton {{ background: {C.PANEL2}; color: {C.GREEN}; border: 1px solid {C.GREEN}; border-radius: 6px; padding: 8px 10px; }}
-            QPushButton:hover {{ background: {C.GHOST}; }}
-        """)
-        self.btn_mode.clicked.connect(self._toggle_listen_mode)
-        inp.addWidget(self.btn_mode)
+        # Notifications
+        from ui.professional_widgets import NotificationWidget
+        self.notifications = NotificationWidget()
+        self.notifications.setFixedHeight(140)
+        right_layout.addWidget(self.notifications)
 
-        self.btn_stop = QPushButton(" 🛑 CALAR ")
-        self.btn_stop.setFont(font_mono(9))
-        self.btn_stop.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_stop.setStyleSheet(f"""
-            QPushButton {{ background: {C.PANEL2}; color: {C.RED}; border: 1px solid {C.RED}; border-radius: 6px; padding: 8px 10px; }}
-            QPushButton:hover {{ background: {C.RED}; color: {C.WHITE}; }}
-        """)
-        self.btn_stop.clicked.connect(self._stop_speech)
-        inp.addWidget(self.btn_stop)
+        # Code Scratchpad
+        self.code_scratchpad = CodeScratchpadWidget()
+        self.code_scratchpad.setFixedHeight(160)
+        right_layout.addWidget(self.code_scratchpad)
 
-        prompt_lbl = QLabel("Mestre ➤")
-        prompt_lbl.setFont(font_mono(10))
-        prompt_lbl.setStyleSheet(f"color: {C.GOLD};")
-        inp.addWidget(prompt_lbl)
+        right_layout.addStretch()
+        right_scroll.setWidget(right_inner)
+        right_layout_main = QVBoxLayout(right)
+        right_layout_main.setContentsMargins(0, 0, 0, 0)
+        right_layout_main.addWidget(right_scroll)
 
-        self.entry = QLineEdit()
-        self.entry.setFont(font_ui(11))
-        self.entry.setPlaceholderText("Fale com o Grande Sábio ou digite aqui… (Enter envia • Esc cala a voz)")
-        self.entry.setStyleSheet(f"""
-            QLineEdit {{
-                background: {C.PANEL}; color: {C.WHITE};
-                border: 1px solid {C.BORDER_B}; border-radius: 6px; padding: 8px 12px;
-                font-size: 13px;
-            }}
-            QLineEdit:focus {{ border: 1px solid {C.PRI}; }}
-        """)
-        self.entry.returnPressed.connect(self._on_enter)
-        inp.addWidget(self.entry, stretch=1)
+        body.addWidget(right)
+        root.addLayout(body, stretch=1)
 
-        send = QPushButton("EXECUTAR ➤")
-        send.setFont(font_mono(9))
-        send.setCursor(Qt.CursorShape.PointingHandCursor)
-        send.setStyleSheet(f"""
-            QPushButton {{ background: {C.PRI}; color: {C.BG}; border: none; border-radius: 6px; padding: 8px 16px; font-weight: bold; }}
-            QPushButton:hover {{ background: {C.ACC}; }}
-        """)
-        send.clicked.connect(self._on_enter)
-        inp.addWidget(send)
+        # ============ HISTORY MAP (overlay on center, over RuneCore) ============
+        self.conv_history_map = ConversationHistoryMap(self)
+        self.conv_history_map.setVisible(False)
+        self.conv_history_map.set_on_node_click(self._on_history_node_click)
+        self.conv_history_map.set_on_history_click(self._open_history_drawer)
 
-        root.addLayout(inp)
+        # ============ HISTORY DRAWER (full-screen overlay) ============
+        self.history_drawer = HistoryDrawer(self)
+        self.history_drawer.setVisible(False)
+        self.history_drawer.set_on_close(lambda: self.history_drawer.setVisible(False))
+        self.history_drawer.set_on_select(self._on_history_select)
 
-        # Atalhos — compatível PySide6/PyQt6
+        # ============ STATUS BAR ============
+        self.status_bar = StatusBar()
+        root.addWidget(self.status_bar)
+
+        # ============ AMBIENT PARTICLES (behind everything) ============
+        self.ambient_particles = AmbientParticles(self)
+        self.ambient_particles.lower()
+
+        # ============ MICRO-INTERACTIONS ============
+        self.micro = MicroInteractions(self)
+        self.micro.raise_()
+
+        # ============ NOTIFICATION TOAST ============
+        self.toast = NotificationToast(self)
+
+        # ============ COMMAND CENTER DRAWER ============
+        self.cmd_drawer = CommandCenterDrawer(self)
+        self.cmd_drawer.set_on_execute(self.submit_command)
+        self.cmd_drawer.setGeometry(self.rect())
+        self.cmd_drawer.hide()
+
+        # Hidden backward-compat widgets
+        self.chat = ChatFlow(); self.chat.hide()
+        self.circle = MagicCircleWidget(); self.circle.hide()
+        self.waveform = WaveformWidget(); self.waveform.hide()
+        self.m_cpu = MetricBar("CPU"); self.m_ram = MetricBar("RAM"); self.m_mic = MetricBar("MIC")
+        self.chip_state = StatusChip("◉", "IDLE"); self.chip_state.hide()
+        self.chip_stt = StatusChip("🎙", "STT"); self.chip_stt.hide()
+        self.chip_ttft = StatusChip("⚡", "TTFT"); self.chip_ttft.hide()
+        self.chip_model = StatusChip("◈", "LLM"); self.chip_model.hide()
+        self.btn_theme = QPushButton(); self.btn_theme.hide()
+        self.btn_voice = QPushButton(); self.btn_voice.hide()
+        self.btn_usage = QPushButton(); self.btn_usage.hide()
+        self.btn_config = QPushButton(); self.btn_config.hide()
+        self.btn_ptt = QPushButton(); self.btn_ptt.hide()
+        self.btn_mode = QPushButton(); self.btn_mode.hide()
+        self.btn_stop = QPushButton(); self.btn_stop.hide()
+        self.entry = QLineEdit(); self.entry.hide()
+
+        # Atalhos
         try:
             from PySide6.QtGui import QShortcut, QKeySequence
         except ImportError:
             from PyQt6.QtGui import QShortcut, QKeySequence
-        QShortcut(QKeySequence("Escape"), self).activated.connect(self._stop_speech)
+        QShortcut(QKeySequence("Escape"), self).activated.connect(self._on_escape)
         QShortcut(QKeySequence("Ctrl+P"), self).activated.connect(lambda: self.open_code_workspace())
-        QShortcut(QKeySequence("Ctrl+L"), self).activated.connect(self._clear_chat)
-        QShortcut(QKeySequence("Ctrl+M"), self).activated.connect(self._toggle_mic)
-        QShortcut(QKeySequence("Ctrl+S"), self).activated.connect(self._save_history)
-        QShortcut(QKeySequence("Ctrl+R"), self).activated.connect(self._cycle_voice)
+        QShortcut(QKeySequence("Ctrl+Shift+P"), self).activated.connect(lambda: self.open_programming_panel())
         QShortcut(QKeySequence("F1"), self).activated.connect(self._show_help)
+
+    def _detect_theme_by_time(self) -> str:
+        """Auto-select theme based on time of day."""
+        import datetime
+        hour = datetime.datetime.now().hour
+        if 6 <= hour < 12:    # Morning
+            return "tensura_gold"  # warm golden
+        elif 12 <= hour < 18:  # Afternoon
+            return "gold"         # bright gold
+        elif 18 <= hour < 22:  # Evening
+            return "tensura"      # blue tones
+        else:                   # Night (22-6)
+            return "crimson"      # deep dark red
+
+    def _check_theme_update(self):
+        """Periodically check if theme should change based on time."""
+        new_theme = self._detect_theme_by_time()
+        if new_theme != self.theme_key:
+            self.theme_key = new_theme
+            apply_theme(new_theme)
+            # Re-apply stylesheet with new theme colors
+            self.setStyleSheet(f"background-color: {C.BG}; color: {C.TEXT};")
+            self.add_sage_message(f"Tema alterado automaticamente para {C.name}, Mestre.")
+
+    def _on_escape(self):
+        """Escape closes overlays (history map, drawer, code workspace)."""
+        if hasattr(self, 'history_drawer') and self.history_drawer.isVisible():
+            self.history_drawer.setVisible(False)
+            return
+        if hasattr(self, 'conv_history_map') and self.conv_history_map.isVisible():
+            self.conv_history_map.setVisible(False)
+            if hasattr(self, 'rune_core'):
+                self.rune_core.set_center_detail(True)
+            return
+        if hasattr(self, 'code_workspace') and self.code_workspace.isVisible():
+            self.code_workspace.setVisible(False)
+            return
+        self._stop_speech()
+
+    # -------------------------------------------------- history map/drawer
+
+    def _load_conversations_for_map(self):
+        """Load recent conversations into the history map."""
+        try:
+            from memory.memory_manager import MemoryManager
+            convs = MemoryManager.get_recent_turns(limit=15)
+            if hasattr(self, 'conv_history_map'):
+                self.conv_history_map.set_conversations(convs)
+        except Exception:
+            pass
+
+    def toggle_history_map(self):
+        """Toggle the history map overlay on top of the RuneCore."""
+        if not hasattr(self, 'conv_history_map'):
+            return
+        if self.conv_history_map.isVisible():
+            self.conv_history_map.setVisible(False)
+            # Restore center detail on RuneCore
+            if hasattr(self, 'rune_core'):
+                self.rune_core.set_center_detail(True)
+            return
+        # Load conversations
+        self._load_conversations_for_map()
+        # Position over the center area (where RuneCore is)
+        r = self.geometry()
+        chat_w = 360
+        right_w = 340
+        center_x = chat_w
+        center_w = r.width() - chat_w - right_w
+        self.conv_history_map.setGeometry(center_x, 48, center_w, r.height() - 104)
+        self.conv_history_map.raise_()
+        self.conv_history_map.setVisible(True)
+        # Hide center detail on RuneCore while history map is open
+        if hasattr(self, 'rune_core'):
+            self.rune_core.set_center_detail(False)
+        self.conv_history_map.update()
+
+    def _on_history_node_click(self, conv: dict):
+        """Load a past conversation into the chat."""
+        user_speech = conv.get('user_speech', '')
+        assistant_response = conv.get('assistant_response', '')
+        if user_speech:
+            self.chat_sidebar.add_message('user', user_speech)
+        if assistant_response:
+            self.chat_sidebar.add_message('assistant', assistant_response)
+        # Close the map after selecting
+        self.conv_history_map.setVisible(False)
+        # Restore center detail on RuneCore
+        if hasattr(self, 'rune_core'):
+            self.rune_core.set_center_detail(True)
+
+    def _open_history_drawer(self):
+        """Open the full history drawer."""
+        try:
+            from memory.memory_manager import MemoryManager
+            convs = MemoryManager.get_recent_turns(limit=200)
+            self.history_drawer.set_conversations(convs)
+        except Exception:
+            self.history_drawer.set_conversations([])
+        self.history_drawer.setGeometry(self.rect())
+        self.history_drawer.raise_()
+        self.history_drawer.setVisible(True)
+        self.history_drawer.update()
+
+    def _on_history_select(self, conv: dict):
+        """Select a conversation from the full history drawer."""
+        self._on_history_node_click(conv)
+        self.history_drawer.setVisible(False)
 
     # ------------------------------------------------------------ boot
 
-    def _on_boot_done(self):
-        self.boot.fade_out()
+    def _on_awakening_done(self):
+        """Called when the ability awakening animation finishes."""
+        # Force-hide the overlay (safety)
+        if hasattr(self, 'awakening'):
+            try:
+                self.awakening.hide()
+                self.awakening.deleteLater()
+            except Exception:
+                pass
+        # Play boot chime from speech engine
         try:
-            from GreatSageAI_Clone.core.persona import _load_user_name
+            if self.speech:
+                self.speech.play_boot_chime()
+        except Exception:
+            pass
+        try:
+            from core.persona import _load_user_name
             user = _load_user_name()
         except Exception:
             user = "Mestre"
+        # Show welcome message after a brief pause
+        QTimer.singleShot(300, lambda: self._show_welcome_msg(user))
+        # Load conversation history into the map
+        QTimer.singleShot(1000, self._load_conversations_for_map)
+        # Toast notification
+        QTimer.singleShot(500, lambda: self.toast.show_toast(
+            "Elívea online — todos os sistemas nominais", "success", 4000))
+        # Set status bar model
+        self.status_bar.set_model(getattr(self, '_current_model', '9Router'))
+
+    def _speak_awakening(self):
+        """Speak the awakening line with the TTS engine."""
+        try:
+            if self.speech:
+                self.speech.speak("Habilidade única desbloqueada: Elivea")
+        except Exception:
+            pass
+
+    def _show_welcome_msg(self, user="Mestre"):
+        """Show the welcome message after the awakening animation."""
+        try:
+            from core.persona import _load_user_name
+            user = _load_user_name()
+        except Exception:
+            pass
         self.add_sage_message(
-            f"Grande Sábio online, {user}. Todos os sistemas nominais. "
+            f"Elívea online, {user}. Todos os sistemas nominais. "
             "Pode falar comigo naturalmente — estou te ouvindo."
         )
+
+    def _on_boot_done(self):
+        """Legacy boot done — now routes to awakening."""
+        self._on_awakening_done() 
+
+    def showEvent(self, ev):
+        super().showEvent(ev)
+        # Size particles to window
+        QTimer.singleShot(100, self._layout_overlays)
+
+    def _layout_overlays(self):
+        r = self.rect()
+        if hasattr(self, 'ambient_particles'):
+            self.ambient_particles.setGeometry(r)
 
     # -------------------------------------------------- window ↔ orb modes
 
     def changeEvent(self, ev):
-        if ev.type() == QEvent.Type.WindowStateChange and self.isMinimized():
-            QTimer.singleShot(0, self._hide_to_orb)
-        super().changeEvent(ev)
+        try:
+            if ev.type() == QEvent.Type.WindowStateChange and self.isMinimized():
+                QTimer.singleShot(0, self._hide_to_orb)
+            super().changeEvent(ev)
+        except Exception:
+            pass
 
     def closeEvent(self, ev):
-        if not self._real_exit:
-            ev.ignore()
-            self._hide_to_orb()
-            return
-        self.orb.hide()
-        super().closeEvent(ev)
+        try:
+            if not self._real_exit:
+                ev.ignore()
+                self._hide_to_orb()
+                return
+            self.orb.hide()
+            super().closeEvent(ev)
+        except Exception:
+            ev.accept()
 
     def _hide_to_orb(self):
-        """Minimizar/fechar → o Raphael vira o orbe flutuante do anime."""
+        """Minimizar/fechar → o Elívea vira o orbe flutuante do anime."""
         self.hide()
         self.orb.set_state(self.circle.state)
         self.orb.show()
@@ -1398,43 +1740,98 @@ class GreatSageMainWindow(QMainWindow):
     # ------------------------------------------------------ chat helpers
 
     def add_master_message(self, text: str):
-        bubble = self.chat.add_bubble("master", int(self.chat.width() * 0.8))
-        bubble.set_text(text)
+        self.chat_sidebar.add_message("user", text)
 
     def add_sage_message(self, text: str):
-        bubble = self.chat.add_bubble("sage", int(self.chat.width() * 0.85))
-        bubble.type_in(text)
-        return bubble
+        # DEDUP: skip if the last bubble already has this exact text
+        bubbles = self.chat_sidebar._bubbles
+        if bubbles:
+            last = bubbles[-1]
+            last_text = getattr(last, '_text', '') or getattr(last, '_full', '')
+            if last_text.strip() == text.strip():
+                return  # already shown
+        # Check if there's already a streaming bubble OR a recent assistant bubble
+        if bubbles and hasattr(bubbles[-1], '_streaming') and bubbles[-1]._streaming:
+            # Streaming bubble exists — just finalize it with the complete text
+            bubbles[-1]._text = text
+            bubbles[-1]._streaming = False
+            bubbles[-1]._compute_size()
+            bubbles[-1].setFixedHeight(bubbles[-1].heightNeeded())
+            bubbles[-1].update()
+        elif bubbles and getattr(bubbles[-1], '_role', '') == 'assistant' and not getattr(bubbles[-1], '_finalized', False):
+            # LLM stream created a bubble via append_stream — update it instead of duplicating
+            bubbles[-1]._text = text
+            bubbles[-1]._finalized = True
+            bubbles[-1]._compute_size()
+            bubbles[-1].setFixedHeight(bubbles[-1].heightNeeded())
+            bubbles[-1].update()
+        else:
+            # No existing bubble — create a new one (local answers)
+            self.chat_sidebar.add_message("assistant", text)
+        # Feed code scratchpad
+        if hasattr(self, 'code_scratchpad'):
+            has_code = any(kw in text for kw in ['def ', 'import ', 'class ', 'function ', '```', 'return ', 'if ', 'for '])
+            if has_code and len(text) > 20:
+                self.code_scratchpad.add_line("", "text")
+                self.code_scratchpad.add_line("// AI Response:", "comment")
+                for line in text.split('\n')[:15]:
+                    self.code_scratchpad.add_line(line, "code")
+            elif text.strip():
+                self.code_scratchpad.add_output(text[:120])
+        return None
 
     def begin_sage_stream(self):
-        self._stream_bubble = self.chat.add_bubble("sage", int(self.chat.width() * 0.85))
+        self.chat_sidebar.begin_stream()
+        self._stream_bubble = True
 
     def append_sage_stream(self, delta: str):
-        if self._stream_bubble:
-            self._stream_bubble.stream_append(delta)
-            sb = self.chat.verticalScrollBar()
-            if sb.maximum() - sb.value() < 140:
-                sb.setValue(sb.maximum())
+        self.chat_sidebar.append_stream(delta)
 
     def end_sage_stream(self):
-        if self._stream_bubble:
-            self._stream_bubble.stream_end()
-            self._stream_bubble = None
+        self.chat_sidebar.end_stream()
+        self._stream_bubble = None
+        # Refresh history map with new conversation
+        QTimer.singleShot(500, self._load_conversations_for_map)
 
     # ------------------------------------------------------ state/telemetry
 
+    def _on_shutdown_requested(self):
+        self._real_exit = True
+        self.close()
+        # SAFETY: use SuperUser with 30s delay, not os.system with 5s
+        try:
+            from modules.superuser import SuperUser
+            SuperUser.shutdown(30)
+        except Exception:
+            pass
+
     def set_pipeline_state(self, state: str):
-        # state: idle | listening | thinking | speaking
         self.circle.set_state(state)
         self.waveform.set_state(state)
+        self.rune_core.set_state(state)
         icons = {"idle": ("EM ESPERA", C.TEXT_DIM),
                  "listening": ("ESCUTANDO", C.GREEN),
                  "thinking": ("PROCESSANDO", C.GOLD),
-                 "speaking": ("FALANDO", C.PRI)}
+                 "speaking": ("FALANDO", C.PRI),
+                 "success": ("CONCLUÍDO", C.GREEN),
+                 "error": ("ERRO", C.RED)}
         icon, col = icons.get(state, ("EM ESPERA", C.TEXT_DIM))
         self.chip_state.set_value(icon, col)
         if self.orb.isVisible():
             self.orb.set_state(state)
+        # Log notification
+        if hasattr(self, 'notifications') and state in ('success', 'error', 'listening'):
+            notif_icons = {'success': '✅', 'error': '❌', 'listening': '🎙'}
+            notif_texts = {'success': 'Comando concluído', 'error': 'Erro no processamento', 'listening': 'Escutando...'}
+            self.notifications.add(notif_icons.get(state, '•'), notif_texts.get(state, state))
+        # Micro-interactions: confetti on success, shake on error
+        if state == "success" and hasattr(self, 'micro'):
+            self.micro.add_confetti(self.width() / 2, self.height() / 2, 25)
+        if state == "error" and hasattr(self, 'micro'):
+            self.micro.trigger_shake(6.0)
+        # Auto-reset success/error to idle after 2s
+        if state in ("success", "error"):
+            QTimer.singleShot(2000, lambda: self.set_pipeline_state("idle"))
 
     def update_mic_rms(self, rms: float):
         try:
@@ -1443,6 +1840,10 @@ class GreatSageMainWindow(QMainWindow):
             self.orb.push_rms(rms)
             val = min(100.0, (rms / 260.0) * 100.0)
             self.m_mic.set_value(val, f"{rms:.0f}")
+            # Audio reactivity for RuneCore
+            if hasattr(self, 'rune_core'):
+                audio_norm = min(1.0, rms / 200.0)
+                self.rune_core.set_audio_level(audio_norm)
         except Exception:
             pass
 
@@ -1450,6 +1851,9 @@ class GreatSageMainWindow(QMainWindow):
         self.chip_stt.set_value(f"STT {stt_engine} {stt_ms}ms")
         self.chip_model.set_value(f"LLM {model.split('-')[0]}")
         self.chip_ttft.set_value(f"TTFT {ttft_ms}ms", C.GREEN if ttft_ms and ttft_ms < 1500 else C.GOLD)
+        if hasattr(self, 'ai_status'):
+            self.ai_status.set_model(model, "Groq")
+            self.ai_status.set_latency(ttft_ms)
 
     def _start_telemetry(self):
         self._tele_timer = QTimer(self)
@@ -1467,6 +1871,17 @@ class GreatSageMainWindow(QMainWindow):
 
     # ------------------------------------------------------ interactions
 
+    def _on_quick_action(self, cmd: str):
+        """Handle quick action buttons — intercept special commands."""
+        cmd_lower = cmd.strip().lower()
+        # Programming panel
+        if cmd_lower in ('programar', 'modo programador', 'ala de programacao',
+                         'ala de programação', 'code lab'):
+            self.open_programming_panel()
+            return
+        # Everything else goes to normal command handler
+        self.submit_command(cmd)
+
     def submit_command(self, cmd: str, echo: bool = True):
         """Show master bubble and dispatch to the app brain (async)."""
         if not cmd.strip():
@@ -1475,6 +1890,17 @@ class GreatSageMainWindow(QMainWindow):
             self.add_master_message(cmd)
         self.set_pipeline_state("thinking")
         self._t0_cmd = time.perf_counter()
+        # Track in recent commands
+        if hasattr(self, 'recent_cmds'):
+            self.recent_cmds.add_command(cmd)
+        if hasattr(self, 'ai_status'):
+            self.ai_status.increment_commands()
+        # Log notification
+        if hasattr(self, 'notifications'):
+            self.notifications.add("💬", cmd[:35])
+        # Toast
+        if hasattr(self, 'toast'):
+            self.toast.show_toast(f"Processando: {cmd[:40]}...", "info", 2000)
         if self.command_handler:
             threading.Thread(target=self._exec_async, args=(cmd,), daemon=True).start()
 
@@ -1483,6 +1909,7 @@ class GreatSageMainWindow(QMainWindow):
             self.command_handler(cmd)
         except Exception as e:
             print(f"[UI] command error: {e}")
+            self.set_pipeline_state("error")
 
     def _on_enter(self):
         cmd = self.entry.text().strip()
@@ -1502,11 +1929,11 @@ class GreatSageMainWindow(QMainWindow):
             return
         if self.pipeline.mode == "always_on":
             self.pipeline.set_mode("wake")
-            self.btn_mode.setText(" 🔑 SÓ COM 'GRANDE SÁBIO' ")
+            self.btn_mode.setText(" 🔑 SÓ COM 'ELIVEA' ")
             self.btn_mode.setStyleSheet(f"""
                 QPushButton {{ background: {C.PANEL2}; color: {C.GOLD}; border: 1px solid {C.GOLD}; border-radius: 6px; padding: 8px 10px; }}
             """)
-            self.add_sage_message("Modo de escuta seletiva ativado. Diga 'Grande Sábio' para me chamar, Mestre.")
+            self.add_sage_message("Modo de escuta seletiva ativado. Diga 'Elívea' para me chamar, Mestre.")
         else:
             self.pipeline.set_mode("always_on")
             self.btn_mode.setText(" 📡 SEMPRE OUVINDO ")
@@ -1534,7 +1961,7 @@ class GreatSageMainWindow(QMainWindow):
     def _save_history(self):
         """Save conversation history."""
         try:
-            from GreatSageAI_Clone.memory.memory_manager import MemoryManager
+            from memory.memory_manager import MemoryManager
             MemoryManager._ensure_files()
             self.add_sage_message("Histórico salvo com sucesso, Mestre.")
         except Exception as e:
@@ -1585,10 +2012,10 @@ Comandos de Voz:
 
     def _open_usage(self):
         """Abre o Usage Dashboard em janela flutuante."""
-        from GreatSageAI_Clone.ui.usage_dashboard import UsageDashboard
+        from ui.usage_dashboard import UsageDashboard
         if not getattr(self, '_usage_win', None) or not self._usage_win.isVisible():
             self._usage_win = UsageDashboard()
-            self._usage_win.setWindowTitle("Usage Tracker - Great Sage AI")
+            self._usage_win.setWindowTitle("Usage Tracker - Elivea")
             self._usage_win.resize(500, 700)
         self._usage_win.show()
         self._usage_win.raise_()
@@ -1603,7 +2030,7 @@ Comandos de Voz:
     def _cycle_voice(self):
         if not self.speech:
             return
-        from GreatSageAI_Clone.core.speech_engine import VOICE_PRESETS
+        from core.speech_engine import VOICE_PRESETS
         keys = list(VOICE_PRESETS.keys())
         cur = self.speech.preset.key
         nxt = keys[(keys.index(cur) + 1) % len(keys)] if cur in keys else keys[0]
@@ -1612,7 +2039,7 @@ Comandos de Voz:
         self.add_sage_message(f"Voz neural recalibrada: {VOICE_PRESETS[nxt].label}.")
 
     def _open_config(self):
-        from GreatSageAI_Clone.core.speech_engine import VOICE_PRESETS
+        from core.speech_engine import VOICE_PRESETS
         voices = [p.label for p in VOICE_PRESETS.values()]
         current = self.speech.current_voice_label if self.speech else ""
         self._config = ConfigDialog(self, voices, current, parent=self)
@@ -1621,20 +2048,132 @@ Comandos de Voz:
     # ------------------------------------------------------ CodeDock
 
     def open_code_workspace(self, task: str = ""):
-        """Abre (ou traz à frente) a Ala de Programação — estilo Cursor/ZCode."""
-        from GreatSageAI_Clone.ui.code_workspace import CodeWorkspaceWindow
-        if not getattr(self, "code_win", None):
-            self.code_win = CodeWorkspaceWindow(llm=self.llm, parent=self)
-            self.code_win.report_signal.connect(self._on_code_agent_report)
-            self.code_win.destroyed.connect(lambda _: setattr(self, "code_win", None))
-        self.code_win.show()
-        self.code_win.raise_()
-        self.code_win.activateWindow()
-        if isinstance(task, str) and task.strip():
-            self.code_win.run_task(task.strip())
+        """Open the code editor overlay in the center panel."""
+        if not hasattr(self, 'code_workspace'):
+            return
+        parent = self.code_workspace.parentWidget()
+        if parent:
+            w, h = parent.width(), parent.height()
+            if w > 0 and h > 0:
+                self.code_workspace.setGeometry(0, 0, w, h)
+        self.rune_core.hide()
+        self.code_workspace.show()
+        self.code_workspace.raise_()
+        self.code_workspace.setFocus()
+        self.code_workspace.update()
+        if task:
+            self.code_workspace._prompt = task
+            self.code_workspace.update()
+            QTimer.singleShot(300, lambda: self._on_generate_code(task))
+
+    def _close_code_workspace(self):
+        """Hide code workspace, show RuneCore again."""
+        self.code_workspace.hide()
+        self.rune_core.show()
+        self.rune_core.set_center_detail(True)
+        self.set_pipeline_state("idle")
+
+    def _on_generate_code(self, prompt: str):
+        """Send prompt to LLM, collect response, set as code in workspace."""
+        self.code_workspace.set_generating(True)
+        self.set_pipeline_state("thinking")
+
+        def _worker():
+            try:
+                collected: list[str] = []
+                system_prompt = (
+                    "You are Elivea (Elivea), an elite AI coding engine. "
+                    "Generate PRODUCTION-QUALITY code — not stubs, not examples. "
+                    "Rules: "
+                    "1) Return ONLY raw code, zero markdown, zero fences, zero explanations. "
+                    "2) Auto-detect the best language from the user's request (Python default). "
+                    "3) Include concise inline comments for non-obvious logic. "
+                    "4) Handle edge cases and errors properly. "
+                    "5) Use modern idioms and best practices. "
+                    "6) If the task needs multiple files, separate them with '# === FILE: path ==='. "
+                    "7) Optimize for speed and readability. "
+                    "8) Never output placeholder code — every function must be fully implemented."
+                )
+                messages = [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt},
+                ]
+                try:
+                    from core.nine_router import NineRouterBridge
+                    for delta in NineRouterBridge().route_and_stream(
+                        messages, system=system_prompt,
+                        task_type="code", max_tokens=8192, temperature=0.15,
+                    ):
+                        if delta:
+                            collected.append(delta)
+                except Exception:
+                    # Fallback: try OpenAI directly
+                    try:
+                        from openai import OpenAI
+                        import os
+                        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
+                        stream = client.chat.completions.create(
+                            model="gpt-4o-mini", messages=messages,
+                            max_tokens=8192, temperature=0.15, stream=True,
+                        )
+                        for chunk in stream:
+                            if chunk.choices and chunk.choices[0].delta.content:
+                                collected.append(chunk.choices[0].delta.content)
+                    except Exception:
+                        collected.append("# Error: No LLM provider available. Configure OPENAI_API_KEY.")
+
+                full_code = "".join(collected).strip()
+                # Remove markdown fences if present
+                if full_code.startswith("```"):
+                    lines = full_code.split("\n")
+                    lines = [l for l in lines if not l.strip().startswith("```")]
+                    full_code = "\n".join(lines)
+
+                QTimer.singleShot(0, lambda: self._apply_generated_code(full_code))
+            except Exception as e:
+                QTimer.singleShot(0, lambda: self._apply_generated_code(f"# Error generating code: {e}"))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _apply_generated_code(self, code: str):
+        """Set generated code in workspace and update state."""
+        self.code_workspace.set_code(code)
+        self.set_pipeline_state("success")
+        # Also push to code scratchpad
+        if hasattr(self, 'code_scratchpad'):
+            self.code_scratchpad.set_code(code)
+
+    def _run_code(self, code: str):
+        """Execute code and show output."""
+        self.set_pipeline_state("thinking")
+        import threading
+        def _worker():
+            try:
+                import subprocess, tempfile
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+                    f.write(code)
+                    f.flush()
+                    result = subprocess.run(
+                        ['python', f.name], capture_output=True, text=True, timeout=10
+                    )
+                    output = result.stdout
+                    if result.stderr:
+                        output += f"\n✗ {result.stderr}"
+                    if not output.strip():
+                        output = "> Code executed successfully (no output)"
+                import os
+                os.unlink(f.name)
+                self.code_workspace.set_output(output)
+                self.set_pipeline_state("success")
+            except subprocess.TimeoutExpired:
+                self.code_workspace.set_output("✗ Execution timed out (10s limit)")
+                self.set_pipeline_state("error")
+            except Exception as e:
+                self.code_workspace.set_output(f"✗ Error: {e}")
+                self.set_pipeline_state("error")
+        threading.Thread(target=_worker, daemon=True).start()
 
     def _on_code_agent_report(self, report: str):
-        """Relatório final do agente chega ao chat principal (e à voz)."""
         if not report:
             return
         self.add_sage_message(report)
@@ -1645,11 +2184,219 @@ Comandos de Voz:
             pass
         self.set_pipeline_state("listening")
 
+    # ---- Programming Panel ----
+    def open_programming_panel(self, task: str = ""):
+        """Open the full programming panel."""
+        if not hasattr(self, 'programming_panel'):
+            return
+        parent = self.programming_panel.parentWidget()
+        if parent:
+            w, h = parent.width(), parent.height()
+            if w > 0 and h > 0:
+                self.programming_panel.setGeometry(0, 0, w, h)
+        self.rune_core.hide()
+        self.programming_panel.show()
+        self.programming_panel.raise_()
+        self.programming_panel.setFocus()
+        if task:
+            self.programming_panel.set_prompt(task)
+            QTimer.singleShot(300, lambda: self._on_programming_generate(task))
+
+    def _close_programming_panel(self):
+        """Hide programming panel, show RuneCore again."""
+        self.programming_panel.hide()
+        self.rune_core.show()
+        self.rune_core.set_center_detail(True)
+        self.set_pipeline_state("idle")
+
+    # -- Deep Dev Panel -----------------------------------------
+
+    def toggle_deep_dev_panel(self):
+        """Toggle the Deep Dev Panel overlay."""
+        if self.deep_dev_panel.isVisible():
+            self._close_deep_dev_panel()
+        else:
+            self._open_deep_dev_panel()
+
+    def _open_deep_dev_panel(self):
+        """Open the Deep Dev Panel overlay on the center area."""
+        self.rune_core.hide()
+        self.deep_dev_panel.show()
+        center = self.deep_dev_panel.parent()
+        if center:
+            margin = 40
+            self.deep_dev_panel.setGeometry(margin, margin, center.width() - margin * 2, center.height() - margin * 2)
+        self.deep_dev_panel.raise_()
+        self.deep_dev_panel.setFocus()
+        self.set_pipeline_state("idle")
+        self.deep_dev_panel.set_output("Deep Dev Panel abrindo...\nEscaneando projeto automaticamente...")
+        self.deep_dev_panel.set_phase("SCANNING")
+        # Auto-trigger full scan in background
+        QTimer.singleShot(100, self._auto_scan_project)
+
+    def _close_deep_dev_panel(self):
+        """Close the Deep Dev Panel, show RuneCore again."""
+        self.deep_dev_panel.hide()
+        self.rune_core.show()
+        self.rune_core.set_center_detail(True)
+        self.set_pipeline_state("idle")
+
+    def _auto_scan_project(self):
+        """Auto-scan the entire project for bugs and issues on panel open."""
+        def _worker():
+            try:
+                # Step 1: Discover files
+                QTimer.singleShot(0, lambda: self.deep_dev_panel.set_phase("SCANNING"))
+                core_dir = os.path.join(str(Path(__file__).resolve().parent.parent), "core")
+                files = []
+                if os.path.isdir(core_dir):
+                    for f in sorted(os.listdir(core_dir)):
+                        if f.endswith(".py") and not f.startswith("__"):
+                            files.append(f"core/{f}")
+                # Also scan ui/ and root .py files
+                ui_dir = os.path.join(str(Path(__file__).resolve().parent.parent), "ui")
+                if os.path.isdir(ui_dir):
+                    for f in sorted(os.listdir(ui_dir)):
+                        if f.endswith(".py") and not f.startswith("__"):
+                            files.append(f"ui/{f}")
+
+                QTimer.singleShot(0, lambda n=len(files): self.deep_dev_panel.set_output(
+                    f"Encontrados {n} arquivos Python.\nAnalisando AST, imports, complexidade..."))
+
+                # Step 2: Run deep analysis via command handler
+                result = self.command_handler("shadow") if self.command_handler else None
+                if result:
+                    QTimer.singleShot(0, lambda r=str(result): self._on_auto_scan_result(r))
+                else:
+                    QTimer.singleShot(0, lambda: self.deep_dev_panel.set_output(
+                        "Deep Dev Panel pronto.\nNenhum bug critico encontrado.\n\n"
+                        "Modos disponiveis:\n"
+                        "\u2022 **Painel** - comandos de engenharia\n"
+                        "\u2022 **Shadow Dev** - analise autonoma\n"
+                        "\u2022 **Time Machine** - investigacao de regressoes"))
+                    QTimer.singleShot(0, lambda: self.deep_dev_panel.set_phase("READY"))
+            except Exception as e:
+                QTimer.singleShot(0, lambda err=str(e): self._on_deep_dev_error(err))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _on_auto_scan_result(self, result):
+        """Handle auto-scan result and display with diff if available."""
+        self.deep_dev_panel.set_output(result)
+        self.deep_dev_panel.set_phase("READY")
+
+    def _on_deep_dev_execute(self, cmd):
+        """Execute a Deep Dev command."""
+        self.deep_dev_panel.set_phase("ANALYZING")
+        self.deep_dev_panel.append_output("> " + cmd)
+
+        def _worker():
+            try:
+                result = self.command_handler(cmd) if self.command_handler else "Command handler not available"
+                QTimer.singleShot(0, lambda r=result: self._on_deep_dev_result(str(r)))
+            except Exception as e:
+                QTimer.singleShot(0, lambda err=str(e): self._on_deep_dev_error(err))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def _on_deep_dev_result(self, result):
+        self.deep_dev_panel.set_output(str(result))
+        self.deep_dev_panel.set_phase("READY")
+
+    def _on_deep_dev_error(self, error):
+        self.deep_dev_panel.append_output("Erro: " + str(error))
+        self.deep_dev_panel.set_phase("FAILED")
+
+    def _on_deep_dev_approve(self):
+        if self.command_handler:
+            try:
+                result = self.command_handler("approve shadow")
+                self.deep_dev_panel.append_output(str(result))
+            except Exception as e:
+                self.deep_dev_panel.append_output("Error: " + str(e))
+
+    def _on_deep_dev_discard(self):
+        if self.command_handler:
+            try:
+                result = self.command_handler("discard shadow")
+                self.deep_dev_panel.append_output(str(result))
+            except Exception as e:
+                self.deep_dev_panel.append_output("Error: " + str(e))
+
+    def _on_programming_generate(self, prompt: str):
+        """Send prompt to LLM for code generation in programming panel."""
+        self.programming_panel.set_generating(True)
+        self.set_pipeline_state("thinking")
+
+        def _worker():
+            try:
+                collected: list[str] = []
+                system = (
+                    "You are Elívea, an elite AI coding engine. "
+                    "Generate PRODUCTION-QUALITY Python code. "
+                    "Rules: Complete, functional, no stubs. "
+                    "Include error handling. Follow PEP 8. "
+                    "Output ONLY the code in a single ```python block."
+                )
+                for delta in self.llm.stream(
+                    [{"role": "user", "content": prompt}],
+                    system=system,
+                    max_tokens=4096,
+                    temperature=0.4,
+                ):
+                    collected.append(delta)
+                full = "".join(collected)
+                # Extract code block
+                if '```python' in full:
+                    code = full.split('```python')[1].split('```')[0].strip()
+                elif '```' in full:
+                    code = full.split('```')[1].split('```')[0].strip()
+                else:
+                    code = full.strip()
+                QTimer.singleShot(0, lambda: self.programming_panel.set_code(code))
+                QTimer.singleShot(0, lambda c=code: self.programming_panel.append_output(
+                    "✅ Código gerado com sucesso!", "#4ec9b0"))
+            except Exception as e:
+                QTimer.singleShot(0, lambda err=str(e): self.programming_panel.append_output(
+                    f"❌ Erro: {err}", "#f44747"))
+            finally:
+                QTimer.singleShot(0, lambda: self.programming_panel.set_generating(False))
+                QTimer.singleShot(0, lambda: self.set_pipeline_state("idle"))
+
+        threading.Thread(target=_worker, daemon=True).start()
+
+    def mousePressEvent(self, ev):
+        """Click ripple + pass to parent."""
+        if hasattr(self, 'micro'):
+            self.micro.add_ripple(ev.position().x(), ev.position().y())
+        super().mousePressEvent(ev)
+
+    def mouseMoveEvent(self, ev):
+        """Mouse trail effect."""
+        if hasattr(self, 'micro'):
+            self.micro.add_trail_point(ev.position().x(), ev.position().y())
+        super().mouseMoveEvent(ev)
+
     def resizeEvent(self, ev):
-        super().resizeEvent(ev)
-        if hasattr(self, "boot") and self.boot.isVisible():
-            self.boot.setGeometry(self.rect())
+        try:
+            super().resizeEvent(ev)
+            r = self.rect()
+            if hasattr(self, "awakening") and self.awakening.isVisible():
+                self.awakening.setGeometry(r)
+            if hasattr(self, "cmd_drawer"):
+                self.cmd_drawer.setGeometry(r)
+            if hasattr(self, "history_drawer") and self.history_drawer.isVisible():
+                self.history_drawer.setGeometry(r)
+            if hasattr(self, "ambient_particles"):
+                self.ambient_particles.setGeometry(r)
+            if hasattr(self, "micro"):
+                self.micro.setGeometry(r)
+            if hasattr(self, "toast") and self.toast.isVisible():
+                pw = self.width()
+                self.toast.setGeometry(pw - 320, 56, 310, 52)
+        except Exception:
+            pass  # Never crash on resize
 
 # Alias para compatibilidade
-MainWindow = GreatSageMainWindow
+MainWindow = EliveaMainWindow
 

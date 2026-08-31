@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Smart Improvements v1 (20 Features)
+Elívea — Smart Improvements v1 (20 Features)
 ====================================================
 20 melhorias seguras que NÃO modificam código existente.
 Cada feature é independente, com try/except, e pode ser desligada.
@@ -40,7 +40,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
 from collections import defaultdict
 
-logger = logging.getLogger("greatsage.smart")
+logger = logging.getLogger("elvea.smart")
 
 # ── Config ───────────────────────────────────────────────────────────────────
 DATA_DIR = Path(__file__).resolve().parent.parent / "config" / "smart_data"

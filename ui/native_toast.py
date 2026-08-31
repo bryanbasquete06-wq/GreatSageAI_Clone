@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Toast notifications customizadas do Great Sage AI."""
+"""Toast notifications customizadas do Elívea."""
 from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QGraphicsOpacityEffect
 from PySide6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve
 
 import logging
 
-logger = logging.getLogger("greatsage.toast")
+logger = logging.getLogger("elvea.toast")
 
 class ToastNotification(QWidget):
     _instance = None

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Dashboard de Atividade
+Elivea — Dashboard de Atividade
 ========================================
 Historico, uso de tokens, memoria, logs de erros.
 """
@@ -13,7 +13,7 @@ from typing import List, Dict, Optional
 from datetime import datetime
 from dataclasses import dataclass, field
 
-logger = logging.getLogger("greatsage.dashboard")
+logger = logging.getLogger("elvea.dashboard")
 
 
 @dataclass
@@ -225,7 +225,7 @@ class Dashboard:
 
     def get_dashboard_summary(self, memory=None) -> str:
         """Get complete dashboard summary."""
-        parts = ["**Dashboard de Atividade do Grande Sage AI**\n"]
+        parts = ["**Dashboard de Atividade do Elivea**\n"]
 
         # Token usage
         parts.append(self.get_token_summary())

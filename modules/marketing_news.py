@@ -1,5 +1,5 @@
 """
-Great Sage AI - Marketing News & Trend Briefing Module
+Elivea - Marketing News & Trend Briefing Module
 Provides real-time marketing trends, digital advertising updates, and growth strategies.
 """
 

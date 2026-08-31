@@ -1,5 +1,5 @@
 """
-Great Sage AI - Persistent Memory & Conversation Archiver
+Elivea - Persistent Memory & Conversation Archiver
 Archives 100% of user speech, queries, assistant responses, and preferences to JSON storage.
 
 v2 improvements:
@@ -290,7 +290,7 @@ class MemoryManager:
             for turn in history[-limit:]:
                 lines.append(f"\n[{turn['timestamp']} | Origem: {turn['source'].upper()}]")
                 lines.append(f" Usuário: {turn['user_speech']}")
-                lines.append(f" Grande Sábio: {turn['assistant_response']}")
+                lines.append(f" Elivea: {turn['assistant_response']}")
             return "\n".join(lines)
         except Exception as e:
             return f"[Erro] Falha ao ler histórico: {e}"

@@ -4,7 +4,7 @@ import logging
 import platform
 import subprocess
 
-logger = logging.getLogger("greatsage.notifications")
+logger = logging.getLogger("elvea.notifications")
 
 def notify(title: str, message: str, duration: int = 5) -> bool:
     """Envia notificacao nativa do Windows via PowerShell."""
@@ -26,7 +26,7 @@ $template = @"
 $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
 $xml.LoadXml($template)
 $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
-[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Great Sage AI").Show($toast)
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("Elívea").Show($toast)
 '''
             subprocess.run(["powershell", "-Command", ps_script],
                           capture_output=True, timeout=10)

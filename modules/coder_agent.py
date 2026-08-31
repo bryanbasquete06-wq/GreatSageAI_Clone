@@ -1,5 +1,5 @@
 """
-Great Sage AI - Coder Agent Engine
+Elivea - Coder Agent Engine
 Provides live code execution, static analysis, refactoring, and code generation.
 """
 

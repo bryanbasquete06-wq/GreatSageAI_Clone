@@ -1,4 +1,4 @@
-# Great Sage AI — Dependencias
+# Elívea — Dependencias
 # Instale com: pip install -r requirements.txt
 
 # Core

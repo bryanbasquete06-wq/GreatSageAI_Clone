@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Setup Wizard
+Elívea — Setup Wizard
 =============================
 Guiado de configuração na primeira execução.
 
@@ -44,13 +44,13 @@ class SetupWizard(QWidget):
     ]
 
     VOICE_OPTIONS = [
-        ("Raphael (Padrão)", "raphael"),
+        ("Elivea (Padrão)", "raphael"),
         ("Jarvis", "jarvis"),
     ]
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Great Sage AI — Configuração Inicial")
+        self.setWindowTitle("Elívea — Configuração Inicial")
         self.setMinimumSize(600, 500)
         self.setMaximumSize(700, 600)
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.CustomizeWindowHint | Qt.WindowType.WindowTitleHint)
@@ -71,7 +71,7 @@ class SetupWizard(QWidget):
         main_layout.setContentsMargins(30, 30, 30, 30)
 
         # Header
-        self._header = QLabel("Great Sage AI")
+        self._header = QLabel("Elívea")
         self._header.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
         self._header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(self._header)
@@ -130,7 +130,7 @@ class SetupWizard(QWidget):
         layout = QVBoxLayout(page)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        welcome = QLabel("Bem-vindo ao Great Sage AI!")
+        welcome = QLabel("Bem-vindo ao Elívea!")
         welcome.setFont(QFont("Segoe UI", 16))
         welcome.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(welcome)
@@ -267,7 +267,7 @@ class SetupWizard(QWidget):
         layout.addWidget(label)
 
         desc = QLabel(
-            "Tudo pronto! O Great Sage AI será iniciado em instantes.\n\n"
+            "Tudo pronto! O Elívea será iniciado em instantes.\n\n"
             "Use sua voz ou digite comandos para interagir comigo.\n"
             "Diga 'ajuda' a qualquer momento para ver o que posso fazer."
         )
@@ -347,7 +347,7 @@ class SetupWizard(QWidget):
     def _test_voice(self):
         """Testa a voz selecionada."""
         try:
-            from GreatSageAI_Clone.core.speech_engine import SpeechEngine
+            from core.speech_engine import SpeechEngine
             voice = self._voice_combo.currentData()
             engine = SpeechEngine(voice_key=voice)
             engine.speak("Teste de voz concluído! Esta é minha voz atual.")
@@ -415,10 +415,10 @@ class SetupWizard(QWidget):
             key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_SET_VALUE)
             if enable:
                 exe_path = sys.executable
-                winreg.SetValueEx(key, "GreatSageAI", 0, winreg.REG_SZ, f'"{exe_path}" --minimized')
+                winreg.SetValueEx(key, "Elívea", 0, winreg.REG_SZ, f'"{exe_path}" --minimized')
             else:
                 try:
-                    winreg.DeleteValue(key, "GreatSageAI")
+                    winreg.DeleteValue(key, "Elívea")
                 except FileNotFoundError:
                     pass
             winreg.CloseKey(key)

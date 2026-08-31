@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import List, Optional
 from dataclasses import dataclass, field
 
-logger = logging.getLogger("greatsage.video")
+logger = logging.getLogger("elvea.video")
 
 @dataclass
 class VideoFrame:
@@ -33,7 +33,7 @@ class VideoAnalyzer:
 
     def _get_image_analyzer(self):
         if self._image_analyzer is None:
-            from GreatSageAI_Clone.core.image_analyzer import analyzer
+            from core.image_analyzer import analyzer
             self._image_analyzer = analyzer
         return self._image_analyzer
 

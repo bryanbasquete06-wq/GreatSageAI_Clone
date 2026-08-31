@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — 9Router (Multi-Provider Token Rotation)
+Elívea — 9Router (Multi-Provider Token Rotation)
 ========================================================
 Tokens infinitos via rotação inteligente entre 10+ providers gratuitos.
 
@@ -37,7 +37,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from collections import defaultdict
 
-logger = logging.getLogger("greatsage.nine_router")
+logger = logging.getLogger("elvea.nine_router")
 
 
 # =========================================================================
@@ -373,7 +373,7 @@ class NineRouter:
     def _get_key(self, profile: ProviderProfile) -> str:
         """Get API key from multiple sources."""
         # 1) SecretManager
-        for mod_path in ("core.secret_manager", "GreatSageAI_Clone.core.secret_manager"):
+        for mod_path in ("core.secret_manager", "EliveaAI_Clone.core.secret_manager"):
             try:
                 mod = __import__(mod_path, fromlist=["secrets"])
                 sm = getattr(mod, "secrets", None)
@@ -665,7 +665,7 @@ class NineRouter:
 class NineRouterBridge:
     """
     Bridges 9Router decisions to the existing LLMProvider/LLMEngine system.
-    Used by great_sage_app.py to transparently upgrade from single-provider
+    Used by elvea_app.py to transparently upgrade from single-provider
     to multi-provider rotation.
     """
 

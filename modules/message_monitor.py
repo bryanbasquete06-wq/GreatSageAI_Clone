@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Message Monitor & Auto-Reply Engine
+Elívea — Message Monitor & Auto-Reply Engine
 =====================================================
 Monitora notificações de mensagens e responde automaticamente.
 
@@ -18,7 +18,7 @@ Fluxo:
   4. ResponseSender envia resposta (click+type ou API)
 
 Uso:
-    from GreatSageAI_Clone.modules.message_monitor import MessageMonitor
+    from modules.message_monitor import MessageMonitor
     monitor = MessageMonitor(llm_engine=llm)
     monitor.start()
 """
@@ -38,7 +38,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 
-logger = logging.getLogger("greatsage.message_monitor")
+logger = logging.getLogger("elvea.message_monitor")
 
 
 # =========================================================================
@@ -74,7 +74,7 @@ class MonitorConfig:
     language: str = "pt-BR"
 
     # File paths
-    config_dir: Path = field(default_factory=lambda: Path("F:/GreatSageTemp/message_monitor"))
+    config_dir: Path = field(default_factory=lambda: Path("F:/EliveaTemp/message_monitor"))
     history_file: str = "reply_history.json"
     rules_file: str = "auto_reply_rules.json"
 

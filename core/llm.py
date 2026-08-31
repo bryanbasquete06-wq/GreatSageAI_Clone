@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Motor LLM Multi-Provider
+Elivea — Motor LLM Multi-Provider
 =========================================
 Suporta: Groq, Google Gemini, OpenRouter, Cerebras, HuggingFace, Ollama
 Fallback automático entre providers.
@@ -17,7 +17,7 @@ from typing import Optional, Generator, Dict, Any, List
 from dataclasses import dataclass, field
 from enum import Enum
 
-logger = logging.getLogger("greatsage.llm")
+logger = logging.getLogger("elvea.llm")
 # silencia warning AFC do google-genai (inofensivo)
 try:
     logging.getLogger("google_genai").setLevel(logging.ERROR)
@@ -526,7 +526,7 @@ class LLMEngine:
         aliases = aliases or []
         env = env or {}
         # 1) SecretManager em F:\\GreatSageTemp (primary)
-        for mod_path in ("core.secret_manager", "GreatSageAI_Clone.core.secret_manager"):
+        for mod_path in ("core.secret_manager", "EliveaAI_Clone.core.secret_manager"):
             try:
                 mod = __import__(mod_path, fromlist=["secrets"])
                 sm = getattr(mod, "secrets", None)
@@ -669,7 +669,7 @@ class LLMEngine:
             # 1) Tenta RAG via RAGWithEmbeddings (prioriza F:\\GreatSageTemp\\rag)
             try:
                 RagClass = None
-                for mod_path in ("core.rag_embeddings", "GreatSageAI_Clone.core.rag_embeddings"):
+                for mod_path in ("core.rag_embeddings", "EliveaAI_Clone.core.rag_embeddings"):
                     try:
                         mod = __import__(mod_path, fromlist=["RAGWithEmbeddings"])
                         RagClass = getattr(mod, "RAGWithEmbeddings", None)
@@ -759,7 +759,7 @@ class LLMEngine:
             # 2) Tenta MemoryManager (facts + histórico) para complementar
             try:
                 MM = None
-                for mod_path in ("memory.memory_manager", "GreatSageAI_Clone.memory.memory_manager", "core.memory"):
+                for mod_path in ("memory.memory_manager", "EliveaAI_Clone.memory.memory_manager", "core.memory"):
                     try:
                         mod = __import__(mod_path, fromlist=["MemoryManager"])
                         MM = getattr(mod, "MemoryManager", None)
@@ -889,9 +889,9 @@ class LLMEngine:
         return status
 
 
-# Compatibilidade: GreatSageLLM usado por great_sage_app original
-class GreatSageLLM(LLMEngine):
-    """Wrapper compatível com o GreatSageLLM original (usa LLMEngine por baixo)."""
+# Compatibilidade: EliveaLLM usado por great_sage_app original
+class EliveaLLM(LLMEngine):
+    """Wrapper compatível com o EliveaLLM original (usa LLMEngine por baixo)."""
     def __init__(self, *args, **kwargs):
         # ignora args, usa env padrão
         super().__init__(env_path=kwargs.get("env_path", ".env"))
@@ -913,7 +913,7 @@ class GreatSageLLM(LLMEngine):
             system = get_system_prompt()
         except Exception:
             try:
-                from GreatSageAI_Clone.core.persona import get_system_prompt
+                from EliveaAI_Clone.core.persona import get_system_prompt
                 system = get_system_prompt()
             except Exception:
                 pass

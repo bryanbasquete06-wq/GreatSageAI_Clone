@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Standalone Installer
+Elívea — Standalone Installer
 =====================================
 Executável único que:
   1. Verifica se Python está instalado
@@ -28,9 +28,9 @@ from urllib.request import urlopen, Request
 from urllib.error import URLError
 
 # ── Config ───────────────────────────────────────────────────────────────────
-GITHUB_REPO = "https://github.com/bryanbasquete06-wq/GreatSageAI_Clone"
-GITHUB_API = "https://api.github.com/repos/bryanbasquete06-wq/GreatSageAI_Clone/releases/latest"
-INSTALL_DIR = Path.home() / "GreatSageAI"
+GITHUB_REPO = "https://github.com/bryanbasquete06-wq/EliveaAI_Clone"
+GITHUB_API = "https://api.github.com/repos/bryanbasquete06-wq/EliveaAI_Clone/releases/latest"
+INSTALL_DIR = Path.home() / "Elívea"
 PYTHON_MIN = (3, 10)
 
 # Cores ANSI
@@ -122,7 +122,7 @@ def download_github():
     # Tenta pegar a release mais recente
     zip_url = None
     try:
-        req = Request(GITHUB_API, headers={"User-Agent": "GreatSageInstaller"})
+        req = Request(GITHUB_API, headers={"User-Agent": "EliveaInstaller"})
         with urlopen(req, timeout=15) as resp:
             data = json.loads(resp.read())
             for asset in data.get("assets", []):
@@ -140,11 +140,11 @@ def download_github():
     
     try:
         # Download
-        tmp_dir = Path(tempfile.mkdtemp(prefix="greatsage_"))
-        zip_path = tmp_dir / "greatsage.zip"
+        tmp_dir = Path(tempfile.mkdtemp(prefix="elvea_"))
+        zip_path = tmp_dir / "elvea.zip"
         
         print(c("dim", "  Baixando..."))
-        req = Request(zip_url, headers={"User-Agent": "GreatSageInstaller"})
+        req = Request(zip_url, headers={"User-Agent": "EliveaInstaller"})
         with urlopen(req, timeout=120) as resp:
             total = int(resp.headers.get("Content-Length", 0))
             downloaded = 0
@@ -301,18 +301,18 @@ def create_shortcuts():
         python_exe = str(uv_python)
     
     # AI shortcut
-    ai_bat = desktop / "Grande Sabio AI.bat"
+    ai_bat = desktop / "Elívea AI.bat"
     ai_bat.write_text(
-        f'@echo off\r\ntitle Grande Sabio AI\r\ncd /d "{INSTALL_DIR}"\r\n'
+        f'@echo off\r\ntitle Elívea AI\r\ncd /d "{INSTALL_DIR}"\r\n'
         f'"{python_exe}" main.py\r\nif errorlevel 1 pause\r\n',
         encoding="ascii", errors="replace"
     )
     print(c("green", f"  ✓ {ai_bat.name}"))
     
     # Installer shortcut (for re-running setup)
-    inst_bat = desktop / "Configurar Great Sage.bat"
+    inst_bat = desktop / "Configurar Elivea.bat"
     inst_bat.write_text(
-        f'@echo off\r\ntitle Configurar Great Sage\r\ncd /d "{INSTALL_DIR}"\r\n'
+        f'@echo off\r\ntitle Configurar Elivea\r\ncd /d "{INSTALL_DIR}"\r\n'
         f'"{python_exe}" installer.py\r\nif errorlevel 1 pause\r\n',
         encoding="ascii", errors="replace"
     )
@@ -359,16 +359,16 @@ def main():
     print(c("gold", "  ✓ INSTALAÇÃO CONCLUÍDA!"))
     print(c("gold", "=" * 60))
     print()
-    print(c("bold", "  O Grande Sábio foi instalado em:"))
+    print(c("bold", "  O Elívea foi instalado em:"))
     print(c("dim", f"  {INSTALL_DIR}"))
     print()
     print(c("bold", "  Próximos passos:"))
     print(c("dim", "  1. Configure suas API keys no assistente que abriu"))
-    print(c("dim", "  2. Escolha a voz do Grande Sábio"))
+    print(c("dim", "  2. Escolha a voz do Elívea"))
     print(c("dim", "  3. Clique em 'Instalar e Iniciar'"))
     print()
     print(c("bold", "  Para iniciar depois:"))
-    print(c("dim", "  • Clique duas vezes em 'Grande Sabio AI' na Área de Trabalho"))
+    print(c("dim", "  • Clique duas vezes em 'Elívea AI' na Área de Trabalho"))
     print(c("dim", "  • Ou execute: python main.py"))
     print()
     

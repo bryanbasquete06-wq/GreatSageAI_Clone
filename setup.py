@@ -1,7 +1,7 @@
 """
-PyInstaller Great Sage AI Setup
+PyInstaller Elivea Setup
 ===============================
-Build script para criar executável instalador do Grande Sábio AI.
+Build script para criar executável instalador do Elívea AI.
 """
 
 from setuptools import setup
@@ -18,20 +18,20 @@ HIDDEN_IMPORTS = [
     "PySide6.QtCore",
     "PySide6.QtGui",
     "PySide6.QtWidgets",
-    "GreatSageAI_Clone",
-    "GreatSageAI_Clone.core",
-    "GreatSageAI_Clone.ui",
-    "GreatSageAI_Clone.core.chain_of_thought",
-    "GreatSageAI_Clone.core.llm",
-    "GreatSageAI_Clone.core.speech_engine",
-    "GreatSageAI_Clone.core.voice_pipeline",
-    "GreatSageAI_Clone.core.persona",
-    "GreatSageAI_Clone.core.request_router",
-    "GreatSageAI_Clone.core.autonomous_planner",
-    "GreatSageAI_Clone.core.code_analyzer",
-    "GreatSageAI_Clone.core.chain_of_thought",
-    "GreatSageAI_Clone.ui.programming_tab",
-    "GreatSageAI_Clone.ui.qt_ui",
+    "EliveaAI_Clone",
+    "EliveaAI_Clone.core",
+    "EliveaAI_Clone.ui",
+    "EliveaAI_Clone.core.chain_of_thought",
+    "EliveaAI_Clone.core.llm",
+    "EliveaAI_Clone.core.speech_engine",
+    "EliveaAI_Clone.core.voice_pipeline",
+    "EliveaAI_Clone.core.persona",
+    "EliveaAI_Clone.core.request_router",
+    "EliveaAI_Clone.core.autonomous_planner",
+    "EliveaAI_Clone.core.code_analyzer",
+    "EliveaAI_Clone.core.chain_of_thought",
+    "EliveaAI_Clone.ui.programming_tab",
+    "EliveaAI_Clone.ui.qt_ui",
 ]
 
 # Excluir módulos desnecessários
@@ -67,6 +67,6 @@ setup(
     data_files=DATA_FILES,
     options={"pyinstaller": OPTIONS},
     version="2.0.0",
-    description="Instalador do Grande Sábio AI - Assistente Holográfico",
-    author="Sistema Great Sage AI",
+    description="Instalador do Elívea AI - Assistente Holográfico",
+    author="Sistema Elivea",
 )

@@ -1,5 +1,5 @@
 """
-Great Sage AI - Mark L Integration Bridge & Unified Tool Registry
+Elivea - Mark L Integration Bridge & Unified Tool Registry
 Provides seamless dynamic loading for ALL 20 Mark-L action modules and tools.
 """
 

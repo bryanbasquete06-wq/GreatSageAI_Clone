@@ -1,8 +1,8 @@
 """
-Great Sage AI — Raphael Orb (＜大贤者＞ Flutuante)
+Elívea — Elivea Orb (＜Elivea＞ Flutuante)
 ===================================================
 Esfera de luz flutuante estilo o anime Tensura: quando o Rimuru anda
-pelo mundo, o Raphael o acompanha como um orbe brilhante. Aqui, sempre
+pelo mundo, o Elívea o acompanha como um orbe brilhante. Aqui, sempre
 que a janela principal sai da tela (minimizar/fechar), este orbe assume:
 
   • Círculo mágico dourado em miniatura (runas, heptagrama, núcleo)
@@ -50,7 +50,7 @@ STATE_INFO = {
 }
 
 
-class RaphaelOrb(QWidget):
+class EliveaOrb(QWidget):
     """Floating companion orb — the Sage's presence outside the main window."""
 
     def __init__(self, main_window):
@@ -65,7 +65,7 @@ class RaphaelOrb(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setFixedSize(ORBSIZE, ORBSIZE)
-        self.setToolTip("＜大贤者＞ Grande Sábio — clique para abrir, botão direito para o menu")
+        self.setToolTip("＜Elivea＞ Elívea — clique para abrir, botão direito para o menu")
 
         self.state = "idle"
         self._t = 0.0
@@ -144,7 +144,7 @@ class RaphaelOrb(QWidget):
     # ---------------------------------------------------------------- paint
 
     def paintEvent(self, _):
-        from GreatSageAI_Clone.ui.qt_ui import C
+        from ui.qt_ui import C
 
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -247,7 +247,7 @@ class RaphaelOrb(QWidget):
                 p.drawArc(rect, int(ang * 16), int(arc_len * 16))
                 ang += arc_len + gap
 
-        # ---- heptagram sigil (Raphael's star)
+        # ---- heptagram sigil (Elivea's star)
         star_r = R * 0.46
         rot = self._star_rot
         pts = []
@@ -367,7 +367,7 @@ class RaphaelOrb(QWidget):
         self._dragging = False
 
     def contextMenuEvent(self, ev):
-        from GreatSageAI_Clone.ui.qt_ui import C
+        from ui.qt_ui import C
 
         m = QMenu(self)
         m.setStyleSheet(f"""
@@ -378,7 +378,7 @@ class RaphaelOrb(QWidget):
         """)
 
         states = {"idle": "Em espera", "listening": "Escutando", "thinking": "Processando", "speaking": "Falando"}
-        title = QAction(f"＜大贤者＞ {states.get(self.state, '—')}", m)
+        title = QAction(f"＜Elivea＞ {states.get(self.state, '—')}", m)
         title.setEnabled(False)
         m.addAction(title)
         m.addSeparator()
@@ -396,7 +396,7 @@ class RaphaelOrb(QWidget):
         m.addAction(a_mode)
 
         m.addSeparator()
-        a_exit = QAction("Encerrar Grande Sábio", m)
+        a_exit = QAction("Encerrar Elivea", m)
         a_exit.triggered.connect(self._exit_app)
         m.addAction(a_exit)
 

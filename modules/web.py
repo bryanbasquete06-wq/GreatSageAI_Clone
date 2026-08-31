@@ -1,5 +1,5 @@
 """
-Great Sage AI - Web Navigation & Search Module
+Elivea - Web Navigation & Search Module
 Handles web searches and browser operations.
 """
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Usage Dashboard Widget
+Elívea — Usage Dashboard Widget
 ========================================
 Widget Qt que mostra uso real-time de todos os providers:
   - Barras de progresso por provider (requests + tokens)

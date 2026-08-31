@@ -1,6 +1,6 @@
 """
-Great Sage AI - System Tray Launcher
-Starts Great Sage AI as a background Taskbar Widget / System Tray App.
+Elivea - System Tray Launcher
+Starts Elivea as a background Taskbar Widget / System Tray App.
 """
 
 import sys
@@ -11,21 +11,21 @@ root_dir = Path(__file__).resolve().parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
-from GreatSageAI_Clone.core.persona import PersonaManager
-from GreatSageAI_Clone.core.llm import GreatSageLLM
-from GreatSageAI_Clone.core.mark_l_bridge import MarkLBridge
-from GreatSageAI_Clone.modules.system import SystemModule
-from GreatSageAI_Clone.modules.files import FileModule
-from GreatSageAI_Clone.modules.web import WebModule
-from GreatSageAI_Clone.ui.tray import GreatSageTrayApp
+from core.persona import PersonaManager
+from core.llm import EliveaLLM
+from core.mark_l_bridge import MarkLBridge
+from modules.system import SystemModule
+from modules.files import FileModule
+from modules.web import WebModule
+from ui.tray import EliveaTrayApp
 
 
-class GreatSageTrayLauncher:
+class EliveaTrayLauncher:
     def __init__(self):
         self.persona = PersonaManager()
-        self.llm = GreatSageLLM()
+        self.llm = EliveaLLM()
         self.bridge = MarkLBridge()
-        self.tray_ui = GreatSageTrayApp(assistant_callback=self.process_command)
+        self.tray_ui = EliveaTrayApp(assistant_callback=self.process_command)
 
     def process_command(self, cmd: str) -> str:
         cmd_clean = cmd.strip()
@@ -76,10 +76,10 @@ class GreatSageTrayLauncher:
         return self.llm.query(cmd_clean)
 
     def start(self):
-        print("[Notice] Starting Great Sage Taskbar App...")
+        print("[Notice] Starting Elívea Taskbar App...")
         self.tray_ui.run()
 
 
 if __name__ == "__main__":
-    app = GreatSageTrayLauncher()
+    app = EliveaTrayLauncher()
     app.start()

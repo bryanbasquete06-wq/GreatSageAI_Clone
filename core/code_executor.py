@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Executor de Codigo Seguro
+Elivea — Executor de Codigo Seguro
 ==========================================
 Executa codigo Python/JS de forma segura com timeout e sandbox.
 """
@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Optional, Dict, Tuple
 from dataclasses import dataclass
 
-logger = logging.getLogger("greatsage.executor")
+logger = logging.getLogger("elvea.executor")
 
 
 @dataclass
@@ -220,7 +220,7 @@ def format_result(result: ExecutionResult) -> str:
 
 
 class CodeExecutor:
-    """Compatibilidade com great_sage_app (GreatSageLLM streaming)."""
+    """Compatibilidade com great_sage_app (EliveaLLM streaming)."""
     @staticmethod
     def has_executable(text: str) -> bool:
         if not text:

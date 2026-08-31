@@ -6,7 +6,7 @@ from typing import Optional, Dict, List
 from dataclasses import dataclass, field
 from urllib.parse import urlparse, urljoin
 
-logger = logging.getLogger("greatsage.link")
+logger = logging.getLogger("elvea.link")
 
 @dataclass
 class LinkAnalysis:
@@ -30,8 +30,8 @@ class LinkAnalyzer:
     def _get_llm(self):
         if self._llm is None:
             try:
-                from GreatSageAI_Clone.core.llm import GreatSageLLM
-                self._llm = GreatSageLLM()
+                from EliveaAI_Clone.core.llm import EliveaLLM
+                self._llm = EliveaLLM()
             except Exception:
                 pass
         return self._llm

@@ -41,16 +41,16 @@ if exist build\installer rmdir /s /q build\installer
 if exist dist rmdir /s /q dist
 
 REM Compila o instalador
-echo [3/4] Compilando Instalador_Great_Sage.exe...
+echo [3/4] Compilando Instalador_Elivea.exe...
 python -m PyInstaller ^
     --onefile ^
-    --name "Instalador_Great_Sage" ^
+    --name "Instalador_Elivea" ^
     --console ^
     --clean ^
     --noconfirm ^
     --distpath dist ^
     --workpath build\installer ^
-    Instalador_Great_Sage.py
+    Instalador_Elivea.py
 
 if %errorlevel% neq 0 (
     echo.
@@ -60,7 +60,7 @@ if %errorlevel% neq 0 (
 )
 
 REM Verifica se o .exe foi criado
-if not exist "dist\Instalador_Great_Sage.exe" (
+if not exist "dist\Instalador_Elivea.exe" (
     echo [ERRO] .exe nao foi encontrado em dist\
     pause
     exit /b 1
@@ -72,7 +72,7 @@ echo ========================================
 echo   SUCESSO!
 echo.
 echo   O instalador esta em:
-echo   dist\Instalador_Great_Sage.exe
+echo   dist\Instalador_Elivea.exe
 echo.
 echo   Envie este arquivo para quem quiser
 echo   instalar o Grande Sabio AI.

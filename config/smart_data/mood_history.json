@@ -1,0 +1,467 @@
+[
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787885010.0953562
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787885010.0963573
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787885010.0963573
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787885278.7284148
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787885278.7293854
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787885278.7293854
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787885418.3542101
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787885418.3551877
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787885418.3551877
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787927826.4078565
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787927826.408878
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787927826.408878
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787927884.2187655
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787927884.2187655
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787927884.219766
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928124.9165637
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928124.9175608
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787928124.9175608
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928209.5626256
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928209.5626256
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787928209.5636268
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928292.2572474
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928292.2582438
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787928292.2582438
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928358.859228
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928358.860228
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787928358.860228
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928773.1779647
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928773.1789641
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787928773.1789641
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928800.97408
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787928800.97408
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787928800.9750807
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787929840.014017
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787929840.0150182
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787929840.0160146
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787931697.8308525
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787931697.83185
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787931697.83185
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] Alô, alô, você tá ouvindo? Grande Sábio, v",
+    "ts": 1787967044.8064284
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] Se você abrisse o Google, por favor",
+    "ts": 1787967061.6015947
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] Legenda por Sônia Ruberti",
+    "ts": 1787967071.6241634
+  },
+  {
+    "mood": "neutral",
+    "context": "abra o google para mim pfv",
+    "ts": 1787967294.7988229
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787967792.2320938
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787967792.2330918
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787967792.2330918
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787967827.6692946
+  },
+  {
+    "mood": "happy",
+    "context": "teste",
+    "ts": 1787967827.6702943
+  },
+  {
+    "mood": "frustrated",
+    "context": "teste",
+    "ts": 1787967827.6712942
+  },
+  {
+    "mood": "neutral",
+    "context": "google",
+    "ts": 1788015193.7412422
+  },
+  {
+    "mood": "neutral",
+    "context": "abrir spotify",
+    "ts": 1788015193.8003738
+  },
+  {
+    "mood": "neutral",
+    "context": "abrir spotify",
+    "ts": 1788015193.891637
+  },
+  {
+    "mood": "neutral",
+    "context": "capturar tela",
+    "ts": 1788015194.017237
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] Greti Sagem, você está me ouvindo? Greti S",
+    "ts": 1788015235.3933954
+  },
+  {
+    "mood": "neutral",
+    "context": "opa",
+    "ts": 1788065338.4363377
+  },
+  {
+    "mood": "neutral",
+    "context": "pq vc esta repetindo ?",
+    "ts": 1788065381.067611
+  },
+  {
+    "mood": "neutral",
+    "context": "recalibrou mesmo?",
+    "ts": 1788065403.7645452
+  },
+  {
+    "mood": "neutral",
+    "context": "tanto eu quanto vce estamos repetindo",
+    "ts": 1788065420.1597722
+  },
+  {
+    "mood": "neutral",
+    "context": "programe e de um jeito de resolver",
+    "ts": 1788065436.139601
+  },
+  {
+    "mood": "neutral",
+    "context": "resolve isso sozinho",
+    "ts": 1788065464.5189512
+  },
+  {
+    "mood": "neutral",
+    "context": "ative o modo de programação",
+    "ts": 1788066489.9421968
+  },
+  {
+    "mood": "neutral",
+    "context": "oq tu fez?",
+    "ts": 1788066725.5674095
+  },
+  {
+    "mood": "neutral",
+    "context": "ta aparencendo ali que eu to com zero tokens",
+    "ts": 1788068598.0493858
+  },
+  {
+    "mood": "neutral",
+    "context": "opa",
+    "ts": 1788068610.7534776
+  },
+  {
+    "mood": "neutral",
+    "context": "cade a ala de programação?",
+    "ts": 1788102285.0178978
+  },
+  {
+    "mood": "neutral",
+    "context": "gostaria de um script para fazer uma animação impe",
+    "ts": 1788102378.1897879
+  },
+  {
+    "mood": "neutral",
+    "context": "crie e execute tudo, quero tudo impecavel profissi",
+    "ts": 1788102427.191391
+  },
+  {
+    "mood": "neutral",
+    "context": "faça oque eu pedi anterir mente",
+    "ts": 1788102465.5713897
+  },
+  {
+    "mood": "neutral",
+    "context": "oque mais voce gostaria de ter na ia?",
+    "ts": 1788103651.8826857
+  },
+  {
+    "mood": "curious",
+    "context": "de 50 ideias do que voce gostaria de ter em si mes",
+    "ts": 1788103694.0891893
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] Eu falei assim, por quanto você acha que e",
+    "ts": 1788104511.3965006
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] E aí",
+    "ts": 1788105875.3051212
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] E aí",
+    "ts": 1788108433.4252594
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] E aí",
+    "ts": 1788108434.7124324
+  },
+  {
+    "mood": "curious",
+    "context": "[AUDIO] O que é o que é o que é",
+    "ts": 1788108465.8666446
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] E aí",
+    "ts": 1788108467.2335286
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] A gente vai aqui",
+    "ts": 1788108469.7249925
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] E aí",
+    "ts": 1788108471.424892
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] E aí",
+    "ts": 1788108473.2629583
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] Gatou, GitHub",
+    "ts": 1788109149.2515457
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] Ah não",
+    "ts": 1788109150.1050768
+  },
+  {
+    "mood": "neutral",
+    "context": "oque mais voce gostaria de melhorar?",
+    "ts": 1788122144.8471882
+  },
+  {
+    "mood": "urgent",
+    "context": "[AUDIO] E já deixa as pernas abridas",
+    "ts": 1788127886.898719
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] Não, não é, não é",
+    "ts": 1788127888.517487
+  },
+  {
+    "mood": "neutral",
+    "context": "[AUDIO] Cadê",
+    "ts": 1788127890.733511
+  },
+  {
+    "mood": "neutral",
+    "context": "[CLIPBOARD_CODE] [AUDIO] E aí\nClipboard contains c",
+    "ts": 1788127963.4693434
+  },
+  {
+    "mood": "neutral",
+    "context": "[CLIPBOARD_CODE] [AUDIO] E aí\nClipboard contains c",
+    "ts": 1788127964.8714747
+  },
+  {
+    "mood": "neutral",
+    "context": "[CLIPBOARD_CODE] abrir terminal\nClipboard contains",
+    "ts": 1788135707.2571309
+  },
+  {
+    "mood": "neutral",
+    "context": "opa",
+    "ts": 1788140375.9243567
+  },
+  {
+    "mood": "neutral",
+    "context": "me faça um prompt para a mudança de cor, pois seu ",
+    "ts": 1788140447.6306665
+  },
+  {
+    "mood": "neutral",
+    "context": "pq c esta tão lerda?",
+    "ts": 1788140466.2518032
+  },
+  {
+    "mood": "neutral",
+    "context": "as respostar estão meio sem sentido",
+    "ts": 1788140489.097534
+  },
+  {
+    "mood": "neutral",
+    "context": "faça um prompt para eu mandar em outra ia para res",
+    "ts": 1788140505.5948436
+  }
+]

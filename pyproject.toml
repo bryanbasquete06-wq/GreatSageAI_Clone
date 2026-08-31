@@ -3,18 +3,18 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.backends._legacy:_Backend"
 
 [project]
-name = "great-sage-ai"
+name = "elvea-ai"
 version = "1.0.0"
-description = "Great Sage AI — Assistente pessoal com IA, controle total do PC, voz e codigo"
+description = "Elívea — Assistente pessoal com IA, controle total do PC, voz e codigo"
 readme = "README.md"
-license = {text = "Proprietary"}
-requires-python = ">=3.11"
+license = {text = "MIT"}
+requires-python = ">=3.10"
 authors = [
-    {name = "Great Sage Dev", email = "support@greatsage.ai"}
+    {name = "Elivea Dev", email = "support@elvea.ai"}
 ]
 keywords = ["ai", "assistant", "voice", "rpg", "windows", "automation"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: End Users/Desktop",
     "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3.11",
@@ -47,17 +47,17 @@ all = [
 ]
 
 [project.scripts]
-great-sage = "GreatSageAI_Clone.main:main"
+elvea = "core.main:main"
 
 [project.gui-scripts]
-great-sage-gui = "GreatSageAI_Clone.main:main"
+elvea-gui = "core.main:main"
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["GreatSageAI_Clone*"]
+include = ["core*"]
 
 [tool.setuptools.package-data]
-GreatSageAI_Clone = ["config/*.json", "*.png", "*.ico"]
+core = ["config/*.json", "*.png", "*.ico"]

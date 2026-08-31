@@ -1,6 +1,6 @@
 """
-Great Sage AI - Futuristic Rich TUI Interface
-Holographic Blue/Cyan aesthetic inspired by Great Sage & Jarvis UI.
+Elivea - Futuristic Rich TUI Interface
+Holographic Blue/Cyan aesthetic inspired by Elivea & Jarvis UI.
 """
 
 try:
@@ -15,7 +15,7 @@ except ImportError:
 
 import time
 
-class GreatSageTUI:
+class EliveaTUI:
     def __init__(self):
         self.theme_color = "yellow"
         self.accent_color = "bright_yellow"
@@ -38,15 +38,15 @@ class GreatSageTUI:
         if HAS_RICH:
             panel = Panel(
                 Text(banner_art, style="bold yellow"),
-                title="[bold bright_yellow] GREAT SAGE [/bold bright_yellow]",
-                subtitle="[dim yellow]Mode: Active | Persona: Great Sage | Core: Mark-L Compatible | by: bryan[/dim yellow]",
+                title="[bold bright_yellow] Elivea [/bold bright_yellow]",
+                subtitle="[dim yellow]Mode: Active | Persona: Elivea | Core: Mark-L Compatible | by: bryan[/dim yellow]",
                 border_style=self.border_color,
                 expand=False
             )
             self.console.print(panel)
         else:
             print("=" * 60)
-            print(" GREAT SAGE (by: bryan)")
+            print(" Elivea (by: bryan)")
             print("=" * 60)
             print(banner_art)
 
@@ -63,7 +63,7 @@ class GreatSageTUI:
             for k, v in metrics.items():
                 print(f"  {k}: {v}")
 
-    def render_notice(self, text: str, title: str = "GREAT SAGE NOTICE"):
+    def render_notice(self, text: str, title: str = "Elivea NOTICE"):
         if HAS_RICH:
             panel = Panel(
                 Text(text, style="bright_yellow"),
@@ -79,7 +79,7 @@ class GreatSageTUI:
 
     def get_input(self) -> str:
         if HAS_RICH:
-            return Prompt.ask("[bold yellow]GreatSage>[/bold yellow] [bold bright_yellow]Master[/bold bright_yellow]")
+            return Prompt.ask("[bold yellow]Elivea>[/bold yellow] [bold bright_yellow]Master[/bold bright_yellow]")
         else:
-            return input("\nGreatSage> Master: ")
+            return input("\nElívea> Master: ")
 

@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 
-logger = logging.getLogger("greatsage.memory")
+logger = logging.getLogger("elvea.memory")
 DB_PATH = Path(__file__).resolve().parent.parent / "config" / "memory.db"
 
 # Decay: importância reduz 50% a cada N dias por categoria

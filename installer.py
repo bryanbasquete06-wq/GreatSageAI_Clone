@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage — Instalador Comercial Automatizado
+Elívea — Instalador Comercial Automatizado
 ==============================================
-Instalador Plug & Play para distribuição comercial da IA Great Sage.
+Instalador Plug & Play para distribuição comercial da IA Elivea.
 
 Arquitetura modular com POO, logging corporativo, tratamento granular
 de exceções e interface terminal dourado/branco.
 
 Uso:
     python installer.py              # instala a IA
-    python installer.py --build      # compila Instalador_Great_Sage.exe
+    python installer.py --build      # compila Instalador_Elivea.exe
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ import traceback
 from pathlib import Path
 from typing import List, Dict, Tuple
 
-# Paleta Great Sage — ANSI dourado/branco (sem emojis)
+# Paleta Elívea — ANSI dourado/branco (sem emojis)
 COR_DOURADO = "\033[93m"
 COR_AMARELO = "\033[33m"
 COR_BRANCO = "\033[97m"
@@ -84,12 +84,12 @@ def limpar_terminal() -> None:
     try:
         os.system("cls" if os.name == "nt" else "clear")
     except OSError as exc:
-        logging.getLogger("greatsage.install").warning(f"Falha ao limpar terminal: {exc}")
+        logging.getLogger("elvea.install").warning(f"Falha ao limpar terminal: {exc}")
 
 
 def obter_logger(log_path: Path) -> logging.Logger:
     """Configura logger corporativo com saída em terminal e arquivo rotativo."""
-    logger = logging.getLogger("greatsage.install")
+    logger = logging.getLogger("elvea.install")
     logger.setLevel(logging.DEBUG)
     if logger.handlers:
         return logger
@@ -265,7 +265,7 @@ class SecurityVerifier:
         candidatos: List[Path] = [
             self.base_dir / ".env",
             self.base_dir / ".env.example",
-            self.base_dir / "GreatSageAI_Clone" / ".env.example",
+            self.base_dir / "EliveaAI_Clone" / ".env.example",
         ]
         for caminho in candidatos:
             if caminho.exists():
@@ -298,27 +298,27 @@ def criar_atalho_desktop(base_dir: Path, logger: logging.Logger) -> bool:
             return False
         desktop.mkdir(parents=True, exist_ok=True)
 
-        icone = base_dir / "great_sage.ico"
+        icone = base_dir / "elvea.ico"
         if not icone.exists():
-            icone = base_dir / "GreatSageAI_Clone" / "great_sage.ico"
+            icone = base_dir / "EliveaAI_Clone" / "elvea.ico"
 
         # --- Tenta copiar .exe pré-compilados ---
         desktop_exes = base_dir / "desktop_exes"
-        ai_exe_src = desktop_exes / "Grande Sabio AI.exe"
-        inst_exe_src = desktop_exes / "Instalador Great Sage.exe"
+        ai_exe_src = desktop_exes / "Elívea AI.exe"
+        inst_exe_src = desktop_exes / "Instalador Elivea.exe"
 
         ai_ok = False
         inst_ok = False
 
         if ai_exe_src.exists():
-            dst = desktop / "Grande Sabio AI.exe"
+            dst = desktop / "Elívea AI.exe"
             shutil.copy2(str(ai_exe_src), str(dst))
             if dst.exists():
                 logger.info(f"{COR_DOURADO}[ OK ] .exe da IA copiado para {dst}{COR_RESET}")
                 ai_ok = True
 
         if inst_exe_src.exists():
-            dst = desktop / "Instalador Great Sage.exe"
+            dst = desktop / "Instalador Elivea.exe"
             shutil.copy2(str(inst_exe_src), str(dst))
             if dst.exists():
                 logger.info(f"{COR_DOURADO}[ OK ] .exe do Instalador copiado para {dst}{COR_RESET}")
@@ -335,11 +335,11 @@ def criar_atalho_desktop(base_dir: Path, logger: logging.Logger) -> bool:
         if not ai_ok:
             alvo = base_dir / "main.py"
             if not alvo.exists():
-                alvo = base_dir / "GreatSageAI_Clone" / "main.py"
+                alvo = base_dir / "EliveaAI_Clone" / "main.py"
             if alvo.exists():
-                bat = desktop / "Grande Sabio AI.bat"
+                bat = desktop / "Elívea AI.bat"
                 bat.write_text(
-                    f'@echo off\ntitle Grande Sabio AI\ncd /d "{alvo.parent}"\n"{_correct_python}" "{alvo}"\nif errorlevel 1 pause\n',
+                    f'@echo off\ntitle Elívea AI\ncd /d "{alvo.parent}"\n"{_correct_python}" "{alvo}"\nif errorlevel 1 pause\n',
                     encoding="utf-8",
                 )
                 logger.info(f"{COR_DOURADO}[ OK ] Atalho .bat criado: {bat}{COR_RESET}")
@@ -422,7 +422,7 @@ class BuildAutomator:
 
         # Coleta --add-data necessários (ícones, pastas de dados)
         datas: List[str] = []
-        for rel in ["great_sage.ico", "great_sage_icon.png", "config", "GreatSageAI_Clone/config"]:
+        for rel in ["elvea.ico", "elvea_icon.png", "config", "EliveaAI_Clone/config"]:
             p = self.base_dir / rel
             if p.exists():
                 sep = ";" if os.name == "nt" else ":"
@@ -431,16 +431,16 @@ class BuildAutomator:
         cmd: List[str] = [
             python_exe, "-m", "PyInstaller",
             "--onefile",
-            "--name=Instalador_Great_Sage",
+            "--name=Instalador_Elivea",
             "--console",
-            "--icon=great_sage.ico" if (self.base_dir / "great_sage.ico").exists() else "",
+            "--icon=elvea.ico" if (self.base_dir / "elvea.ico").exists() else "",
             "installer.py",
         ]
         # Remove entradas vazias (quando ícone não existe)
         cmd = [c for c in cmd if c]
         cmd.extend(datas)
         # Também empacota a IA principal se solicitado
-        # pyinstaller --onefile --name=Great_Sage --windowed main.py poderia ser adicionado aqui
+        # pyinstaller --onefile --name=Elivea --windowed main.py poderia ser adicionado aqui
 
         self.logger.info(f"{COR_BRANCO}[ INFO ] Iniciando compilação comercial: {' '.join(cmd)}{COR_RESET}")
         try:
@@ -454,12 +454,12 @@ class BuildAutomator:
                 errors="replace",
             )
             if result.returncode == 0:
-                dist_exe = self.base_dir / "dist" / "Instalador_Great_Sage.exe"
+                dist_exe = self.base_dir / "dist" / "Instalador_Elivea.exe"
                 if dist_exe.exists():
-                    self.logger.info(f"{COR_DOURADO}[ OK ] [Sucesso] Produto Comercial 'Instalador_Great_Sage.exe' gerado com sucesso na pasta /dist!{COR_RESET}")
+                    self.logger.info(f"{COR_DOURADO}[ OK ] [Sucesso] Produto Comercial 'Instalador_Elivea.exe' gerado com sucesso na pasta /dist!{COR_RESET}")
                 else:
                     # PyInstaller pode gerar com nome sem sublinhado
-                    alt = self.base_dir / "dist" / "GreatSageAI_Installer.exe"
+                    alt = self.base_dir / "dist" / "Elivea_Installer.exe"
                     if alt.exists():
                         self.logger.info(f"{COR_DOURADO}[ OK ] Produto gerado: {alt}{COR_RESET}")
                     else:
@@ -479,7 +479,7 @@ class BuildAutomator:
             return False
 
 
-class InstaladorGreatSage:
+class InstaladorElivea:
     """Orquestrador principal do instalador comercial."""
 
     def __init__(self) -> None:
@@ -488,18 +488,18 @@ class InstaladorGreatSage:
             self.base_dir: Path = Path(sys.executable).resolve().parent
             # Quando congelado, o código fonte pode estar em _MEIPASS
             self.source_dir: Path = Path(getattr(sys, "_MEIPASS", self.base_dir))
-            # Se _MEIPASS não contém GreatSageAI_Clone, usa base_dir
-            if not (self.source_dir / "main.py").exists() and (self.base_dir / "GreatSageAI_Clone" / "main.py").exists():
-                self.source_dir = self.base_dir / "GreatSageAI_Clone"
+            # Se _MEIPASS não contém EliveaAI_Clone, usa base_dir
+            if not (self.source_dir / "main.py").exists() and (self.base_dir / "EliveaAI_Clone" / "main.py").exists():
+                self.source_dir = self.base_dir / "EliveaAI_Clone"
         else:
             self.base_dir: Path = Path(__file__).resolve().parent
             self.source_dir: Path = self.base_dir
 
         # Logger corporativo em arquivo rotativo
-        log_path: Path = self.base_dir / "logs" / "great_sage_install.log"
+        log_path: Path = self.base_dir / "logs" / "elvea_install.log"
         # Se rodando congelado, log vai para base_dir/logs
         if getattr(sys, "frozen", False):
-            log_path = self.base_dir / "logs" / "great_sage_install.log"
+            log_path = self.base_dir / "logs" / "elvea_install.log"
         self.logger: logging.Logger = obter_logger(log_path)
         self.env_manager = EnvironmentManager(self.base_dir, self.logger)
         self.dep_installer = DependencyInstaller(sys.executable, self.logger)
@@ -510,9 +510,9 @@ class InstaladorGreatSage:
         """Exibe logo ASCII dourado/branco e status inicial."""
         limpar_terminal()
         print(f"{COR_DOURADO}{ASCII_LOGO}{COR_RESET}")
-        print(f"{COR_BRANCO}  Great Sage — Assistente Omnipotente | Conversa • Estudo • Programação • Automação{COR_RESET}")
+        print(f"{COR_BRANCO}  Elívea — Assistente Omnipotente | Conversa • Estudo • Programação • Automação{COR_RESET}")
         print(f"{COR_DIM}  Distribuição Comercial — Plug & Play{COR_RESET}\n")
-        self.logger.info("[Great Sage] Iniciando assistente de instalação oficial...")
+        self.logger.info("[Elívea] Iniciando assistente de instalação oficial...")
         print(f"{COR_BRANCO}[ INFO ] Iniciando assistente de instalação oficial...{COR_RESET}")
         print(f"{COR_BRANCO}[ INFO ] Módulos de Verificação: Prontos.{COR_RESET}")
 
@@ -534,7 +534,7 @@ class InstaladorGreatSage:
             # 1b. Atalho desktop com ícone (exigido: baixar totalmente + ícone)
             print(f"{COR_BRANCO}[ INFO ] Criando atalho na Área de Trabalho com ícone...{COR_RESET}")
             if criar_atalho_desktop(self.base_dir, self.logger):
-                print(f"{COR_DOURADO}[ OK ] Atalhos criados: Grande Sábio AI + Instalador Great Sage.{COR_RESET}")
+                print(f"{COR_DOURADO}[ OK ] Atalhos criados: Elívea AI + Instalador Elivea.{COR_RESET}")
             else:
                 print(f"{COR_AMARELO}[ ALERTA ] Atalho não criado — verifique permissões.{COR_RESET}")
 
@@ -555,21 +555,21 @@ class InstaladorGreatSage:
             print(f"{COR_BRANCO}[ INFO ] Verificando integridade de credenciais...{COR_RESET}")
             chaves_ok = self.security.verificar_todas()
             if not chaves_ok:
-                print(f"{COR_AMARELO}[ ALERTA ] Integridade de chaves comprometida — verifique great_sage_install.log{COR_RESET}")
+                print(f"{COR_AMARELO}[ ALERTA ] Integridade de chaves comprometida — verifique elvea_install.log{COR_RESET}")
 
             # 4. Finalização suprema
-            print(f"\n{COR_DOURADO}[ OK ] [Great Sage] Instalação concluída com sucesso! Conexão estabelecida.{COR_RESET}")
+            print(f"\n{COR_DOURADO}[ OK ] [Elívea] Instalação concluída com sucesso! Conexão estabelecida.{COR_RESET}")
             self.logger.info("[ OK ] Instalação concluída com sucesso! Conexão estabelecida.")
-            print(f"{COR_BRANCO}[ INFO ] Inicializando Great Sage em 3 segundos...{COR_RESET}")
+            print(f"{COR_BRANCO}[ INFO ] Inicializando Elívea em 3 segundos...{COR_RESET}")
             time.sleep(3)
             limpar_terminal()
             # reexibe cabeçalho com nome para não piscar sem nome
             print(f"{COR_DOURADO}{ASCII_LOGO}{COR_RESET}")
-            print(f"{COR_DOURADO}[ OK ] [Great Sage] Instalação concluída com sucesso! Conexão estabelecida.{COR_RESET}\n")
+            print(f"{COR_DOURADO}[ OK ] [Elívea] Instalação concluída com sucesso! Conexão estabelecida.{COR_RESET}\n")
             codigo = self._iniciar_ia()
             if codigo == 0:
-                print(f"\n{COR_BRANCO}[ INFO ] Great Sage iniciado — verifique a janela e a bandeja do sistema.{COR_RESET}")
-                print(f"{COR_DIM}Log: logs/great_sage_install.log | Atalhos: Desktop/Grande Sábio AI + Instalador Great Sage{COR_RESET}")
+                print(f"\n{COR_BRANCO}[ INFO ] Elivea iniciado — verifique a janela e a bandeja do sistema.{COR_RESET}")
+                print(f"{COR_DIM}Log: logs/elvea_install.log | Atalhos: Desktop/Elívea AI + Instalador Elivea{COR_RESET}")
                 time.sleep(4)
             return codigo
 
@@ -580,17 +580,17 @@ class InstaladorGreatSage:
         except Exception as exc:
             self.logger.error(f"[ ERRO ] Falha crítica na instalação: {exc}\n{traceback.format_exc()}")
             print(f"\n{COR_AMARELO}[ ERRO ] Falha crítica: {exc}{COR_RESET}")
-            print(f"{COR_DIM}Detalhes registrados em logs/great_sage_install.log{COR_RESET}")
+            print(f"{COR_DIM}Detalhes registrados em logs/elvea_install.log{COR_RESET}")
             return 1
 
     def _iniciar_ia(self) -> int:
         """Executa o script principal da IA de forma direta (sem piscar outro launcher)."""
-        # Tenta GreatSageAI_Clone/main.py primeiro, depois main.py na raiz
+        # Tenta EliveaAI_Clone/main.py primeiro, depois main.py na raiz
         candidatos = [
-            self.base_dir / "GreatSageAI_Clone" / "main.py",
+            self.base_dir / "EliveaAI_Clone" / "main.py",
             self.base_dir / "main.py",
             self.source_dir / "main.py",
-            self.source_dir / "GreatSageAI_Clone" / "main.py",
+            self.source_dir / "EliveaAI_Clone" / "main.py",
         ]
         alvo: Path | None = None
         for c in candidatos:
@@ -633,7 +633,7 @@ class InstaladorGreatSage:
                 creationflags=creationflags,
                 close_fds=True,
             )
-            print(f"{COR_DOURADO}[ OK ] Great Sage em execução.{COR_RESET}")
+            print(f"{COR_DOURADO}[ OK ] Elivea em execução.{COR_RESET}")
             return 0
         except FileNotFoundError as exc:
             self.logger.error(f"[ ERRO ] Interpretador não encontrado: {exc}")
@@ -641,7 +641,7 @@ class InstaladorGreatSage:
             return 1
         except PermissionError as exc:
             self.logger.error(f"[ ERRO ] Permissão negada ao iniciar IA: {exc}")
-            print(f"{COR_AMARELO}[ ERRO ] Permissão negada ao iniciar great_sage.{COR_RESET}")
+            print(f"{COR_AMARELO}[ ERRO ] Permissão negada ao iniciar elvea.{COR_RESET}")
             return 1
         except OSError as exc:
             self.logger.error(f"[ ERRO ] Falha ao iniciar IA: {exc}")
@@ -664,14 +664,14 @@ def main() -> None:
             except Exception:
                 pass  # Fallback para CLI
 
-        instalador = InstaladorGreatSage()
+        instalador = InstaladorElivea()
         codigo = instalador.executar(modo_build=modo_build)
         sys.exit(codigo)
     except Exception as exc:
         # Fail-safe global — nunca fecha silenciosamente
         try:
-            log_path = Path(__file__).resolve().parent / "logs" / "great_sage_install.log"
-            logging.getLogger("greatsage.install").error(f"Erro não tratado no main: {exc}\n{traceback.format_exc()}")
+            log_path = Path(__file__).resolve().parent / "logs" / "elvea_install.log"
+            logging.getLogger("elvea.install").error(f"Erro não tratado no main: {exc}\n{traceback.format_exc()}")
         except Exception:
             pass
         print(f"{COR_AMARELO}[ ERRO ] Falha inesperada: {exc}{COR_RESET}")

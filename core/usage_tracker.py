@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Usage Tracker
+Elívea — Usage Tracker
 ================================
 Monitora requests, tokens e latencia por provider em tempo real.
 Mostra limites diarios, usage percent, e projecao de quandog vai bater o limite.

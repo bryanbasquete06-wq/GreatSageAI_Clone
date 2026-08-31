@@ -1,5 +1,5 @@
 """
-Great Sage AI — Autonomous Task Planner
+Elivea — Autonomous Task Planner
 ========================================
 Planejador autônomo que:
   • Decompõe metas complexas em passos executáveis
@@ -21,7 +21,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 
-logger = logging.getLogger("greatsage.planner")
+logger = logging.getLogger("elvea.planner")
 
 MEMORY_DIR = Path(__file__).resolve().parent.parent / "config" / "planner_memory"
 MEMORY_DIR.mkdir(parents=True, exist_ok=True)

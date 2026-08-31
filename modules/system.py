@@ -1,5 +1,5 @@
 """
-Great Sage AI - System Interaction Module
+Elivea - System Interaction Module
 Manages OS monitoring, performance diagnostics, and system settings.
 """
 

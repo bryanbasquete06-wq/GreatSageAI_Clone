@@ -43,7 +43,7 @@ def load_env_file():
 load_env_file()
 
 
-class GreatSage:
+class Elivea:
     def __init__(self, voice_enabled: bool = False):
         self.voice_enabled = voice_enabled
         self.microphone_available = self._check_windows_voice()
@@ -74,7 +74,7 @@ class GreatSage:
             return False
 
     def speak(self, text: str):
-        print(f"Grande Sábio: {text}")
+        print(f"Elivea: {text}")
         if not self.voice_enabled:
             return
 
@@ -225,10 +225,10 @@ try {
             return "Peço que me faça uma pergunta clara."
 
         if q in {"oi", "olá", "bom dia", "boa tarde", "boa noite"}:
-            return "Saudações. Sou o Grande Sábio, e estou à sua disposição."
+            return "Saudações. Sou o Elívea, e estou à sua disposição."
 
         if "quem é você" in q or "quem e voce" in q or "quem é o grande sabio" in q:
-            return "Sou o Grande Sábio, um assistente pessoal que pode responder perguntas, abrir programas, pesquisar na web e executar tarefas no computador."
+            return "Sou o Elívea, um assistente pessoal que pode responder perguntas, abrir programas, pesquisar na web e executar tarefas no computador."
 
         if "hora" in q:
             return f"Agora são {self._format_time_now()}."
@@ -237,7 +237,7 @@ try {
             return f"Hoje é {self._format_date_now()}."
 
         if "seu nome" in q:
-            return "Meu nome é Grande Sábio."
+            return "Meu nome é Elívea."
 
         if "sistema" in q or "windows" in q or "pc" in q:
             return f"O sistema operacional detectado é {platform.system()} {platform.release()}."
@@ -331,7 +331,7 @@ try {
         try:
             messages = [{
                 "role": "system",
-                "content": "Você é o Grande Sábio, um assistente inteligente em português. Responda de forma útil, clara e objetiva. Use o contexto da web quando houver. Se não souber, diga honestamente e ajude o usuário.",
+                "content": "Você é o Elívea, um assistente inteligente em português. Responda de forma útil, clara e objetiva. Use o contexto da web quando houver. Se não souber, diga honestamente e ajude o usuário.",
             }]
 
             if context:
@@ -409,7 +409,7 @@ try {
         return self._local_answer(q)
 
     def run(self):
-        print("=== GRANDE SÁBIO ===")
+        print("=== ELÍVEA ===")
         print("Diga 'sair' para encerrar.")
         while True:
             try:
@@ -429,16 +429,16 @@ try {
             self.speak(result)
 
 
-class GreatSageGui:
+class EliveaGui:
     def __init__(self, root):
         self.root = root
-        self.root.title("GREAT SAGE")
+        self.root.title("Elívea")
         self.root.geometry("1000x750")
         self.root.minsize(820, 600)
         self.root.configure(bg="#050505")
         self.root.attributes("-alpha", 0.98)
 
-        self.assistant = GreatSage(voice_enabled=True)
+        self.assistant = Elivea(voice_enabled=True)
         self.orb_anim_job = None
         self.orb_rings = []
         self.orb_particles = []
@@ -464,7 +464,7 @@ class GreatSageGui:
 
         self.title_label = tk.Label(
             self.top_bar,
-            text="GREAT SAGE",
+            text="Elívea",
             bg="#000000",
             fg="#ffd700",
             font=("Segoe UI", 32, "bold"),
@@ -559,7 +559,7 @@ class GreatSageGui:
 
         self.status = tk.Label(
             root,
-            text="Aguardando palavra de ativação: Great Sage",
+            text="Aguardando palavra de ativação: Elivea",
             bg="#050505",
             fg="#ffed4e",
             font=("Segoe UI", 10, "bold"),
@@ -567,7 +567,7 @@ class GreatSageGui:
         )
         self.status.pack(fill="x")
 
-        self.append_message("System", "✦ Great Sage está online ✦ Diga 'Great Sage' ou 'Sage' para ativar o assistente.")
+        self.append_message("System", "✦ Elívea está online ✦ Diga 'Elívea' ou 'Sage' para ativar o assistente.")
         self.root.after(100, self._animate_idle)
         self.entry.focus_set()
 
@@ -665,25 +665,25 @@ class GreatSageGui:
 
         response = self.assistant.process(command)
         if response == "encerrar":
-            self.append_message("Grande Sábio", "Até logo.")
+            self.append_message("Elívea", "Até logo.")
             self.status.configure(text="Sistema finalizado")
             self.root.after(600, self.root.destroy)
             return
 
-        self.append_message("Grande Sábio", response)
+        self.append_message("Elívea", response)
         self.status.configure(text="Pronto para atender")
 
     def on_submit(self, _event=None):
         self.submit_command()
 
     def voice_input(self):
-        self.append_message("Grande Sábio", "Aguardando a palavra de ativação...")
+        self.append_message("Elívea", "Aguardando a palavra de ativação...")
 
         def _listen():
             try:
                 text = self.assistant.wait_for_wake_word()
                 if text:
-                    self.root.after(0, self.append_message, "Grande Sábio", "Ativado. Diga seu comando.")
+                    self.root.after(0, self.append_message, "Elívea", "Ativado. Diga seu comando.")
                     self.root.after(0, self.status.configure, "text", "Ativado · ouvindo comando")
                     self.root.after(0, self.entry.focus_set)
                     recognized = self.assistant.listen()
@@ -692,14 +692,14 @@ class GreatSageGui:
                         self.root.after(0, self.entry.insert, 0, recognized)
                         self.root.after(0, self.submit_command)
                     else:
-                        self.root.after(0, self.append_message, "Grande Sábio", "Não consegui capturar o comando. Tente novamente.")
-                        self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Great Sage")
+                        self.root.after(0, self.append_message, "Elívea", "Não consegui capturar o comando. Tente novamente.")
+                        self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Elivea")
                 else:
-                    self.root.after(0, self.append_message, "Grande Sábio", "Não foi possível ativar por voz neste ambiente.")
-                    self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Great Sage")
+                    self.root.after(0, self.append_message, "Elívea", "Não foi possível ativar por voz neste ambiente.")
+                    self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Elivea")
             except Exception as exc:
-                self.root.after(0, self.append_message, "Grande Sábio", f"Não consegui ouvir: {exc}")
-                self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Great Sage")
+                self.root.after(0, self.append_message, "Elívea", f"Não consegui ouvir: {exc}")
+                self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Elivea")
 
         t = threading.Thread(target=_listen, daemon=True)
         t.start()
@@ -718,7 +718,7 @@ def main():
     root = tk.Tk()
     root.iconbitmap(default=None)
     root.configure(bg="#040b12")
-    gui = GreatSageGui(root)
+    gui = EliveaGui(root)
     root.mainloop()
 
 

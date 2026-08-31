@@ -1,5 +1,5 @@
 """
-Great Sage AI - Assistant Core Application
+Elivea - Assistant Core Application
 Main entry point coordinating Persona, System Modules, UI, and Mark-L Bridge.
 """
 
@@ -12,30 +12,30 @@ root_dir = Path(__file__).resolve().parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
-from GreatSageAI_Clone.core.persona import PersonaManager
-from GreatSageAI_Clone.core.llm import GreatSageLLM
-from GreatSageAI_Clone.core.mark_l_bridge import MarkLBridge
-from GreatSageAI_Clone.modules.system import SystemModule
-from GreatSageAI_Clone.modules.files import FileModule
-from GreatSageAI_Clone.modules.web import WebModule
-from GreatSageAI_Clone.modules.hardware_controller import HardwareController
-from GreatSageAI_Clone.ui.tui import GreatSageTUI
+from core.persona import PersonaManager
+from core.llm import EliveaLLM
+from core.mark_l_bridge import MarkLBridge
+from modules.system import SystemModule
+from modules.files import FileModule
+from modules.web import WebModule
+from modules.hardware_controller import HardwareController
+from ui.tui import EliveaTUI
 
 
-class GreatSageAssistant:
+class EliveaAssistant:
     def __init__(self):
-        self.tui = GreatSageTUI()
+        self.tui = EliveaTUI()
         self.persona = PersonaManager()
-        self.llm = GreatSageLLM()
+        self.llm = EliveaLLM()
         self.bridge = MarkLBridge()
         self.running = True
 
     def initialize(self):
-        """Boot sequence for Great Sage AI System."""
+        """Boot sequence for Elivea System."""
         self.tui.print_banner()
 
         status_msg = (
-            "[Notice] Great Sage Core Initialized.\n"
+            "[Notice] Elívea Core Initialized.\n"
             f"  - Neural Core: Active ({self.llm.provider.upper()})\n"
             f"  - Mark-L Integration: {'ONLINE' if self.bridge.is_connected() else 'STANDBY'}\n"
             "  - Interface: Futuristic TUI Mode Active\n\n"
@@ -51,7 +51,7 @@ class GreatSageAssistant:
             return
 
         if cmd_lower in ("exit", "quit", "sair", "desligar"):
-            self.tui.render_notice("[Notice] Terminating Great Sage session. Farewell, Master.", title="SHUTDOWN")
+            self.tui.render_notice("[Notice] Terminating Elívea session. Farewell, Master.", title="SHUTDOWN")
             self.running = False
             return
 
@@ -88,14 +88,14 @@ class GreatSageAssistant:
 
         if cmd_lower in ("help", "ajuda"):
             help_text = (
-                "[Notice] Great Sage Directive Protocols:\n"
+                "[Notice] Elivea Directive Protocols:\n"
                 "  - sys / status   : Display real-time hardware telemetry\n"
                 "  - ls [path]      : List contents of directory\n"
                 "  - find <term>    : Search file system for target pattern\n"
                 "  - search <query> : Execute web search\n"
                 "  - open <url>     : Open URL in default web browser\n"
                 "  - mark-l status  : Check Mark-L core bridge status\n"
-                "  - exit / quit    : Terminate Great Sage process"
+                "  - exit / quit    : Terminate Elivea process"
             )
             self.tui.render_notice(help_text, title="DIRECTIVE ASSIST")
             return
@@ -136,7 +136,7 @@ class GreatSageAssistant:
 
         # Default query to LLM / Analytical Engine
         response = self.llm.query(cmd)
-        self.tui.render_notice(response, title="GREAT SAGE RESPONSE")
+        self.tui.render_notice(response, title="ELIVEA RESPONSE")
 
     def run(self):
         self.initialize()
@@ -152,5 +152,5 @@ class GreatSageAssistant:
 
 
 if __name__ == "__main__":
-    assistant = GreatSageAssistant()
+    assistant = EliveaAssistant()
     assistant.run()

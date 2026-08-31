@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Self-Improver v2 — Motor de Auto-Programação CONTÍNUA do Grande Sábio.
+"""Self-Improver v2 — Motor de Auto-Programação CONTÍNUA do Elívea.
 
 Análise, melhoria e auto-modificação da codebase com:
   - Loop contínuo (melhoria iterativa sem limite de rodadas)
@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from GreatSageAI_Clone.modules.smart_agent import SmartCodeAgent
+    from modules.smart_agent import SmartCodeAgent
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 MODULES_DIR = BASE_DIR / "modules"
@@ -82,7 +82,7 @@ def _get_completed_tasks() -> set[str]:
 # --------------------------------------------------------------------------- #
 
 SELF_IMPROVE_PROMPT = """\
-MODO AUTO-PROGRAMAÇÃO ATIVADO — você é o Grande Sábio se auto-melhorando.
+MODO AUTO-PROGRAMAÇÃO ATIVADO — você é o Elívea se auto-melhorando.
 
 DIRETRIZES PRIORIZADAS (em ordem de importância):
 1. SEGURANÇA: corrija falhas de segurança, injecao, hardcoded secrets, etc.
@@ -368,8 +368,8 @@ class SelfImproverModule:
         Se task é None: analisa codebase → gera tarefas → executa em loop.
         Se task é fornecida: executa essa tarefa específica.
         """
-        from GreatSageAI_Clone.modules.smart_agent import SmartCodeAgent
-        from GreatSageAI_Clone.modules.code_index import CodeIndex
+        from modules.smart_agent import SmartCodeAgent
+        from modules.code_index import CodeIndex
 
         workspace = cls.BASE_DIR
 
@@ -462,8 +462,8 @@ class SelfImproverModule:
         Roda indefinidamente se rounds=0.
         Use stop_continuous() para interromper.
         """
-        from GreatSageAI_Clone.modules.smart_agent import SmartCodeAgent
-        from GreatSageAI_Clone.modules.code_index import CodeIndex
+        from modules.smart_agent import SmartCodeAgent
+        from modules.code_index import CodeIndex
 
         _stop_continuous.clear()
         workspace = cls.BASE_DIR
@@ -528,8 +528,8 @@ class SelfImproverModule:
     def run_prompt(cls, llm, prompt: str, on_step=None,
                    max_steps: int = 24) -> tuple[str, str]:
         """Modo 'programar via prompt': o Mestre descreve em linguagem natural."""
-        from GreatSageAI_Clone.modules.smart_agent import SmartCodeAgent
-        from GreatSageAI_Clone.modules.code_index import CodeIndex
+        from modules.smart_agent import SmartCodeAgent
+        from modules.code_index import CodeIndex
 
         workspace = cls.BASE_DIR
 

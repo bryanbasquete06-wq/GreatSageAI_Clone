@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
-datas = [('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/modules', 'GreatSageAI_Clone/modules'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/ui', 'GreatSageAI_Clone/ui'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/core', 'GreatSageAI_Clone/core'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/memory', 'GreatSageAI_Clone/memory'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/plugins', 'GreatSageAI_Clone/plugins'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/config', 'GreatSageAI_Clone/config'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/tests', 'GreatSageAI_Clone/tests'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/great_sage.ico', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/great_sage_icon.png', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/.env.example', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/main.py', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/great_sage_app.py', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/great_sage_console.py', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/assistant.py', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/app_tray.py', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/gui_launcher.py', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/run_tests.py', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/setup_api_keys.py', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/test_providers.py', 'GreatSageAI_Clone'), ('F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/test_voice.py', 'GreatSageAI_Clone')]
+datas = [('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/modules', 'EliveaAI_Clone/modules'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/ui', 'EliveaAI_Clone/ui'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/core', 'EliveaAI_Clone/core'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/memory', 'EliveaAI_Clone/memory'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/plugins', 'EliveaAI_Clone/plugins'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/config', 'EliveaAI_Clone/config'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/tests', 'EliveaAI_Clone/tests'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/elvea.ico', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/elvea_icon.png', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/.env.example', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/main.py', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/elvea_app.py', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/elvea_console.py', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/assistant.py', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/app_tray.py', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/gui_launcher.py', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/run_tests.py', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/setup_api_keys.py', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/test_providers.py', 'EliveaAI_Clone'), ('F:/programação/J.A.R.V.I.S/EliveaAI_Clone/test_voice.py', 'EliveaAI_Clone')]
 binaries = []
 hiddenimports = ['PySide6', 'groq', 'requests', 'numpy', 'sounddevice', 'pydub', 'scipy', 'edge_tts', 'google.genai', 'dotenv', 'imageio_ffmpeg', 'ddgs', 'pydantic', 'speech_recognition', 'psutil', 'pyautogui', 'keyboard', 'json', 'threading', 'subprocess', 'pathlib']
 tmp_ret = collect_all('PySide6')
@@ -21,7 +21,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/main.py'],
+    ['F:/programação/J.A.R.V.I.S/EliveaAI_Clone/main.py'],
     pathex=[],
     binaries=binaries,
     datas=datas,
@@ -40,7 +40,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='GreatSageAI',
+    name='EliveaAI',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -51,7 +51,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/great_sage.ico'],
+    icon=['F:/programação/J.A.R.V.I.S/EliveaAI_Clone/elvea.ico'],
 )
 coll = COLLECT(
     exe,
@@ -60,5 +60,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='GreatSageAI',
+    name='EliveaAI',
 )

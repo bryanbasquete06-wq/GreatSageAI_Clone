@@ -1,12 +1,12 @@
 """
-Great Sage AI — Raphael Class Application
+Elívea — Elívea Class Application
 ==========================================
 Orquestra o sistema completo:
 
      Voz → VoicePipeline (VAD + Whisper V3 Turbo)
-     LLM → GreatSageLLM (Groq GPT-OSS 120B em STREAMING)
+     LLM → EliveaLLM (Groq GPT-OSS 120B em STREAMING)
      Voz → SpeechEngine (TTS neural por frases, fala enquanto pensa)
-     UI → GreatSageMainWindow (interface ＜大賢者＞ estilo Tensura)
+     UI → EliveaMainWindow (interface ＜Elivea＞ estilo Tensura)
 
 by: bryan
 """
@@ -33,10 +33,17 @@ root_dir = Path(__file__).resolve().parent.parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
+# ═══ SAFETY: patch os.system to run silently (no PowerShell windows) ═══
+try:
+    from core.silent_run import patch_os_system
+    patch_os_system()
+except Exception:
+    pass
+
 # Tudo no disco F ASCII — evita MCI falhar com acento
 try:
     import os, tempfile
-    _ft = Path("F:/GreatSageTemp")
+    _ft = Path("F:/EliveaTemp")
     _ft.mkdir(parents=True, exist_ok=True)
     tempfile.tempdir = str(_ft)
     os.environ["TMP"] = str(_ft)
@@ -46,7 +53,7 @@ try:
     os.environ["TRANSFORMERS_CACHE"] = str(_ft / "hf_cache")
     os.environ["TORCH_HOME"] = str(_ft / "torch_cache")
     os.environ["XDG_CACHE_HOME"] = str(_ft / "cache")
-    for _d in ["hf_cache","torch_cache","cache","greatsage_tts","uploads"]:
+    for _d in ["hf_cache","torch_cache","cache","elvea_tts","uploads"]:
         (_ft / _d).mkdir(parents=True, exist_ok=True)
 except Exception:
     pass
@@ -63,7 +70,7 @@ except ImportError:
     _qt_api = "PyQt6"
 
 try:
-    from GreatSageAI_Clone.core.persona import PersonaManager
+    from core.persona import PersonaManager
 except ImportError:
     try:
         from core.persona import PersonaManager
@@ -71,57 +78,57 @@ except ImportError:
         from persona import PersonaManager
 
 try:
-    from GreatSageAI_Clone.core.llm import GreatSageLLM
+    from core.llm import EliveaLLM
 except ImportError:
     try:
-        from core.llm import GreatSageLLM
+        from core.llm import EliveaLLM
     except ImportError:
         # fallback para LLMEngine (clone)
         try:
-            from GreatSageAI_Clone.core.llm import LLMEngine as GreatSageLLM
+            from core.llm import LLMEngine as EliveaLLM
         except ImportError:
-            from core.llm import LLMEngine as GreatSageLLM
-from GreatSageAI_Clone.core.mark_l_bridge import MarkLBridge
-from GreatSageAI_Clone.core.speech_engine import SpeechEngine
-from GreatSageAI_Clone.core.voice_pipeline import VoicePipeline
-from GreatSageAI_Clone.core.autonomous_engine import AutonomousEngine
-from GreatSageAI_Clone.modules.system import SystemModule
-from GreatSageAI_Clone.modules.files import FileModule
-from GreatSageAI_Clone.modules.web import WebModule
-from GreatSageAI_Clone.modules.coder_agent import CoderAgentModule
-from GreatSageAI_Clone.modules.automation import AutomationModule
-from GreatSageAI_Clone.modules.self_improver import SelfImproverModule
-from GreatSageAI_Clone.modules.hardware_controller import HardwareController
-from GreatSageAI_Clone.modules.productivity import ProductivityModule
-from GreatSageAI_Clone.modules.superuser import SuperUser
-from GreatSageAI_Clone.memory.memory_manager import MemoryManager
-from GreatSageAI_Clone.core.intent_engine import IntentEngine
-from GreatSageAI_Clone.ui.qt_ui import GreatSageMainWindow
-from GreatSageAI_Clone.core.security import SecurityGuard, SecurityLevel
-from GreatSageAI_Clone.core.ambiance import AmbianceEngine
-from GreatSageAI_Clone.modules.rag import RAGEngine
-from GreatSageAI_Clone.modules.clipboard import ClipboardMonitor
-from GreatSageAI_Clone.modules.screen_context import ScreenContext
-from GreatSageAI_Clone.modules.scheduler import TaskScheduler
-from GreatSageAI_Clone.modules.monitor import SystemMonitor
-from GreatSageAI_Clone.modules.plugin_system import PluginManager
-from GreatSageAI_Clone.core.voice_cloner import VoiceCloner
-from GreatSageAI_Clone.modules.multilang import MultiLang
-from GreatSageAI_Clone.modules.learning import LearningEngine
-from GreatSageAI_Clone.modules.app_integration import AppIntegration
-from GreatSageAI_Clone.ui.dashboard import WebDashboard
-from GreatSageAI_Clone.core.updater import AutoUpdater
-from GreatSageAI_Clone.modules.config_manager import ConfigManager
+            from core.llm import LLMEngine as EliveaLLM
+from core.mark_l_bridge import MarkLBridge
+from core.speech_engine import SpeechEngine
+from core.voice_pipeline import VoicePipeline
+from core.autonomous_engine import AutonomousEngine
+from modules.system import SystemModule
+from modules.files import FileModule
+from modules.web import WebModule
+from modules.coder_agent import CoderAgentModule
+from modules.automation import AutomationModule
+from modules.self_improver import SelfImproverModule
+from modules.hardware_controller import HardwareController
+from modules.productivity import ProductivityModule
+from modules.superuser import SuperUser
+from memory.memory_manager import MemoryManager
+from core.intent_engine import IntentEngine
+from ui.qt_ui import EliveaMainWindow
+from core.security import SecurityGuard, SecurityLevel
+from core.ambiance import AmbianceEngine
+from modules.rag import RAGEngine
+from modules.clipboard import ClipboardMonitor
+from modules.screen_context import ScreenContext
+from modules.scheduler import TaskScheduler
+from modules.monitor import SystemMonitor
+from modules.plugin_system import PluginManager
+from core.voice_cloner import VoiceCloner
+from modules.multilang import MultiLang
+from modules.learning import LearningEngine
+from modules.app_integration import AppIntegration
+from ui.dashboard import WebDashboard
+from core.updater import AutoUpdater
+from modules.config_manager import ConfigManager
 
-from GreatSageAI_Clone.core.logger import get_logger
-from GreatSageAI_Clone.core.event_bus import event_bus
-from GreatSageAI_Clone.core.state_manager import state
-from GreatSageAI_Clone.core.audit_log import audit, ActionLevel
-from GreatSageAI_Clone.core.secret_manager import secrets
-from GreatSageAI_Clone.core.memory_persistent import PersistentMemory
-from GreatSageAI_Clone.core.chain_of_thought import ChainOfThought
-from GreatSageAI_Clone.core.proactive_engine import ProactiveEngine
-from GreatSageAI_Clone.core.smart_improvements import (
+from core.logger import get_logger
+from core.event_bus import event_bus
+from core.state_manager import state
+from core.audit_log import audit, ActionLevel
+from core.secret_manager import secrets
+from core.memory_persistent import PersistentMemory
+from core.chain_of_thought import ChainOfThought
+from core.proactive_engine import ProactiveEngine
+from core.smart_improvements import (
     SessionMemory, LearningDashboard, ErrorLearner, CodePatternLearner,
     VoiceCommandLearner, SmartReminders, ConversationSummarizer,
     MoodTracker, ResponseFeedback, SmartDefaults, CodeSnippetCache,
@@ -129,14 +136,14 @@ from GreatSageAI_Clone.core.smart_improvements import (
     AdaptiveResponseLength, PersonalityLearning, KnowledgeGraph,
     SmartAliases, HealthMonitor,
 )
-from GreatSageAI_Clone.core.image_analyzer import analyzer as image_analyzer
-from GreatSageAI_Clone.core.video_analyzer import analyzer as video_analyzer
-from GreatSageAI_Clone.core.link_analyzer import analyzer as link_analyzer
-from GreatSageAI_Clone.core.autonomous_planner import AutonomousPlanner
-from GreatSageAI_Clone.core.code_analyzer import analyze_file, analyze_project, quick_analyze
-from GreatSageAI_Clone.core.nine_router import NineRouterBridge
-from GreatSageAI_Clone.modules.browser_agent import BrowserAgent
-from GreatSageAI_Clone.core.usage_tracker import UsageTracker
+from core.image_analyzer import analyzer as image_analyzer
+from core.video_analyzer import analyzer as video_analyzer
+from core.link_analyzer import analyzer as link_analyzer
+from core.autonomous_planner import AutonomousPlanner
+from core.code_analyzer import analyze_file, analyze_project, quick_analyze
+from core.nine_router import NineRouterBridge
+from modules.browser_agent import BrowserAgent
+from core.usage_tracker import UsageTracker
 
 
 # ---------------------------------------------------------------------------
@@ -156,11 +163,11 @@ class SignalBridge(QObject):
     sig_self_improve = Signal(str, str) # (tarefa, modo) → self-improve via SmartCodeAgent
 
 
-class GreatSageApp:
+class EliveaApp:
     def __init__(self):
         # --- engines
         self.persona = PersonaManager()
-        self.llm = GreatSageLLM()
+        self.llm = EliveaLLM()
         self.nine_router = NineRouterBridge(llm_engine=self.llm)  # Tokens infinitos via rotação
         self.bridge = MarkLBridge()
         self.speech = SpeechEngine(voice_key="raphael")
@@ -196,8 +203,8 @@ class GreatSageApp:
         self.mark_l_tools = self.bridge.actions if self.bridge.is_connected() else {}
 
         # --- new infrastructure
-        self.log = get_logger("greatsage.app")
-        self.log.info("Great Sage AI inicializando")
+        self.log = get_logger("elvea.app")
+        self.log.info("Elivea inicializando")
         self.persistent_memory = PersistentMemory()
         self.proactive = ProactiveEngine(memory=self.persistent_memory)
 
@@ -227,7 +234,7 @@ class GreatSageApp:
 
         # Message Monitor — auto-reply to WhatsApp, Telegram, Discord, Email
         try:
-            from GreatSageAI_Clone.modules.message_monitor import MessageMonitor, MonitorConfig
+            from modules.message_monitor import MessageMonitor, MonitorConfig
             msg_config = MonitorConfig()
             self.message_monitor = MessageMonitor(config=msg_config, llm_engine=self.llm)
             self.message_monitor.on_message(self._on_incoming_message)
@@ -267,6 +274,52 @@ class GreatSageApp:
         )
         self.log.info("Autonomous self-improvement wired")
 
+        # ═══════════════════════════════════════════════════════════════
+        # MODULE 1: Clipboard Monitor
+        # ═══════════════════════════════════════════════════════════════
+        try:
+            self.clipboard_monitor = ClipboardMonitor()
+            self.clipboard_monitor.start()
+            self.log.info("ClipboardMonitor active")
+        except Exception as e:
+            self.log.debug(f"ClipboardMonitor skip: {e}")
+
+        # ═══════════════════════════════════════════════════════════════
+        # MODULE 2: Screen Context
+        # ═══════════════════════════════════════════════════════════════
+        try:
+            self.screen_context = ScreenContext()
+            self.log.info("ScreenContext active")
+        except Exception as e:
+            self.log.debug(f"ScreenContext skip: {e}")
+
+        # ═══════════════════════════════════════════════════════════════
+        # MODULE 3: RAG Engine
+        # ═══════════════════════════════════════════════════════════════
+        try:
+            self.rag = RAGEngine()
+            self.log.info("RAGEngine active")
+        except Exception as e:
+            self.log.debug(f"RAGEngine skip: {e}")
+
+        # ═══════════════════════════════════════════════════════════════
+        # MODULE 4: MultiLang
+        # ═══════════════════════════════════════════════════════════════
+        try:
+            self.multilang = MultiLang()
+            self.log.info("MultiLang active")
+        except Exception as e:
+            self.log.debug(f"MultiLang skip: {e}")
+
+        # ═══════════════════════════════════════════════════════════════
+        # MODULE 5: App Integration
+        # ═══════════════════════════════════════════════════════════════
+        try:
+            self.app_integration = AppIntegration()
+            self.log.info("AppIntegration active")
+        except Exception as e:
+            self.log.debug(f"AppIntegration skip: {e}")
+
         state.update({"app_state": "initializing"})
         event_bus.emit("app.starting")
 
@@ -286,15 +339,24 @@ class GreatSageApp:
         self.log.debug(f"transcript ({source}): {text}")
         self.signals.sig_master_text.emit(text)
         self._check_ambiance(text)
+        # Screen context: capture what's on screen when user speaks
+        ctx_prefix = ""
+        try:
+            if hasattr(self, 'screen_context') and self.screen_context:
+                ctx = self.screen_context.get_context()
+                if ctx:
+                    ctx_prefix = f"[SCREEN: {ctx[:200]}] "
+        except Exception:
+            pass
         # Prefix [AUDIO] so LLM knows this came from the microphone
-        voice_text = f"[AUDIO] {text}" if source == "voice" else text
+        voice_text = f"[AUDIO] {ctx_prefix}{text}" if source == "voice" else text
         self.handle_command(voice_text)
 
     def _check_ambiance(self, text: str):
         """Analisa humor, saudacao temporal, insights proativos."""
         result = AmbianceEngine.on_interaction(text)
         if self._first_interaction and result.get("greeting"):
-            self.speech.speak(result["greeting"])
+            # Boot already sends greeting to chat, don't speak it again
             self._first_interaction = False
         if result.get("proactive"):
             self.signals.sig_sage_full.emit(result["proactive"])
@@ -385,6 +447,29 @@ class GreatSageApp:
         if not cmd_clean:
             return
 
+        # ═══ GLOBAL SAFETY: block destructive commands unless explicitly confirmed ═══
+        _cmd_lower = cmd_clean.lower()
+        _dangerous_keywords = ('desligar', 'shutdown', 'reiniciar', 'restart', 'reboot')
+        _confirmation_words = ('confirm', 'confirma', 'sim', 'yes', 'tenho certeza', 'pode fazer')
+        if any(kw in _cmd_lower for kw in _dangerous_keywords):
+            if not any(cw in _cmd_lower for cw in _confirmation_words):
+                self._answer_local(cmd_clean,
+                    f"⚠️ Comando perigoso detectado: '{cmd_clean[:50]}'. "
+                    f"Para confirmar, adicione 'confirmo' ou 'sim' na mensagem.")
+                return
+
+        # Clipboard context: auto-detect code/errors in clipboard
+        try:
+            if hasattr(self, 'clipboard_monitor') and self.clipboard_monitor:
+                clip = self.clipboard_monitor.get_content()
+                if clip and len(clip) > 10:
+                    if self.clipboard_monitor.is_code(clip):
+                        cmd_clean = f"[CLIPBOARD_CODE] {cmd_clean}\nClipboard contains code:\n{clip[:500]}"
+                    elif self.clipboard_monitor.is_error(clip):
+                        cmd_clean = f"[CLIPBOARD_ERROR] {cmd_clean}\nClipboard contains error:\n{clip[:500]}"
+        except Exception:
+            pass
+
         # SPEED: batch all pre-routing operations into one try block
         try:
             # Record user pattern for proactive suggestions
@@ -474,7 +559,7 @@ class GreatSageApp:
 
         # SPEED: PC Controller — smart actions (open app, launch game, media, window)
         try:
-            from GreatSageAI_Clone.modules.pc_controller import PCController
+            from modules.pc_controller import PCController
             pc_response = PCController.smart_action(cmd_clean)
             if pc_response:
                 self._answer_local(cmd_clean, pc_response)
@@ -511,7 +596,23 @@ class GreatSageApp:
             importance=0.6,
             tags=["conversation", "local"]
         )
-        self.speech.speak(response)
+        # Knowledge Graph: extract entities and relationships
+        try:
+            self.knowledge_graph.extract_and_store(cmd, response)
+        except Exception:
+            pass
+        # Proactive: suggest next actions based on context
+        try:
+            suggestions = self.proactive.get_suggestions(cmd, response)
+            if suggestions:
+                self.session_mem.set_proactive_hints(suggestions)
+        except Exception:
+            pass
+        # Speak response — but skip pure code blocks
+        _skip_tts = ('```' in response and response.count('```') >= 2) or response.strip().startswith('import ')
+        if not _skip_tts:
+            self.speech.speak(response)
+        self.signals.sig_state.emit("success")
         op = cmd[:60] if len(cmd) > 10 else "operacao"
         phrase = AmbianceEngine.on_task_complete(True, is_code=False, op=op)
         if phrase:
@@ -524,9 +625,11 @@ class GreatSageApp:
         event_bus.emit("llm.query", {"command": cmd[:200]})
         state.set("app_state", "thinking")
 
-        # 9Router: rota inteligente entre providers para tokens infinitos
-        from GreatSageAI_Clone.core.request_router import RequestRouter
-        from GreatSageAI_Clone.core.nine_router import NineRouterBridge
+        # SPEED: parallel pre-computation — route + prompt + history simultaneously
+        from core.request_router import RequestRouter
+        from core.nine_router import NineRouterBridge
+
+        # Build route and system prompt in parallel (both are CPU-bound)
         route = RequestRouter.analyze(
             cmd,
             recent_history=MemoryManager.get_recent_turns(limit=4),
@@ -560,41 +663,77 @@ class GreatSageApp:
             self._cached_base_prompt = _base_prompt
             self._cached_prompt_mood = _current_mood
 
+        # SPEED: pre-build full system prompt once (not per-yield)
+        _full_system = _base_prompt
+        try:
+            corrections = self.persistent_memory.get_corrections_for_prompt(cmd)
+            if corrections:
+                _full_system += "\n\n" + corrections
+        except Exception:
+            pass
+        try:
+            session_ctx = self.session_mem.to_prompt_context()
+            if session_ctx:
+                _full_system += "\n\n" + session_ctx
+        except Exception:
+            pass
+        try:
+            defaults_ctx = self.smart_defaults.to_prompt_context()
+            if defaults_ctx:
+                _full_system += "\n\n" + defaults_ctx
+        except Exception:
+            pass
+        _full_system += f"\n\nHumor: {_current_mood}"
+
+        # Build conversation history for context
+        _history = []
+        try:
+            recent = self.persistent_memory.get_recent(category="conversation", limit=10)
+            for r in reversed(recent):
+                content = r.content if hasattr(r, 'content') else str(r)
+                if content.startswith("User: "):
+                    _history.append({"role": "user", "content": content[6:]})
+                elif content.startswith("AI: "):
+                    _history.append({"role": "assistant", "content": content[4:]})
+        except Exception:
+            pass
+        # Also add session memory turns
+        try:
+            if hasattr(self.session_mem, 'turns') and self.session_mem.turns:
+                for turn in self.session_mem.turns[-8:]:
+                    role = turn.get('role', 'user')
+                    text = turn.get('content', '')
+                    if role in ('user', 'assistant'):
+                        _history.append({"role": role, "content": text})
+        except Exception:
+            pass
+        # Current message
+        _history.append({"role": "user", "content": cmd})
+
+        # ═══ INTELLIGENCE ENGINE: enrich context dynamically ═══
+        try:
+            from core.intelligence_engine import IntelligenceEngine
+            if not hasattr(self, '_intel_engine'):
+                self._intel_engine = IntelligenceEngine()
+            _full_system = self._intel_engine.enrich_context(
+                _full_system, cmd, _history,
+                self.session_mem.turns[-8:] if hasattr(self.session_mem, 'turns') else []
+            )
+        except Exception:
+            pass
+
         def _tee():
             try:
-                # SPEED: only build dynamic context (skip if empty)
-                full_system = _base_prompt
-                try:
-                    corrections = self.persistent_memory.get_corrections_for_prompt(cmd)
-                    if corrections:
-                        full_system += "\n\n" + corrections
-                except Exception:
-                    pass
-                try:
-                    session_ctx = self.session_mem.to_prompt_context()
-                    if session_ctx:
-                        full_system += "\n\n" + session_ctx
-                except Exception:
-                    pass
-                try:
-                    defaults_ctx = self.smart_defaults.to_prompt_context()
-                    if defaults_ctx:
-                        full_system += "\n\n" + defaults_ctx
-                except Exception:
-                    pass
-                try:
-                    mood_ctx = f"Humor: {_current_mood}"
-                    full_system += "\n\n" + mood_ctx
-                except Exception:
-                    pass
-
                 # Use 9Router for streaming with automatic fallback
                 for delta in self.nine_router.route_and_stream(
-                    [{"role": "user", "content": cmd}],
-                    system=full_system,
+                    _history,
+                    system=_full_system,
                     task_type=task_type,
                     max_tokens=route.max_tokens,
-                    temperature=0.7,
+                    temperature=0.65,
+                    top_p=0.92,
+                    frequency_penalty=0.05,
+                    presence_penalty=0.08,
                 ):
                     collected.append(delta)
                     self.signals.sig_sage_delta.emit(delta)
@@ -612,9 +751,21 @@ class GreatSageApp:
                             importance=0.6,
                             tags=["conversation", "llm"]
                         )
-                        self.signals.sig_sage_full.emit(full_response[0])  # ← enviar resposta completa para UI
+                        self.signals.sig_sage_full.emit(full_response[0])
                         state.set("app_state", "idle")
                         event_bus.emit("response.llm", {"cmd": cmd[:100], "resp_len": len(full_response[0])})
+                        # Knowledge Graph: extract entities from LLM response
+                        try:
+                            self.knowledge_graph.extract_and_store(cmd, full_response[0])
+                        except Exception:
+                            pass
+                        # Proactive suggestions
+                        try:
+                            suggestions = self.proactive.get_suggestions(cmd, full_response[0])
+                            if suggestions:
+                                self.session_mem.set_proactive_hints(suggestions)
+                        except Exception:
+                            pass
                 except Exception:
                     pass
                 self.signals.sig_sage_end.emit()
@@ -639,7 +790,7 @@ class GreatSageApp:
     def _post_stream_execute(self, full_response: str):
         """Verifica se a resposta contém [EXECUTE] e roda o código com segurança."""
         try:
-            from GreatSageAI_Clone.core.code_executor import CodeExecutor
+            from core.code_executor import CodeExecutor
             if not CodeExecutor.has_executable(full_response):
                 return
 
@@ -691,9 +842,9 @@ class GreatSageApp:
         cmd_lower = cmd_clean.lower()
 
         intent_action, params = IntentEngine.match_intent(cmd_clean)
-        if not intent_action:
-            intent_action, params = IntentEngine.extract_intent_with_llm(
-                cmd_clean, groq_key=self.llm.groq_key)
+        # NOTE: removed extract_intent_with_llm fallback — it misclassifies
+        # conversational queries as system commands, returning wrong answers.
+        # Only rule-based match_intent is used for local routing.
 
         # --- Ações seguras (leitura/informação) ---
         if intent_action == "clean_recycle_bin":
@@ -722,7 +873,7 @@ class GreatSageApp:
             return MemoryManager.get_memory_context()
         if intent_action == "self_program":
             self.signals.sig_self_improve.emit(params.get("target", ""), "auto")
-            return ("Protocolo de auto-melhoria iniciado. O Grande Sábio está "
+            return ("Protocolo de auto-melhoria iniciado. O Elívea está "
                     "analisando e melhorando seus próprios arquivos, Mestre.")
         if intent_action == "kill_process":
             return HardwareController.kill_process(params.get("target", ""))
@@ -841,9 +992,17 @@ class GreatSageApp:
                     return SuperUser.set_static_ip(parts[0], parts[1], parts[2] if len(parts) > 2 else "192.168.1.1")
             return "Forneça interface IP gateway."
         if intent_action == "shutdown_pc":
-            return SuperUser.shutdown()
+            # SAFETY: always require confirmation, always 30s delay
+            if not SecurityGuard.require_confirmation("shutdown", "Desligar o PC em 30 segundos. Tem certeza?"):
+                return "Desligamento cancelado pelo Mestre."
+            SecurityGuard.audit("shutdown", "user_confirmed")
+            return SuperUser.shutdown(30)
         if intent_action == "restart_pc":
-            return SuperUser.restart()
+            # SAFETY: always require confirmation, always 30s delay
+            if not SecurityGuard.require_confirmation("restart", "Reiniciar o PC em 30 segundos. Tem certeza?"):
+                return "Reinicialização cancelada pelo Mestre."
+            SecurityGuard.audit("restart", "user_confirmed")
+            return SuperUser.restart(30)
         if intent_action == "lock_pc":
             return SuperUser.lock_pc()
         if intent_action == "set_volume":
@@ -956,7 +1115,10 @@ class GreatSageApp:
                 return f"Erro: {result.error}"
             return result.summary or "Analise concluida."
 
-        # --- Ações PERIGOSAS (precisam confirmação) ---
+        # --- Broad regex fallback patterns (superuser admin commands) ---
+        # Guard: only match if message looks like a command (short, imperative)
+        _is_cmd = len(cmd_clean) < 80 and not any(q in cmd_lower for q in ('?', 'como', 'por que', 'porque', 'o que', 'qual', 'quem', 'onde', 'quando', 'me explica', 'me fale', 'conte', 'explica'))
+
         if intent_action == "install_app":
             if not SecurityGuard.require_confirmation("install", params.get("target", "")):
                 return "Aviso. Instalação cancelada pelo Mestre."
@@ -1002,6 +1164,9 @@ class GreatSageApp:
 
         # ===================================================== SUPERUSER (admin total)
         # Comandos de administração total do PC — voz ou texto
+        # Guard: skip broad regex patterns if message looks like a question
+        if not _is_cmd:
+            return None  # let LLM handle conversational queries
 
         # --- downloads e instalação (COM CONFIRMAÇÃO)
         if re.search(r'\b(baixar|download|pegar|puxar)\b', cmd_lower):
@@ -1078,7 +1243,7 @@ class GreatSageApp:
             code = re.sub(r'^(python|py)\s+', '', cmd_clean).strip()
             if not code:
                 return "Especifique o código Python."
-            from GreatSageAI_Clone.core.security import SandBox
+            from core.security import SandBox
             is_safe, warnings = SandBox.scan_code(code)
             if not is_safe:
                 if not SecurityGuard.require_confirmation("run_python", f"Código com {len(warnings)} avisos"):
@@ -1275,7 +1440,7 @@ class GreatSageApp:
             min_val = float(m.group(1)) if m else 5.0
             msg_val = re.sub(r'.*?(minutos|minuto|min)\s*(de|para|que)?\s*', '', cmd_clean, flags=re.IGNORECASE).strip()
             return ProductivityModule.set_timer_reminder(
-                min_val, msg_val or "Lembrete do Grande Sábio", callback_speak=self.speech.speak)
+                min_val, msg_val or "Lembrete do Elívea", callback_speak=self.speech.speak)
 
         if "limpar temp" in cmd_lower or "arquivos temporarios" in cmd_lower or "temporários" in cmd_lower:
             return HardwareController.clean_temp_files()
@@ -1316,7 +1481,7 @@ class GreatSageApp:
             return SystemModule.get_status_report()
 
         if cmd_lower in ("help", "ajuda"):
-            return ("Diretivas do Grande Sábio, Mestre. "
+            return ("Diretivas do Elívea, Mestre. "
                     "Status, meu ip, meus discos para telemetria. "
                     "Otimizar ram, limpar lixeira, organizar desktop, limpar temporários. "
                     "Abrir ou fechar aplicativo. Capturar tela. Anotar texto. "
@@ -1419,7 +1584,7 @@ class GreatSageApp:
 
         if cmd_lower in ("melhorar-se", "auto-programar", "meus-codigos", "meus codigos"):
             self.signals.sig_self_improve.emit("", "auto")
-            return ("Protocolo de auto-melhoria iniciado. O Grande Sábio está "
+            return ("Protocolo de auto-melhoria iniciado. O Elívea está "
                     "analisando e melhorando seus próprios arquivos, Mestre. "
                     "Aguarde o relatório.")
 
@@ -1427,7 +1592,7 @@ class GreatSageApp:
                          "melhoria contínua", "melhoria continua",
                          "aprenda e melhore", "auto-aprenda"):
             self.signals.sig_self_improve.emit("", "continuous")
-            return ("Modo melhoria contínua ativado. O Grande Sábio vai "
+            return ("Modo melhoria contínua ativado. O Elívea vai "
                     "analisar, melhorar e aprender continuamente sem limite "
                     "de rodadas. Use 'parar' para interromper, Mestre.")
 
@@ -1436,7 +1601,7 @@ class GreatSageApp:
             if target:
                 self.signals.sig_self_improve.emit(target, "targeted")
                 return (f"Auto-melhoria direcionada: {target}. "
-                        "O Grande Sábio está trabalhando nisso, Mestre.")
+                        "O Elívea está trabalhando nisso, Mestre.")
 
         if cmd_lower.startswith("ler-codigo ") or cmd_lower.startswith("ler codigo "):
             rel_p = cmd_clean.split(maxsplit=2)[-1]
@@ -1465,7 +1630,7 @@ class GreatSageApp:
                 if prompt_text:
                     self.signals.sig_self_improve.emit(prompt_text, "prompt")
                     return (f"Modo programar via prompt ativado: {prompt_text}. "
-                            "O Grande Sábio está implementando, Mestre.")
+                            "O Elívea está implementando, Mestre.")
                 break
 
         _code_mode = cmd_lower.strip(" \t!?.,;:") in (
@@ -1490,7 +1655,7 @@ class GreatSageApp:
             self.signals.sig_code_request.emit(code_task or "")
             if code_task:
                 return (f"Aviso. Abrindo a Ala de Programação com a tarefa: {code_task}. "
-                        "Modo programador do Grande Sábio iniciado, Mestre.")
+                        "Modo programador do Elívea iniciado, Mestre.")
             return ("Aviso. Abrindo a Ala de Programação, Mestre. O CodeDock está "
                     "pronto para receber suas ordens de código.")
 
@@ -1602,21 +1767,21 @@ def main():
     app_qt = QApplication.instance() or QApplication(sys.argv)
     app_qt.setFont(QFont("Segoe UI", 10))
 
-    great_sage = GreatSageApp()
-    win = GreatSageMainWindow(
-        command_handler=great_sage.handle_command,
-        pipeline=great_sage.pipeline,
-        speech=great_sage.speech,
-        llm=great_sage.llm,
-        voice_handler=great_sage.speech.set_voice,
-        stop_speech_handler=great_sage.speech.stop_speaking,
-        mic_button_handler=great_sage.pipeline.begin_push_capture,
+    elvea = EliveaApp()
+    win = EliveaMainWindow(
+        command_handler=elvea.handle_command,
+        pipeline=elvea.pipeline,
+        speech=elvea.speech,
+        llm=elvea.llm,
+        voice_handler=elvea.speech.set_voice,
+        stop_speech_handler=elvea.speech.stop_speaking,
+        mic_button_handler=elvea.pipeline.begin_push_capture,
     )
-    win.voice_test_requested.connect(lambda: great_sage.speech.speak(
-        f"Teste de síntese de voz concluído, {great_sage.persona.user_name}. Esta é minha voz neural atual."))
+    win.voice_test_requested.connect(lambda: elvea.speech.speak(
+        f"Teste de síntese de voz concluído, {elvea.persona.user_name}. Esta é minha voz neural atual."))
 
     # Wire worker-thread signals → UI slots (queued, thread-safe)
-    sig = great_sage.signals
+    sig = elvea.signals
     sig.sig_master_text.connect(win.add_master_message)
     sig.sig_sage_full.connect(win.add_sage_message)
     sig.sig_sage_begin.connect(win.begin_sage_stream)
@@ -1626,31 +1791,43 @@ def main():
     sig.sig_rms.connect(win.update_mic_rms)
     sig.sig_telemetry.connect(win.update_telemetry)
     sig.sig_code_request.connect(win.open_code_workspace)
-    sig.sig_self_improve.connect(great_sage._on_self_improve)
+    sig.sig_self_improve.connect(elvea._on_self_improve)
 
     win.show()
 
     def _startup():
+        # Boot chime + greeting handled by AbilityAwakeningOverlay
+        # Only log startup — no duplicate speech
         import logging
-        _log = logging.getLogger("greatsage.app")
-        _log.info("Startup thread started — waiting 2.2s")
-        time.sleep(2.2)
-        _log.info("Playing boot chime")
-        great_sage.speech.play_boot_chime()
-        name = great_sage.persona.user_name
-        _log.info(f"Speaking startup greeting for {name}")
-        great_sage.speech.speak(
-            f"Sistema Grande Sábio inicializado com sucesso, {name}. "
-            "Pipeline de voz unificado ativo, síntese neural em pé de guerra, "
-            "e o núcleo neural à sua disposição. "
-            f"Pode falar comigo naturalmente, {name}. Estou te ouvindo.")
-        _log.info("Startup greeting queued")
+        _log = logging.getLogger("elvea.app")
+        _log.info("Startup thread started — awakening handles speech")
 
     threading.Thread(target=_startup, daemon=True).start()
 
+    # ═══════════════════════════════════════════════════════
+    # MODULE 6: Auto-Updater (checks on startup)
+    # ═══════════════════════════════════════════════════════
+    try:
+        AutoUpdater.check_on_startup()
+    except Exception:
+        pass
+
+    # ═══════════════════════════════════════════════════════
+    # MODULE 7: Config Manager (loads saved preferences)
+    # ═══════════════════════════════════════════════════════
+    try:
+        ConfigManager.load()
+    except Exception:
+        pass
+
     def _on_close(*_):
-        great_sage.pipeline.stop()
-        great_sage.speech.stop_speaking()
+        elvea.pipeline.stop()
+        elvea.speech.stop_speaking()
+        # Save config on exit
+        try:
+            ConfigManager.save()
+        except Exception:
+            pass
 
     app_qt.aboutToQuit.connect(_on_close)
     sys.exit(app_qt.exec())

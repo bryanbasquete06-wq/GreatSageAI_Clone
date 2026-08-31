@@ -6,7 +6,7 @@ from typing import Optional
 from dotenv import load_dotenv
 import logging
 
-logger = logging.getLogger("greatsage.config")
+logger = logging.getLogger("elvea.config")
 ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
 try:

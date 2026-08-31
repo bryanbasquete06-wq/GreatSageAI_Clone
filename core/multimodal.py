@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Suporte Multi-Modal
+Elívea — Suporte Multi-Modal
 ====================================
 Analise e geracao de imagens.
 """
@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional
 from dataclasses import dataclass
 
-logger = logging.getLogger("greatsage.multimodal")
+logger = logging.getLogger("elvea.multimodal")
 
 
 @dataclass

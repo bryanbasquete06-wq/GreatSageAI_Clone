@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Optional, List
 from enum import Enum
 
-logger = logging.getLogger("greatsage.audit")
+logger = logging.getLogger("elvea.audit")
 AUDIT_DIR = Path(__file__).resolve().parent.parent / "config" / "audit"
 
 class ActionLevel(Enum):

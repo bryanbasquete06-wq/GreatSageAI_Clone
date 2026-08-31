@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Sistema de logging estruturado do Great Sage AI."""
+"""Sistema de logging estruturado do Elívea."""
 import logging
 import sys
 import json
@@ -22,7 +22,7 @@ class JsonFormatter(logging.Formatter):
 
 _initialized = False
 
-def get_logger(name: str = "greatsage") -> logging.Logger:
+def get_logger(name: str = "elvea") -> logging.Logger:
     global _initialized
     root = logging.getLogger(name)
     if not _initialized:
@@ -32,7 +32,7 @@ def get_logger(name: str = "greatsage") -> logging.Logger:
         ch.setLevel(logging.INFO)
         ch.setFormatter(logging.Formatter("[%(levelname)s] %(name)s: %(message)s"))
         root.addHandler(ch)
-        fh = logging.FileHandler(LOG_DIR / "greatsage.jsonl", encoding="utf-8")
+        fh = logging.FileHandler(LOG_DIR / "elvea.jsonl", encoding="utf-8")
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(JsonFormatter())
         root.addHandler(fh)

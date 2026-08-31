@@ -1,5 +1,5 @@
 """
-Great Sage AI - Daily Productivity Module
+Elivea - Daily Productivity Module
 Manages reminders, quick notes, timers, date/time queries, and daily tasks for the user.
 """
 
@@ -68,7 +68,7 @@ class ProductivityModule:
 
         def _worker():
             time.sleep(sec)
-            alert_msg = f"Aviso! Lembrete do Grande Sábio: {message}"
+            alert_msg = f"Aviso! Lembrete do Elívea: {message}"
             print(f"\n {alert_msg}\n")
             if callback_speak:
                 callback_speak(alert_msg)

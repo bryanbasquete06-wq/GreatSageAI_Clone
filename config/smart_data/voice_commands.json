@@ -1,0 +1,11 @@
+{
+  "successful": {
+    "abre o chrome": {
+      "intent": "open_app",
+      "count": 86,
+      "last_used": 1788102043.850935
+    }
+  },
+  "failed": {},
+  "aliases": {}
+}

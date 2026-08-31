@@ -1,10 +1,10 @@
 """
-Great Sage AI — Console Terminal & Escuta ao Vivo (v3 Raphael)
+Elívea — Console Terminal & Escuta ao Vivo (v3 Elivea)
 ================================================================
 Versão headless (sem janela) com o pipeline de voz unificado:
 microfone → VAD → Whisper V3 Turbo → comando → resposta falada.
 
-Uso: python great_sage_console.py
+Uso: python elvea_console.py
 """
 
 import os
@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from GreatSageAI_Clone.great_sage_app import GreatSageApp
+from elvea_app import EliveaApp
 
 
 C_Y = "\033[93m"
@@ -30,12 +30,12 @@ def main():
     os.system("") # ANSI no CMD
 
     print(f"{C_Y}{'=' * 70}")
-    print(" ＜大賢者＞ GREAT SAGE AI (RAPHAEL) — CONSOLE v3")
+    print(" ＜Elivea＞ Elívea — CONSOLE v3")
     print(" Pipeline de voz unificado • Whisper V3 Turbo • TTS neural streaming")
     print(f"{'=' * 70}{C_0}\n")
 
     print(f"{C_C}[SYS] Inicializando motores de voz, inteligência e automação...{C_0}")
-    app = GreatSageApp()
+    app = EliveaApp()
     pipeline = app.pipeline
 
     # Streaming de resposta impresso ao vivo no terminal
@@ -45,7 +45,7 @@ def main():
     sig.sig_sage_end.connect(lambda: print(f"{C_C}]{C_0}\n", flush=True))
     sig.sig_sage_full.connect(lambda t: print(f"{C_G}[SÁBIO] {t}{C_0}\n", flush=True))
 
-    print(f"{C_G}[SYS] Microfone contínuo ONLINE — fale 'Grande Sábio' ou qualquer comando.{C_0}\n")
+    print(f"{C_G}[SYS] Microfone contínuo ONLINE — fale 'Elívea' ou qualquer comando.{C_0}\n")
 
     def _on_speech(text: str, source: str):
         print(f"\n{C_Y}[FALA CAPTURADA ({source})]:{C_0} \"{C_W}{text}{C_0}\"")
@@ -58,7 +58,7 @@ def main():
         print(f"{C_G}[ respondido em {time.perf_counter() - t0:.1f}s — STT {pipeline.last_stt_ms}ms/{pipeline.last_stt_engine} | TTFT {app.llm.last_ttft_ms}ms]{C_0}")
 
     pipeline.on_transcript = _on_speech
-    pipeline.on_wake = lambda: print(f"{C_Y}［Grande Sábio ativado — à escuta, Mestre］{C_0}")
+    pipeline.on_wake = lambda: print(f"{C_Y}［Elivea ativado — à escuta, Mestre］{C_0}")
 
     print(f"{C_Y}Digite comandos abaixo ('sair' encerra).{C_0}\n")
     while True:
@@ -67,7 +67,7 @@ def main():
             if not user_input:
                 continue
             if user_input.lower() in ("sair", "exit", "quit"):
-                print(f"{C_R}Encerrando o Grande Sábio...{C_0}")
+                print(f"{C_R}Encerrando o Elívea...{C_0}")
                 pipeline.stop()
                 app.speech.stop_speaking()
                 sys.exit(0)

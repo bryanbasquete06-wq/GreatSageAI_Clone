@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>＜Elívea＞ Elívea — Elívea Class</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@font-face{font-family:'Rune';src:local('Consolas'),local('monospace')}
+:root{
+  --bg:#000000;--panel:#0a0a0a;--panel2:#111111;--border:#1a1a1a;
+  --gold:#FFD700;--gold-dim:#b8960f;--gold-bright:#ffe44d;
+  --text:#ffffff;--text-dim:#666666;--text-med:#999999;
+  --green:#4ade80;--red:#f87171;
+}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;overflow:hidden;height:100vh;width:100vw}
+.app{display:grid;grid-template-columns:340px 1fr 320px;grid-template-rows:48px 1fr 28px;height:100vh;width:100vw}
+
+/* ── Top Bar ── */
+.topbar{grid-column:1/-1;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px}
+.topbar .logo{font-size:14px;font-weight:bold;color:var(--gold);font-family:'Microsoft YaHei UI',sans-serif}
+.topbar .subtitle{font-size:10px;color:var(--text-dim);font-family:Consolas,monospace;letter-spacing:2px}
+
+/* ── Chat Panel ── */
+.chat-panel{background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.chat-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.chat-header h3{font-size:12px;color:var(--gold);font-family:Consolas,monospace}
+.chat-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.chat-messages::-webkit-scrollbar{width:4px}
+.chat-messages::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.15);border-radius:2px}
+.chat-input{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px}
+.chat-input input{flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;outline:none}
+.chat-input input:focus{border-color:var(--gold)}
+.chat-input button{background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px 16px;font-weight:bold;cursor:pointer;font-size:13px}
+.chat-input button:hover{background:var(--gold-bright)}
+
+/* ── Bubbles ── */
+.bubble{max-width:280px;padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.5;animation:slideIn 0.4s ease-out;position:relative}
+.bubble.user{align-self:flex-end;background:linear-gradient(135deg,#2a2000,#1c1600);border:1px solid rgba(255,215,0,0.15);color:var(--text)}
+.bubble.assistant{align-self:flex-start;background:linear-gradient(135deg,#101828,#0c1220);border:1px solid rgba(85,153,221,0.12);color:#d0dce8}
+.bubble .role{font-size:9px;font-weight:bold;margin-bottom:4px;font-family:Consolas,monospace}
+.bubble.user .role{color:var(--gold)}
+.bubble.assistant .role{color:#77bbff}
+.bubble .time{font-size:9px;color:var(--text-dim);margin-top:4px}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+.bubble.user{animation:slideInR 0.4s ease-out}
+@keyframes slideInR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── Center: RuneCore ── */
+.center{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at center,#060913 0%,#000000 100%)}
+.rune-core{position:relative;width:340px;height:340px}
+.rune-core canvas{position:absolute;top:0;left:0}
+
+/* ── Right Panel ── */
+.right-panel{background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px}
+.right-panel::-webkit-scrollbar{width:3px}
+.right-panel::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.1);border-radius:2px}
+.panel-card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;transition:border-color 0.3s}
+.panel-card:hover{border-color:rgba(255,215,0,0.2)}
+.panel-card h4{font-size:10px;color:var(--gold);font-family:Consolas,monospace;margin-bottom:8px;letter-spacing:1px}
+.metric{display:flex;justify-content:space-between;align-items:center;margin:4px 0;font-size:11px}
+.metric .label{color:var(--text-dim)}
+.metric .value{color:var(--gold);font-family:Consolas,monospace;font-weight:bold}
+.bar{height:4px;background:var(--bg);border-radius:2px;margin-top:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;transition:width 0.5s ease}
+.bar-fill.green{background:linear-gradient(90deg,var(--green),#22c55e)}
+.bar-fill.gold{background:linear-gradient(90deg,var(--gold-dim),var(--gold))}
+.bar-fill.red{background:linear-gradient(90deg,var(--red),#dc2626)}
+
+/* ── Quick Actions ── */
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.qa-btn{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;cursor:pointer;transition:all 0.2s;font-size:11px;color:var(--text-med)}
+.qa-btn:hover{border-color:var(--gold);color:var(--gold);box-shadow:0 0 12px rgba(255,215,0,0.1)}
+.qa-btn .icon{font-size:16px;display:block;margin-bottom:2px}
+
+/* ── Status Bar ── */
+.statusbar{grid-column:1/-1;background:var(--panel);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;font-size:10px;color:var(--text-dim);font-family:Consolas,monospace;gap:16px}
+.statusbar .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* ── Ambient particles ── */
+.particles{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.particle{position:absolute;width:2px;height:2px;background:var(--gold);border-radius:50%;opacity:0;animation:float linear infinite}
+@keyframes float{0%{opacity:0;transform:translateY(0)}10%{opacity:0.4}90%{opacity:0.4}100%{opacity:0;transform:translateY(-100vh)}}
+
+/* ── Typing indicator ── */
+.typing{display:flex;align-items:center;gap:6px;padding:8px 14px;align-self:flex-start}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:typingPulse 1.4s infinite}
+.typing-dot:nth-child(2){animation-delay:0.2s}
+.typing-dot:nth-child(3){animation-delay:0.4s}
+@keyframes typingPulse{0%,60%,100%{transform:scale(0.6);opacity:0.3}30%{transform:scale(1);opacity:1}}
+.typing-label{font-size:9px;color:var(--text-dim);font-family:Consolas,monospace}
+
+/* ── History nodes ── */
+.history-nodes{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+.history-node{width:8px;height:8px;border-radius:50%;background:var(--gold-dim);cursor:pointer;transition:all 0.2s;position:relative}
+.history-node:hover{background:var(--gold);transform:scale(1.5);box-shadow:0 0 8px var(--gold)}
+.history-node:hover::after{content:attr(data-tip);position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:9px;color:var(--text);white-space:nowrap;z-index:10}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <span class="logo">＜Elívea＞</span>
+    <span class="subtitle">Elívea AI — ELÍVEA CLASS v3.0</span>
+    <span style="flex:1"></span>
+    <span style="font-size:10px;color:var(--text-dim);font-family:Consolas,monospace" id="clock"></span>
+  </div>
+
+  <!-- Chat Panel -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <h3>💬 Chat</h3>
+      <span style="flex:1"></span>
+      <span style="font-size:10px;color:var(--text-dim)">📜 Histórico</span>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="bubble assistant">
+        <div class="role">＜Elívea＞ Elívea</div>
+        Elívea online, Mestre. Todos os sistemas nominais. Pode falar comigo naturalmente — estou te ouvindo.
+        <div class="time">09:42</div>
+      </div>
+    </div>
+    <div class="typing" id="typingIndicator" style="display:none">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <span class="typing-label">pensando</span>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Digite sua mensagem..." autocomplete="off">
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+  </div>
+
+  <!-- Center: RuneCore -->
+  <div class="center" id="centerArea">
+    <div class="rune-core">
+      <canvas id="runeCanvas" width="340" height="340"></canvas>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <!-- System Monitor -->
+    <div class="panel-card">
+      <h4>📊 SYSTEM MONITOR</h4>
+      <div class="metric"><span class="label">CPU</span><span class="value" id="cpuVal">23%</span></div>
+      <div class="bar"><div class="bar-fill gold" id="cpuBar" style="width:23%"></div></div>
+      <div class="metric"><span class="label">RAM</span><span class="value" id="ramVal">4.2 GB</span></div>
+      <div class="bar"><div class="bar-fill green" id="ramBar" style="width:52%"></div></div>
+      <div class="metric"><span class="label">DISK</span><span class="value">156 GB livre</span></div>
+    </div>
+
+    <!-- AI Status -->
+    <div class="panel-card">
+      <h4>🧠 AI STATUS</h4>
+      <div class="metric"><span class="label">Modelo</span><span class="value">9Router</span></div>
+      <div class="metric"><span class="label">Latência</span><span class="value" id="latency">320ms</span></div>
+      <div class="metric"><span class="label">Comandos</span><span class="value" id="cmdCount">0</span></div>
+      <div class="metric"><span class="label">Tokens</span><span class="value" id="tokenCount">0</span></div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="panel-card">
+      <h4>⚡ QUICK ACTIONS</h4>
+      <div class="qa-grid">
+        <div class="qa-btn" onclick="sendAction('programar')"><span class="icon">⚙️</span>Programar</div>
+        <div class="qa-btn" onclick="sendAction('status')"><span class="icon">📊</span>Status</div>
+        <div class="qa-btn" onclick="sendAction('limpar lixeira')"><span class="icon">🗑️</span>Lixeira</div>
+        <div class="qa-btn" onclick="sendAction('meu ip')"><span class="icon">🌐</span>Meu IP</div>
+        <div class="qa-btn" onclick="sendAction('otimizar ram')"><span class="icon">⚡</span>Boost RAM</div>
+        <div class="qa-btn" onclick="sendAction('google python')"><span class="icon">🔍</span>Buscar</div>
+      </div>
+    </div>
+
+    <!-- Recent Commands -->
+    <div class="panel-card">
+      <h4>🕐 RECENT</h4>
+      <div id="recentCmds" style="font-size:10px;color:var(--text-dim);font-family:Consolas,monospace">
+        <div style="margin:3px 0;opacity:0.6">• status</div>
+        <div style="margin:3px 0;opacity:0.5">• meu ip</div>
+        <div style="margin:3px 0;opacity:0.4">• limpar lixeira</div>
+      </div>
+    </div>
+
+    <!-- History Map -->
+    <div class="panel-card">
+      <h4>📜 HISTORY MAP</h4>
+      <div class="history-nodes">
+        <div class="history-node" data-tip="Sistema de voz"></div>
+        <div class="history-node" data-tip="Instalar Discord"></div>
+        <div class="history-node" data-tip="Bug no Python"></div>
+        <div class="history-node" data-tip="Organizar desktop"></div>
+        <div class="history-node" data-tip="Pesquisa Google"></div>
+        <div class="history-node" data-tip="Configurar WiFi"></div>
+        <div class="history-node" data-tip="Analisar código"></div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="panel-card">
+      <h4>🔔 NOTIFICATIONS</h4>
+      <div style="font-size:10px;color:var(--text-med)">
+        <div style="margin:4px 0">✅ Sistema inicializado</div>
+        <div style="margin:4px 0;opacity:0.6">🎙 Pipeline de voz ativo</div>
+        <div style="margin:4px 0;opacity:0.4">🧠 Memória persistente carregada</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="statusbar">
+    <div class="dot"></div>
+    <span>Elívea — ONLINE</span>
+    <span>|</span>
+    <span>Modelo: 9Router</span>
+    <span>|</span>
+    <span>Voz: Elívea (pt-BR)</span>
+    <span>|</span>
+    <span id="uptime">Uptime: 00:00</span>
+    <span style="flex:1"></span>
+    <span>by: bryan</span>
+  </div>
+</div>
+
+<!-- Ambient Particles -->
+<div class="particles" id="particles"></div>
+
+<script>
+// ── Clock ──
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock').textContent=now.toLocaleTimeString('pt-BR');
+  const h=now.getHours();
+  document.documentElement.style.setProperty('--bg', h>=22||h<6?'#0a0005':h>=18?'#020817':'#060913');
+}
+setInterval(updateClock,1000);updateClock();
+
+// ── Uptime ──
+let uptimeSec=0;
+setInterval(()=>{
+  uptimeSec++;
+  const m=Math.floor(uptimeSec/60).toString().padStart(2,'0');
+  const s=(uptimeSec%60).toString().padStart(2,'0');
+  document.getElementById('uptime').textContent=`Uptime: ${m}:${s}`;
+},1000);
+
+// ── System Monitor (simulated) ──
+setInterval(()=>{
+  const cpu=Math.floor(15+Math.random()*25);
+  const ram=3.5+Math.random()*2;
+  document.getElementById('cpuVal').textContent=cpu+'%';
+  document.getElementById('cpuBar').style.width=cpu+'%';
+  document.getElementById('ramBar').style.width=(ram/8*100)+'%';
+  document.getElementById('ramVal').textContent=ram.toFixed(1)+' GB';
+  document.getElementById('cpuBar').className='bar-fill '+(cpu>80?'red':cpu>50?'gold':'gold');
+},2000);
+
+// ── Chat ──
+let cmdCount=0, tokenCount=0;
+const responses=[
+  "Claro, Mestre! Vou analisar isso agora mesmo. Deixa eu ver o que tenho aqui...",
+  "Entendido! Processando sua solicitação. Isso é bem interessante, sabe?",
+  "Boa pergunta! Vou buscar essa informação pra você. Um segundo...",
+  "Hmm, deixa eu pensar... Ah, sei exatamente o que você precisa!",
+  "Pronto! Analisei tudo e a resposta é bem direta. Quer que eu detalhe mais?",
+  "Olha, isso é mais simples do que parece. Vou te explicar...",
+  "Mestre, encontrei algo interessante nos seus dados. Quer ver?",
+  "Executado com sucesso! Todos os sistemas operacionais.",
+];
+const chatMessages=document.getElementById('chatMessages');
+const chatInput=document.getElementById('chatInput');
+const typingIndicator=document.getElementById('typingIndicator');
+
+function addBubble(role,text){
+  const d=document.createElement('div');
+  d.className='bubble '+role;
+  const now=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const label=role==='user'?'Você':'＜Elívea＞ Elívea';
+  d.innerHTML=`<div class="role">${label}</div>${text}<div class="time">${now}</div>`;
+  chatMessages.appendChild(d);
+  chatMessages.scrollTop=chatMessages.scrollHeight;
+}
+
+function sendAction(text){
+  addBubble('user',text);
+  typingIndicator.style.display='flex';
+  chatMessages.scrollTop=chatMessages.scrollHeight;
+  cmdCount++;
+  document.getElementById('cmdCount').textContent=cmdCount;
+  setTimeout(()=>{
+    typingIndicator.style.display='none';
+    const resp=responses[Math.floor(Math.random()*responses.length)];
+    addBubble('assistant',resp);
+    tokenCount+=Math.floor(50+Math.random()*200);
+    document.getElementById('tokenCount').textContent=tokenCount;
+    document.getElementById('latency').textContent=Math.floor(200+Math.random()*400)+'ms';
+    // Add to recent
+    const rc=document.getElementById('recentCmds');
+    const nd=document.createElement('div');
+    nd.style.cssText='margin:3px 0;opacity:0.6';
+    nd.textContent='• '+text;
+    rc.insertBefore(nd,rc.firstChild);
+    if(rc.children.length>5)rc.removeChild(rc.lastChild);
+  },800+Math.random()*1200);
+}
+
+chatInput.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&chatInput.value.trim()){
+    sendAction(chatInput.value.trim());
+    chatInput.value='';
+  }
+});
+
+function sendMessage(){sendAction(chatInput.value.trim());chatInput.value=''}
+
+// ── Ambient Particles ──
+const particlesEl=document.getElementById('particles');
+for(let i=0;i<30;i++){
+  const p=document.createElement('div');
+  p.className='particle';
+  p.style.left=Math.random()*100+'%';
+  p.style.top=(100+Math.random()*20)+'%';
+  p.style.animationDuration=(8+Math.random()*12)+'s';
+  p.style.animationDelay=Math.random()*10+'s';
+  p.style.width=p.style.height=(1+Math.random()*2)+'px';
+  particlesEl.appendChild(p);
+}
+
+// ── RuneCore Canvas ──
+const canvas=document.getElementById('runeCanvas');
+const ctx=canvas.getContext('2d');
+const W=340,H=340,CX=W/2,CY=H/2;
+const RUNES='ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛈᛇᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ';
+let t=0,glowT=0.6;
+
+function drawRuneCore(){
+  ctx.clearRect(0,0,W,H);
+  t+=0.02;
+  const R=120;
+  const g=glowT+Math.sin(t*2)*0.05;
+
+  // Background glow
+  const bgGrad=ctx.createRadialGradient(CX,CY,R*0.3,CX,CY,R*2.5);
+  bgGrad.addColorStop(0,`rgba(255,215,0,${0.06*g})`);
+  bgGrad.addColorStop(0.5,`rgba(255,215,0,${0.02*g})`);
+  bgGrad.addColorStop(1,'rgba(255,215,0,0)');
+  ctx.fillStyle=bgGrad;
+  ctx.fillRect(0,0,W,H);
+
+  // Outer ring
+  ctx.strokeStyle=`rgba(255,215,0,${0.6*g})`;
+  ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(CX,CY,R,0,Math.PI*2);ctx.stroke();
+
+  // Inner ring
+  ctx.strokeStyle=`rgba(255,215,0,${0.3*g})`;
+  ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(CX,CY,R*0.88,0,Math.PI*2);ctx.stroke();
+
+  // Tick marks
+  ctx.strokeStyle=`rgba(255,215,0,${0.4*g})`;
+  ctx.lineWidth=1;
+  for(let i=0;i<36;i++){
+    const ang=i*Math.PI*2/36;
+    const big=i%4===0;
+    const r1=R;const r2=R*(big?0.93:0.96);
+    ctx.beginPath();
+    ctx.moveTo(CX+r1*Math.cos(ang),CY+r1*Math.sin(ang));
+    ctx.lineTo(CX+r2*Math.cos(ang),CY+r2*Math.sin(ang));
+    ctx.stroke();
+  }
+
+  // Rotating runes
+  ctx.save();ctx.translate(CX,CY);ctx.rotate(t*0.5);
+  ctx.font='bold 10px "Microsoft YaHei UI",sans-serif';
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  for(let i=0;i<RUNES.length;i++){
+    const ang=i*Math.PI*2/RUNES.length;
+    const runeR=R*0.8;
+    ctx.save();
+    ctx.rotate(ang);ctx.translate(0,-runeR);ctx.rotate(Math.PI);
+    const a=0.5+0.5*Math.sin(t*2+i*0.5);
+    ctx.fillStyle=`rgba(255,228,77,${a*g})`;
+    ctx.fillText(RUNES[i],0,0);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  // Central cross
+  ctx.strokeStyle=`rgba(255,215,0,${0.5*g})`;
+  ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(CX-R*0.4,CY);ctx.lineTo(CX+R*0.4,CY);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(CX,CY-R*0.4);ctx.lineTo(CX,CY+R*0.4);ctx.stroke();
+
+  // Diagonal cross
+  ctx.strokeStyle=`rgba(255,215,0,${0.25*g})`;
+  ctx.lineWidth=0.8;
+  const d=R*0.28;
+  ctx.beginPath();ctx.moveTo(CX-d,CY-d);ctx.lineTo(CX+d,CY+d);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(CX-d,CY+d);ctx.lineTo(CX+d,CY-d);ctx.stroke();
+
+  // Hexagram
+  ctx.save();ctx.translate(CX,CY);ctx.rotate(t*0.3);
+  ctx.strokeStyle=`rgba(255,215,0,${0.3*g})`;
+  ctx.lineWidth=1;
+  for(let offset of[0,Math.PI]){
+    ctx.beginPath();
+    for(let k=0;k<3;k++){
+      const a=k*Math.PI*2/3+offset-Math.PI/2;
+      const x=R*0.55*Math.cos(a);
+      const y=R*0.55*Math.sin(a);
+      k===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.closePath();ctx.stroke();
+  }
+  ctx.restore();
+
+  // Sound wave rings (simulated audio)
+  const audioLevel=0.3+Math.sin(t*4)*0.2;
+  if(audioLevel>0.2){
+    for(let i=0;i<3;i++){
+      const wr=R*(1.1+i*0.15+audioLevel*0.3);
+      const wa=30*audioLevel*(1-i*0.25);
+      if(wa>3){
+        ctx.strokeStyle=`rgba(255,215,0,${wa/255})`;
+        ctx.lineWidth=1;
+        ctx.beginPath();ctx.arc(CX,CY,wr,0,Math.PI*2);ctx.stroke();
+      }
+    }
+  }
+
+  // Central glow
+  const coreR=R*0.15*(1+Math.sin(t*3)*0.05);
+  const coreGrad=ctx.createRadialGradient(CX,CY,0,CX,CY,coreR*3);
+  coreGrad.addColorStop(0,`rgba(255,228,77,${0.8*g})`);
+  coreGrad.addColorStop(0.3,`rgba(255,215,0,${0.3*g})`);
+  coreGrad.addColorStop(1,'rgba(255,215,0,0)');
+  ctx.fillStyle=coreGrad;
+  ctx.beginPath();ctx.arc(CX,CY,coreR*3,0,Math.PI*2);ctx.fill();
+
+  // White core
+  ctx.fillStyle=`rgba(255,255,255,${0.9*g})`;
+  ctx.beginPath();ctx.arc(CX,CY,coreR*0.4,0,Math.PI*2);ctx.fill();
+
+  // Particles
+  for(let i=0;i<8;i++){
+    const pa=t*0.5+i*Math.PI*2/8;
+    const pd=R*(0.4+0.3*Math.sin(t+i));
+    const px=CX+pd*Math.cos(pa);
+    const py=CY+pd*Math.sin(pa);
+    const pa2=0.3+0.3*Math.sin(t*2+i);
+    ctx.fillStyle=`rgba(255,215,0,${pa2*g})`;
+    ctx.beginPath();ctx.arc(px,py,1.5,0,Math.PI*2);ctx.fill();
+  }
+
+  // Title below
+  ctx.font='bold 14px "Microsoft YaHei UI",sans-serif';
+  ctx.fillStyle=`rgba(255,228,77,${0.9*g})`;
+  ctx.textAlign='center';
+  ctx.fillText('＜Elívea＞',CX,CY+R+30);
+  ctx.font='9px Consolas,monospace';
+  ctx.fillStyle=`rgba(255,215,0,${0.7*g})`;
+  ctx.fillText('Elívea  ·  R A P H A E L',CX,CY+R+48);
+
+  requestAnimationFrame(drawRuneCore);
+}
+drawRuneCore();
+
+// ── Glow breathing ──
+setInterval(()=>{glowT=0.55+Math.sin(Date.now()*0.001)*0.1},100);
+</script>
+</body>
+</html>

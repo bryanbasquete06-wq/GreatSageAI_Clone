@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """SuperUser — Controle TOTAL do PC via prompt ou voz.
 
-Módulo de administração completa que permite ao Grande Sábio executar
+Módulo de administração completa que permite ao Elívea executar
 QUALQUER ação no Windows como se fosse um humano com acesso admin:
 
   - Baixar arquivos/programas (URL direta, winget, choco, pip, npm)
@@ -17,7 +17,7 @@ QUALQUER ação no Windows como se fosse um humano com acesso admin:
   - Tudo que um humano admin consegue fazer
 
 Uso:
-    from GreatSageAI_Clone.modules.superuser import SuperUser
+    from modules.superuser import SuperUser
     SuperUser.download_file("https://example.com/file.exe", "C:/Downloads/")
     SuperUser.run_cmd("winget install Notepad++", admin=True)
 """
@@ -522,17 +522,19 @@ class SuperUser:
     # ================================================================ SYSTEM
 
     @staticmethod
-    def shutdown(delay: int = 0, reason: str = "") -> str:
-        """Desliga o PC."""
+    def shutdown(delay: int = 30, reason: str = "") -> str:
+        """Desliga o PC. MINIMO 30 segundos para cancelar."""
+        delay = max(delay, 30)  # SAFETY: never less than 30s
         r = f'"{reason}"' if reason else ""
         rc, out, err = _run(f"shutdown /s /t {delay} /c {r}", admin=True)
-        return f"PC desligando em {delay}s." if rc == 0 else f"Erro: {err[:200]}"
+        return f"PC desligando em {delay}s. Para cancelar: 'cancelar desligamento'." if rc == 0 else f"Erro: {err[:200]}"
 
     @staticmethod
-    def restart(delay: int = 0) -> str:
-        """Reinicia o PC."""
+    def restart(delay: int = 30) -> str:
+        """Reinicia o PC. MINIMO 30 segundos para cancelar."""
+        delay = max(delay, 30)  # SAFETY: never less than 30s
         rc, out, err = _run(f"shutdown /r /t {delay}", admin=True)
-        return f"PC reiniciando em {delay}s." if rc == 0 else f"Erro: {err[:200]}"
+        return f"PC reiniciando em {delay}s. Para cancelar: 'cancelar desligamento'." if rc == 0 else f"Erro: {err[:200]}"
 
     @staticmethod
     def cancel_shutdown() -> str:

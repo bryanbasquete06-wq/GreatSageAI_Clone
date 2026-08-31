@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Speed Optimizer
+Elívea — Speed Optimizer
 ================================
 Centralized speed improvements across the entire pipeline:
   1. TTS Phrase Cache — skip edge-tts for common short phrases
@@ -25,7 +25,7 @@ from typing import Optional, Dict, Any
 from functools import lru_cache
 from collections import OrderedDict
 
-logger = logging.getLogger("greatsage.speed")
+logger = logging.getLogger("elvea.speed")
 
 
 # =========================================================================
@@ -39,7 +39,7 @@ class TTSCache:
     and reused from disk cache — saving 1-2s per cached phrase.
     """
 
-    _CACHE_DIR = Path("F:/GreatSageTemp/tts_cache")
+    _CACHE_DIR = Path("F:/EliveaTemp/tts_cache")
     _MAX_CACHE = 200  # max cached phrases
     _MAX_AGE_SEC = 86400 * 7  # 7 days
 
@@ -129,7 +129,7 @@ class TTSCache:
                                 self._cache[key] = dest if dest.exists() else path
                         else:
                             try: path.unlink(missing_ok=True)
-                            except: pass
+                            except Exception: pass
                     except Exception as e:
                         logger.debug(f"TTS preload failed for '{phrase[:20]}': {e}")
                 self._loaded = True

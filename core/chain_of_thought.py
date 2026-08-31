@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Chain of Thought v4 (Superior Intelligence)
+Elivea — Chain of Thought v4 (Superior Intelligence)
 ============================================================
 Raciocínio em cadeia com:
   • Análise multi-perspectiva (técnica, lógica, prática, criativa)
@@ -18,7 +18,7 @@ from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
 from pathlib import Path
 
-logger = logging.getLogger("greatsage.cot")
+logger = logging.getLogger("elvea.cot")
 
 PATTERNS_DIR = Path(__file__).resolve().parent.parent / "config" / "reasoning_patterns"
 PATTERNS_DIR.mkdir(parents=True, exist_ok=True)

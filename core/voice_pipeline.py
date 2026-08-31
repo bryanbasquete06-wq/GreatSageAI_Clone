@@ -1,5 +1,5 @@
 """
-Great Sage AI — Unified Voice Pipeline (single audio stream)
+Elívea — Unified Voice Pipeline (single audio stream)
 =============================================================
 Replaces the old duplicated wake-word + realtime-mic double-stream design
 (which captured and transcribed every utterance TWICE) with a single
@@ -34,7 +34,7 @@ import numpy as np
 import sounddevice as sd
 
 try:
-    from GreatSageAI_Clone.core.mic_manager import get_best_input_device
+    from core.mic_manager import get_best_input_device
 except ImportError:
     try:
         from core.mic_manager import get_best_input_device
@@ -58,11 +58,11 @@ WAKE_ARMED_WINDOW = 12.0             # seconds after wake word to accept command
 def _get_stt_context() -> str:
     """Gera o contexto STT com o nome do usuário configurado."""
     try:
-        from GreatSageAI_Clone.core.persona import _load_user_name
+        from core.persona import _load_user_name
         name = _load_user_name()
     except Exception:
         name = "Mestre"
-    return (f"Grande Sábio, {name}. "
+    return (f"Elivea, {name}. "
             "Python, GitHub, Groq, GPT, WhatsApp, YouTube, Google, "
             "Steam, Discord, Chrome, Firefox, Notepad, VS Code, Blender.")
 
@@ -168,7 +168,7 @@ def strip_wake_phrase(text: str, leading_only: bool = False) -> str:
     """Removes the wake phrase (and leading connectors) from a command.
 
     leading_only=True remove apenas no INÍCIO da frase — usado nos modos de
-    escuta para que menções no meio da frase a "sábio"/"Raphael" (ex.: "quem
+    escuta para que menções no meio da frase a "sábio"/"Elívea" (ex.: "quem
     foi o sábio Confúcio?") cheguem inteiras ao LLM.
     """
     if leading_only:

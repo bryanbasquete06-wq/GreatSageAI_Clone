@@ -3,38 +3,38 @@
 ## Passo 1: Subir o código no GitHub
 
 ```bash
-cd "F:\programação\J.A.R.V.I.S\GreatSageAI_Clone"
+cd "F:\programação\J.A.R.V.I.S\EliveaAI_Clone"
 
 # Criar repo no GitHub (substitua SEU_USER pelo seu usuário)
-# Vá em https://github.com/new e crie o repo "GreatSageAI_Clone"
+# Vá em https://github.com/new e crie o repo "EliveaAI_Clone"
 
 # Adicionar remote e enviar
-git remote add origin https://github.com/SEU_USER/GreatSageAI_Clone.git
+git remote add origin https://github.com/SEU_USER/EliveaAI_Clone.git
 git branch -M main
 git push -u origin main
 ```
 
 ## Passo 2: Atualizar o instalador
 
-Abra `Instalador_Great_Sage.py` e substitua:
+Abra `Instalador_Elivea.py` e substitua:
 ```python
-GITHUB_REPO = "https://github.com/SEU_USER/GreatSageAI_Clone"
-GITHUB_API = "https://api.github.com/repos/SEU_USER/GreatSageAI_Clone/releases/latest"
+GITHUB_REPO = "https://github.com/SEU_USER/EliveaAI_Clone"
+GITHUB_API = "https://api.github.com/repos/SEU_USER/EliveaAI_Clone/releases/latest"
 ```
 
 ## Passo 3: Compilar o .exe
 
 ```bash
-cd "F:\programação\J.A.R.V.I.S\GreatSageAI_Clone"
+cd "F:\programação\J.A.R.V.I.S\EliveaAI_Clone"
 build_installer.bat
 ```
 
-O .exe será gerado em: `dist\Instalador_Great_Sage.exe`
+O .exe será gerado em: `dist\Instalador_Elivea.exe`
 
 ## Passo 4: Enviar para alguém
 
 ### Opção A: Arquivo direto
-- Envie `dist\Instalador_Great_Sage.exe` por WhatsApp, Discord, Email, etc.
+- Envie `dist\Instalador_Elivea.exe` por WhatsApp, Discord, Email, etc.
 - A pessoa executa e a IA é baixada automaticamente
 
 ### Opção B: Link de download
@@ -43,7 +43,7 @@ O .exe será gerado em: `dist\Instalador_Great_Sage.exe`
   git tag v1.0
   git push origin v1.0
   ```
-- Vá em https://github.com/SEU_USER/GreatSageAI_Clone/releases/new
+- Vá em https://github.com/SEU_USER/EliveaAI_Clone/releases/new
 - Adicione o .exe como asset
 - Compartilhe o link da release
 
@@ -65,7 +65,7 @@ O .exe será gerado em: `dist\Instalador_Great_Sage.exe`
 
 ## O que a pessoa precisa fazer
 
-1. Executar `Instalador_Great_Sage.exe`
+1. Executar `Instalador_Elivea.exe`
 2. Seguir o assistente (6 passos simples)
 3. Colar a chave de API do Groq (gratuita, sem cartão)
 4. Pronto! A IA já fala e ouve

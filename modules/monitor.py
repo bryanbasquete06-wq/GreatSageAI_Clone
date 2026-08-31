@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Real-time System Monitor
+Elívea — Real-time System Monitor
 ==========================================
 Monitoramento completo do sistema em tempo real.
 """

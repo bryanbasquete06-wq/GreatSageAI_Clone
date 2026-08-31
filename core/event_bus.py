@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Callable, Any
 import logging
 
-logger = logging.getLogger("greatsage.events")
+logger = logging.getLogger("elvea.events")
 
 class EventBus:
     _instance = None

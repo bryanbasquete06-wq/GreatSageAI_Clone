@@ -26,7 +26,7 @@ import os
 import time
 from pathlib import Path
 
-from GreatSageAI_Clone.modules.code_agent import (
+from modules.code_agent import (
     CodeAgent, AGENT_SYSTEM_PROMPT, MAX_STEPS, MAX_TOKENS, CONTEXT_BUDGET,
     READ_LIMIT, OUTPUT_LIMIT, SEARCH_LIMIT,
 )
@@ -141,7 +141,7 @@ class SmartCodeAgent(CodeAgent):
         if self.provider is not None and self.provider.available():
             return self.provider
         try:
-            from GreatSageAI_Clone.core.providers import resolve_code_provider
+            from core.providers import resolve_code_provider
             p = resolve_code_provider(self.llm)
             if p is not None:
                 self.provider = p

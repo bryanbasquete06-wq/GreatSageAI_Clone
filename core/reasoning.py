@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Raciocínio Avançado (Chain of Thought)
+Elívea — Raciocínio Avançado (Chain of Thought)
 =======================================================
 Multi-camada: Análise → Contra-argumento → Verificação → Síntese
 """
@@ -12,7 +12,7 @@ from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
-logger = logging.getLogger("greatsage.reasoning")
+logger = logging.getLogger("elvea.reasoning")
 
 
 class Complexity(Enum):

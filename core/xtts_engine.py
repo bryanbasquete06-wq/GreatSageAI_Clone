@@ -102,7 +102,7 @@ for line in sys.stdin:
         text = req["text"]
         ref = req["ref"]
         out = req["out"]
-        # Character voice parameters for Great Sage
+        # Character voice parameters for Elivea
         # Lower temperature = more stable, consistent voice
         # Higher repetition_penalty = less repetition artifacts
         kwargs = {
@@ -243,7 +243,7 @@ def _get_server():
 
 
 def synthesize(text: str, output_path: str) -> bool:
-    """Synthesize text using XTTS v2 with Great Sage voice cloning.
+    """Synthesize text using XTTS v2 with Elivea voice cloning.
 
     Thread-safe: only one XTTS call at a time.
     Uses random reference segment for natural variety.

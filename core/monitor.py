@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Dashboard de Monitoramento
+Elívea — Dashboard de Monitoramento
 ============================================
 Graficos de uso, performance, estatisticas.
 """
@@ -14,7 +14,7 @@ from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 
-logger = logging.getLogger("greatsage.monitor")
+logger = logging.getLogger("elvea.monitor")
 
 
 @dataclass

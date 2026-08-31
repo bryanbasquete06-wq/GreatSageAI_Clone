@@ -1,5 +1,5 @@
 """
-Great Sage AI - File Management Module
+Elivea - File Management Module
 Handles file operations, searching, reading, writing, and disk organization.
 """
 

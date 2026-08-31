@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Automação de Desktop
+Elivea — Automação de Desktop
 ======================================
 Controla o computador: teclado, mouse, apps, arquivos, screenshot.
 """
@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Optional, List, Dict
 from datetime import datetime
 
-logger = logging.getLogger("greatsage.automation")
+logger = logging.getLogger("elvea.automation")
 
 
 class DesktopAutomation:

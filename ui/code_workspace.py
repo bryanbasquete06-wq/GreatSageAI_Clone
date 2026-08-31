@@ -1,7 +1,7 @@
 """
-Great Sage AI — CODE WORKSPACE (Ala de Programação — estilo ZCode / Cursor)
+Elívea — CODE WORKSPACE (Ala de Programação — estilo ZCode / Cursor)
 ============================================================================
-Janela IDE completa do Grande Sábio:
+Janela IDE completa do Elívea:
 
   • Explorador de projetos (com filtro de ruído: .git, __pycache__ etc.)
   • Editor de código com syntax highlight multi-linguagem e números de linha
@@ -28,17 +28,21 @@ from PySide6.QtCore import (
     QDir, QProcess, QSortFilterProxyModel, Qt, Signal,
 )
 from PySide6.QtGui import (
-    QColor, QFont, QFileSystemModel, QTextCharFormat, QTextCursor,
+    QColor, QFont, QTextCharFormat, QTextCursor,
 )
 from PySide6.QtWidgets import (
-    QComboBox, QFileDialog, QHBoxLayout, QInputDialog,
+    QComboBox, QFileDialog, QFileSystemModel, QHBoxLayout, QInputDialog,
     QLabel, QLineEdit, QMainWindow, QMessageBox, QPlainTextEdit,
     QPushButton, QSplitter, QTextBrowser, QToolBar, QTreeView, QVBoxLayout,
     QWidget,
 )
 
-from GreatSageAI_Clone.ui.qt_ui import C, font_mono, font_ui
-from GreatSageAI_Clone.ui.code_syntax import CodeHighlighter, LANG_NAMES, detect_language
+try:
+    from ui.qt_ui import C, font_mono, font_ui
+    from ui.code_syntax import CodeHighlighter, LANG_NAMES, detect_language
+except ImportError:
+    from ui.qt_ui import C, font_mono, font_ui
+    from ui.code_syntax import CodeHighlighter, LANG_NAMES, detect_language
 
 # ---------------------------------------------------------------------------
 # Config
@@ -229,7 +233,7 @@ class CodeWorkspaceWindow(QMainWindow):
         self.workspace = Path(ws).expanduser().resolve() if ws else PROJECT_ROOT
         self.workspace.mkdir(parents=True, exist_ok=True)
 
-        self.setWindowTitle("⌨ ALA DE PROGRAMAÇÃO — CodeDock ＜大賢者＞")
+        self.setWindowTitle("⌨ ALA DE PROGRAMAÇÃO — CodeDock ＜Elivea＞")
         self.resize(1300, 800)
         self.setMinimumSize(1020, 640)
 
@@ -281,8 +285,8 @@ class CodeWorkspaceWindow(QMainWindow):
                     pass
 
     def refresh_theme(self):
-        """Recolore widgets e rehighlight após troca de tema do Grande Sábio."""
-        from GreatSageAI_Clone.ui.code_syntax import CodeHighlighter
+        """Recolore widgets e rehighlight após troca de tema do Elívea."""
+        from ui.code_syntax import CodeHighlighter
         self._apply_palette()
         try:
             if self.highlighter:
@@ -824,11 +828,11 @@ class CodeWorkspaceWindow(QMainWindow):
             self._append_agent_html(
                 "<div style='color:#ff9d6a'> Sem núcleo neural conectado "
                 "(LLM não fornecido). Abra a Ala de Programação pela janela "
-                "principal do Grande Sábio.</div>")
+                "principal do Elívea.</div>")
             return
 
-        from GreatSageAI_Clone.modules.smart_agent import SmartCodeAgent
-        from GreatSageAI_Clone.modules.code_index import CodeIndex
+        from modules.smart_agent import SmartCodeAgent
+        from modules.code_index import CodeIndex
 
         self._agent = None
         self._agent_stop = threading.Event()
@@ -898,15 +902,15 @@ class CodeWorkspaceWindow(QMainWindow):
 
 
 if __name__ == "__main__":
-    # Modo standalone: python -m GreatSageAI_Clone.ui.code_workspace
+    # Modo standalone: python -m EliveaAI_Clone.ui.code_workspace
     from PySide6.QtWidgets import QApplication
 
     app = QApplication(sys.argv)
     app.setFont(QFont("Segoe UI", 10))
     llm = None
     try:
-        from GreatSageAI_Clone.core.llm import GreatSageLLM
-        llm = GreatSageLLM()
+        from core.llm import EliveaLLM
+        llm = EliveaLLM()
     except Exception as e:
         print(f"[CodeDock] LLM não carregado: {e}")
     win = CodeWorkspaceWindow(llm=llm)

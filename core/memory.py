@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Memória Inteligente (v2)
+Elivea — Memória Inteligente (v2)
 ==========================================
 - Resumo automático de conversas
 - Busca semântica por similaridade
@@ -19,7 +19,7 @@ from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 from collections import Counter
 
-logger = logging.getLogger("greatsage.memory")
+logger = logging.getLogger("elvea.memory")
 
 
 def _tokenize(text: str) -> List[str]:

@@ -1,5 +1,5 @@
 """
-Great Sage AI - Continuous Audio Stream Mic Listener (Gapless Queue Architecture)
+Elivea - Continuous Audio Stream Mic Listener (Gapless Queue Architecture)
 Streams live audio via sounddevice.InputStream with adaptive dynamic noise thresholding and Groq Whisper STT.
 """
 
@@ -14,7 +14,7 @@ import threading
 import numpy as np
 import sounddevice as sd
 from groq import Groq
-from GreatSageAI_Clone.core.mic_manager import get_best_input_device
+from core.mic_manager import get_best_input_device
 
 
 def resample_pcm(audio_data: np.ndarray, orig_sr: int, target_sr: int = 16000) -> np.ndarray:

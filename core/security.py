@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Security Guard
+Elívea — Security Guard
 ================================
 Centraliza todas as verificações de segurança do sistema.
 

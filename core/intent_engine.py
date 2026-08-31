@@ -1,5 +1,5 @@
 """
-Great Sage AI - Smart LLM & Rule-Based Intent Engine (Optimized v2)
+Elivea - Smart LLM & Rule-Based Intent Engine (Optimized v2)
 ===================================================================
 Parses natural spoken or typed Portuguese queries and executes real OS actions on Windows.
 
@@ -96,7 +96,8 @@ class IntentEngine:
         "liberar", "libere", "organizar", "organize", "arrumar", "arrume",
         "anotar", "anote", "salvar nota", "salve a nota", "pesquisar",
         "pesquise", "googlar", "capturar", "captura", "mutar", "silenciar",
-        "bloquear", "reiniciar", "desligar", "criar pasta", "crie a pasta",
+        "bloquear",  # REMOVED: reiniciar, desligar — too dangerous for auto-classification
+        "criar pasta", "crie a pasta",
         "ler arquivo", "leia o arquivo", "executar", "rodar", "exec",
         "tocar", "toque", "toca", "ouvir", "colocar pra tocar",
         # nomes/apps específicos

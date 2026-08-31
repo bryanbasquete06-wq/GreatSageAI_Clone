@@ -4,7 +4,7 @@ import logging
 from typing import Any, Dict, Callable
 from copy import deepcopy
 
-logger = logging.getLogger("greatsage.state")
+logger = logging.getLogger("elvea.state")
 
 class StateManager:
     _instance = None

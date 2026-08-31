@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — RAG (Retrieval-Augmented Generation) com Pesquisa Web
+Elívea — RAG (Retrieval-Augmented Generation) com Pesquisa Web
 =====================================================================
 Pesquisa na internet em tempo real via DuckDuckGo (gratis).
 Indexa resultados localmente para reuso rapido.
@@ -80,7 +80,7 @@ class RAGEngine:
             params = {"q": query, "format": "json", "no_html": 1, "skip_disambig": 1}
             full_url = f"{url}?{urllib.parse.urlencode(params)}"
             req = urllib.request.Request(full_url, headers={
-                "User-Agent": "GreatSageAI/1.0",
+                "User-Agent": "Elivea/1.0",
             })
             with urllib.request.urlopen(req, timeout=10) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
@@ -110,7 +110,7 @@ class RAGEngine:
             encoded = urllib.parse.quote_plus(query)
             url = f"https://lite.duckduckgo.com/lite/?q={encoded}"
             req = urllib.request.Request(url, headers={
-                "User-Agent": "GreatSageAI/1.0",
+                "User-Agent": "Elivea/1.0",
             })
             with urllib.request.urlopen(req, timeout=10) as resp:
                 html = resp.read().decode("utf-8", errors="ignore")

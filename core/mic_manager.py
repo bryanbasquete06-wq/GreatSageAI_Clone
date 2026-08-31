@@ -1,5 +1,5 @@
 """
-Great Sage AI - Sounddevice Microphone & Groq Whisper STT Engine
+Elivea - Sounddevice Microphone & Groq Whisper STT Engine
 Captures voice from system microphone using sounddevice (no PyAudio required) and transcribes via Groq Whisper V3 Turbo.
 """
 

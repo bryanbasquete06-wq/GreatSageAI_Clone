@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Gerenciamento seguro de secrets com encriptacao XOR. Armazenamento preferencial em F:\\GreatSageTemp."""
+"""Gerenciamento seguro de secrets com encriptacao XOR. Armazenamento preferencial em F:\\EliveaTemp."""
 import os
 import json
 import base64
@@ -7,18 +7,18 @@ from pathlib import Path
 from typing import Optional, List
 import logging
 
-logger = logging.getLogger("greatsage.secrets")
+logger = logging.getLogger("elvea.secrets")
 
 def _resolve_secret_dir() -> Path:
-    """Resolve diretório de secrets: prioriza F:\\GreatSageTemp, fallback para config."""
+    """Resolve diretório de secrets: prioriza F:\\EliveaTemp, fallback para config."""
     candidates = []
-    for env_key in ("GREAT_SAGE_TEMP", "GREATSAGE_TEMP"):
+    for env_key in ("ELIVEA_TEMP", "ELIVEA_TEMP"):
         v = os.getenv(env_key)
         if v:
             candidates.append(Path(v))
     # Primary on F disk (obrigatório per spec: tudo em F)
-    candidates.append(Path("F:/GreatSageTemp"))
-    candidates.append(Path("F:\\GreatSageTemp"))
+    candidates.append(Path("F:/EliveaTemp"))
+    candidates.append(Path("F:\\EliveaTemp"))
     for cand in candidates:
         if cand is None:
             continue
@@ -67,7 +67,7 @@ class SecretManager:
         self._secrets = self._load()
 
     def _load_or_create_key(self) -> bytes:
-        # 1) tenta primary em F:\\GreatSageTemp\\.key
+        # 1) tenta primary em F:\\EliveaTemp\\.key
         if KEY_FILE.exists():
             try:
                 return base64.b64decode(KEY_FILE.read_text(encoding="utf-8").strip())

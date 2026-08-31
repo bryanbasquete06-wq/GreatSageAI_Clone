@@ -1,5 +1,5 @@
 """
-Great Sage AI — Ala de Programação (Agente de Código)
+Elívea — Ala de Programação (Agente de Código)
 ======================================================
 Agente agêntico estilo ZCode/Cursor: um loop LLM + ferramentas que lê,
 escreve e edita arquivos, executa código e comandos, e verifica o próprio
@@ -38,7 +38,7 @@ OUTPUT_LIMIT = 12000 # chars máximos de saída de execução
 SEARCH_LIMIT = 100 # resultados máximos da busca
 CONTEXT_BUDGET = 250_000 # chars de histórico mantidos no contexto do LLM
 
-AGENT_SYSTEM_PROMPT = """Você é o motor de código do Grande Sábio — um engenheiro de software de elite de classe mundial trabalhando para o Mestre, num Windows com Python instalado.
+AGENT_SYSTEM_PROMPT = """Você é o motor de código do Elívea — um engenheiro de software de elite de classe mundial trabalhando para o Mestre, num Windows com Python instalado.
 
 Você resolve tarefas de programação em LOOP: pensa, escolhe UMA ferramenta, observa o resultado e repete até terminar. Depois chama finish.
 
@@ -92,7 +92,7 @@ class CodeAgent:
     """Loop agêntico de programação com ferramentas de arquivo e execução."""
 
     def __init__(self, llm=None, workspace: Path | str = ".", on_step=None, max_tokens: int | None = None):
-        self.llm = llm # GreatSageLLM (fornece cliente/modeledos Groq)
+        self.llm = llm # EliveaLLM (fornece cliente/modeledos Groq)
         self.workspace = Path(workspace).resolve()
         self.workspace.mkdir(parents=True, exist_ok=True)
         self.on_step = on_step # callback(texto) para UI ao vivo

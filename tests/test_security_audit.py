@@ -8,7 +8,7 @@ sys.path.insert(0, str(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 from core.security import SecurityGuard, SandBox, SecurityLevel
 
 print("=" * 60)
-print("  SECURITY AUDIT — Great Sage AI")
+print("  SECURITY AUDIT — Elivea")
 print("=" * 60)
 
 findings = []  # (severity, description)

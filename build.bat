@@ -3,7 +3,7 @@ REM ============================================
 REM Great Sage AI — Build Script
 REM ============================================
 REM Executa: build.bat
-REM Output: dist/GreatSageAI/
+REM Output: dist/EliveaAI/
 REM ============================================
 
 echo.
@@ -35,7 +35,7 @@ if exist build rmdir /s /q build
 
 REM Build
 echo [2/4] Compilando com PyInstaller...
-python -m PyInstaller great_sage.spec --noconfirm --clean
+python -m PyInstaller elvea.spec --noconfirm --clean
 if %errorlevel% neq 0 (
     echo [ERRO] Build falhou.
     pause
@@ -52,15 +52,15 @@ if %errorlevel% equ 0 (
         echo.
         echo ========================================
         echo   Build CONCLUIDO com sucesso!
-        echo   EXE: dist\GreatSageAI\GreatSageAI.exe
-        echo   Instalador: dist\GreatSageAI-Setup.exe
+        echo   EXE: dist\EliveaAI\EliveaAI.exe
+        echo   Instalador: dist\EliveaAI-Setup.exe
         echo ========================================
     ) else (
         echo [AVISO] Instalador falhou, mas EXE foi criado.
         echo.
         echo ========================================
         echo   Build CONCLUIDO com sucesso!
-        echo   EXE: dist\GreatSageAI\GreatSageAI.exe
+        echo   EXE: dist\EliveaAI\EliveaAI.exe
         echo ========================================
     )
 ) else (
@@ -68,7 +68,7 @@ if %errorlevel% equ 0 (
     echo.
     echo ========================================
     echo   Build CONCLUIDO com sucesso!
-    echo   EXE: dist\GreatSageAI\GreatSageAI.exe
+    echo   EXE: dist\EliveaAI\EliveaAI.exe
     echo ========================================
 )
 

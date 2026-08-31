@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Agendamento e Lembretes
+Elívea — Agendamento e Lembretes
 ========================================
 Sistema de lembretes e tarefas agendadas.
 """
@@ -15,7 +15,7 @@ from typing import List, Dict, Optional, Callable
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 
-logger = logging.getLogger("greatsage.scheduler")
+logger = logging.getLogger("elvea.scheduler")
 
 
 @dataclass

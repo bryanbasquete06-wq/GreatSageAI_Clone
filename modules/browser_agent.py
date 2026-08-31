@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Browser Agent (Controle Total de Navegador)
+Elívea — Browser Agent (Controle Total de Navegador)
 ============================================================
 Automação completa de QUALQUER navegador no PC:
 
@@ -25,7 +25,7 @@ Modo de operação:
   3. webbrowser (mínimo) — apenas abrir URLs
 
 Uso:
-    from GreatSageAI_Clone.modules.browser_agent import BrowserAgent
+    from modules.browser_agent import BrowserAgent
     BrowserAgent.open("https://google.com")
     BrowserAgent.type_in("search box", "python tutorial")
     BrowserAgent.click("Buscar")

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Proactive Suggestions Engine
+Elívea — Proactive Suggestions Engine
 =============================================
 Analisa padrões de uso e sugere melhorias sem o usuário pedir.
 
@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 from dataclasses import dataclass, field
 
-logger = logging.getLogger("greatsage.proactive")
+logger = logging.getLogger("elvea.proactive")
 
 
 @dataclass

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Config Manager (Export/Import)
+Elívea — Config Manager (Export/Import)
 ================================================
 Backup e restauracao de configuracoes do usuario.
 """

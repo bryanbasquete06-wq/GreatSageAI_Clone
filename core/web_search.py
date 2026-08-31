@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Pesquisa na Web
+Elívea — Pesquisa na Web
 ================================
 Busca respostas na web usando DuckDuckGo.
 """
@@ -9,7 +9,7 @@ Busca respostas na web usando DuckDuckGo.
 import logging
 from typing import Optional, List, Dict
 
-logger = logging.getLogger("greatsage.web")
+logger = logging.getLogger("elvea.web")
 
 
 def search_web(query: str, max_results: int = 5) -> List[Dict]:

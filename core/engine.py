@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Motor Principal (v2)
+Elivea — Motor Principal (v2)
 =====================================
 Conecta LLM, Voz, Memória, Persona, Raciocínio, Automação e Programação.
 Comandos completos, raciocínio com confiança real, consciência de contexto.
@@ -31,8 +31,11 @@ from core.plugins import PluginManager
 from core.multimodal import analyze_image, generate_image
 from core.scheduler import Scheduler
 from core.monitor import Monitor
+from core.intelligence_engine import IntelligenceEngine
+from core.request_router import RequestRouter
+from core.deep_dev import DeepDevEngine
 
-logger = logging.getLogger("greatsage.engine")
+logger = logging.getLogger("elvea.engine")
 
 
 @dataclass
@@ -48,7 +51,7 @@ class ChatMessage:
 
 class SageEngine:
     """
-    Motor principal do Great Sage AI.
+    Motor principal do Elivea.
     Coordena todos os subsistemas com inteligência aprimorada.
     """
 
@@ -68,6 +71,11 @@ class SageEngine:
         self.plugins = PluginManager()
         self.scheduler = Scheduler(str(self.project_dir / "memory"))
         self.monitor = Monitor(str(self.project_dir / "memory"))
+        # Intelligence engine
+        self.intelligence = IntelligenceEngine()
+
+        # Deep Dev Panel
+        self.deep_dev = DeepDevEngine(str(self.project_dir))
 
         # Start scheduler
         self.scheduler.start_checker(interval=30)
@@ -87,7 +95,7 @@ class SageEngine:
         self.on_error: Optional[Callable[[str], None]] = None
         self.on_voice: Optional[Callable[[str], None]] = None
 
-        logger.info(f"Great Sage Engine v2 | User: {self.user_name}")
+        logger.info(f"Elivea Engine v2 | User: {self.user_name}")
         logger.info(f"Providers: {[p.name for p in self.llm.providers if p.available]}")
 
     def greet(self) -> str:
@@ -102,6 +110,14 @@ class SageEngine:
 
         # Salva mensagem do usuário
         self.memory.add_message("user", user_input)
+
+        # Deep Dev commands
+        dd_result = self.deep_dev.handle_command(user_input)
+        if dd_result is not None:
+            msg = ChatMessage(role="assistant", content=dd_result)
+            self.memory.add_message("assistant", dd_result)
+            self._is_processing = False
+            return msg
 
         # Detecta comandos especiais
         cmd_result = self._handle_command(user_input)
@@ -506,6 +522,24 @@ class SageEngine:
 
         return None
 
+
+    # Deep Dev handlers
+    @staticmethod
+    def _cmd_deep_status(engine):
+        return engine.deep_dev.handle_command("deep dev status") or "Deep Dev unavailable"
+
+    @staticmethod
+    def _cmd_shadow(engine):
+        return engine.deep_dev.handle_command("shadow") or "Shadow Dev unavailable"
+
+    @staticmethod
+    def _cmd_time_machine(engine):
+        return engine.deep_dev.handle_command("timemachine") or "Time Machine unavailable"
+
+    @staticmethod
+    def _cmd_scan_secrets(engine):
+        return engine.deep_dev.handle_command("scan secrets") or "Scanner unavailable"
+
     def _get_help(self) -> str:
         """Gera ajuda completa."""
         return """**Comandos do Grande Sabio:**
@@ -584,7 +618,7 @@ class SageEngine:
         except Exception:
             sys_info = ""
 
-        return f"""📊 **Status do Grande Sage AI**
+        return f"""📊 **Status do Elivea**
 
 **Providers LLM:**
 {chr(10).join(status_lines)}

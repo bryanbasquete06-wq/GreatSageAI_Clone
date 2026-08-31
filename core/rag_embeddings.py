@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""RAG melhorado com embeddings locais (sentence-transformers). Tudo em F:\\GreatSageTemp\\rag"""
+"""RAG melhorado com embeddings locais (sentence-transformers). Tudo em F:\\EliveaTemp\\rag"""
 import logging
 import json
 import hashlib
@@ -8,13 +8,13 @@ from pathlib import Path
 from typing import List, Dict, Tuple
 from dataclasses import dataclass
 
-logger = logging.getLogger("greatsage.rag")
+logger = logging.getLogger("elvea.rag")
 
 def _resolve_rag_dir() -> Path:
-    """Resolve RAG cache dir: prioriza F:\\GreatSageTemp\\rag, fallback para config/rag_embeddings."""
+    """Resolve RAG cache dir: prioriza F:\\EliveaTemp\\rag, fallback para config/rag_embeddings."""
     candidates: List[Path] = []
     # Env var override
-    for env_key in ("GREAT_SAGE_TEMP", "GREATSAGE_TEMP", "GREAT_SAGE_RAG"):
+    for env_key in ("ELIVEA_TEMP", "ELIVEA_TEMP", "ELIVEA_RAG"):
         v = os.getenv(env_key)
         if v:
             p = Path(v)
@@ -24,8 +24,8 @@ def _resolve_rag_dir() -> Path:
             else:
                 candidates.append(p)
     # Primary required location on F disk
-    candidates.append(Path("F:/GreatSageTemp/rag"))
-    candidates.append(Path("F:\\GreatSageTemp\\rag"))
+    candidates.append(Path("F:/EliveaTemp/rag"))
+    candidates.append(Path("F:\\EliveaTemp\\rag"))
     # Try each candidate if F drive exists and writable
     for cand in candidates:
         if cand is None:
@@ -65,7 +65,7 @@ LEGACY_DIRS: List[Path] = [
     Path(__file__).resolve().parent.parent / "config" / "rag_embeddings",
     Path(__file__).resolve().parent.parent / "config" / "rag_cache",
     Path(__file__).resolve().parent.parent / "memory" / "rag_embeddings",
-    Path("F:/GreatSageTemp/rag_embeddings"),
+    Path("F:/EliveaTemp/rag_embeddings"),
 ]
 
 def get_rag_cache_dir() -> Path:
@@ -107,7 +107,7 @@ class RAGWithEmbeddings:
             return False
 
     def _load_index(self):
-        """Carrega índice do CACHE_DIR principal, com fallback/migração de dirs legados e F:\\GreatSageTemp\\rag."""
+        """Carrega índice do CACHE_DIR principal, com fallback/migração de dirs legados e F:\\EliveaTemp\\rag."""
         loaded = False
         # 1) tenta primary
         if self._index_path.exists():
@@ -120,7 +120,7 @@ class RAGWithEmbeddings:
             except Exception as e:
                 logger.warning(f"Falha ao carregar {self._index_path}: {e}")
 
-        # 2) se primary vazio, tenta legados (inclui F:\\GreatSageTemp\\rag se CACHE_DIR diferente, memory/rag_embeddings, etc)
+        # 2) se primary vazio, tenta legados (inclui F:\\EliveaTemp\\rag se CACHE_DIR diferente, memory/rag_embeddings, etc)
         if not loaded:
             for legacy in LEGACY_DIRS:
                 if legacy.resolve() == CACHE_DIR.resolve():
@@ -133,7 +133,7 @@ class RAGWithEmbeddings:
                         if docs:
                             self._documents = docs
                             logger.info(f"RAG migrado de legado {p} -> {self._index_path} ({len(docs)} docs)")
-                            # persiste no novo local F:\\GreatSageTemp\\rag
+                            # persiste no novo local F:\\EliveaTemp\\rag
                             self._save_index()
                             loaded = True
                             break
@@ -141,10 +141,10 @@ class RAGWithEmbeddings:
                         logger.debug(f"Falha legado {p}: {e}")
                         continue
 
-        # 3) se ainda vazio, tenta varredura direta de F:\\GreatSageTemp\\rag (caso CACHE_DIR fallback)
+        # 3) se ainda vazio, tenta varredura direta de F:\\EliveaTemp\\rag (caso CACHE_DIR fallback)
         if not loaded:
             # tenta F explicitamente mesmo se CACHE_DIR falhou
-            for cand in [Path("F:/GreatSageTemp/rag"), Path("F:\\GreatSageTemp\\rag")]:
+            for cand in [Path("F:/EliveaTemp/rag"), Path("F:\\EliveaTemp\\rag")]:
                 if cand.resolve() == CACHE_DIR.resolve():
                     continue
                 p = cand / "index.json"

@@ -1,5 +1,5 @@
 """
-Great Sage AI — Neural Streaming Voice Engine (Raphael Class)
+Elívea — Neural Streaming Voice Engine (Elívea Class)
 ================================================================
 Ultra-realistic streaming text-to-speech built on Microsoft Neural voices
 (edge-tts) with per-sentence synthesis pipeline:
@@ -30,7 +30,7 @@ from pathlib import Path
 
 import edge_tts
 
-logger = logging.getLogger("greatsage.speech")
+logger = logging.getLogger("elvea.speech")
 # Ensure speech errors are visible (not just in JSON log file)
 if not logger.handlers:
     _sh = logging.StreamHandler()
@@ -42,12 +42,12 @@ if not logger.handlers:
 # ---------------------------------------------------------------------------
 # Voice catalog — pt-BR neural voices with tuned prosody per persona.
 #
-# Raphael (Tensura): calm, analytical, precise, slightly slower delivery.
+# Elivea (Tensura): calm, analytical, precise, slightly slower delivery.
 #   Rate  -6% → deliberate pacing (she never rushes)
 #   Pitch -3Hz → lower, serene register
 #   Volume +0% → controlled, never loud
 #
-# voice_id: pt-BR-FranciscaNeural — the closest match to Raphael's feminine
+# voice_id: pt-BR-FranciscaNeural — the closest match to Elívea's feminine
 #   analytical tone available in edge-tts. We tune rate/pitch to nail the
 #   anime feel: measured, elegant, slightly detached.
 # ---------------------------------------------------------------------------
@@ -65,10 +65,10 @@ class VoicePreset:
 
 VOICE_PRESETS: dict[str, VoicePreset] = {
     p.key: p for p in [
-        # ── Raphael: Grande Sábio — natural, humana, Gisele Vinchin
+        # ── Elivea: Elívea — natural, humana, Gisele Vinchin
         # Antes -10%/-5Hz ficava lento e grave demais (robótico). Agora mais natural:
-        VoicePreset("raphael",   "Grande Sábio • Raphael", "pt-BR-FranciscaNeural", "-4%", "-2Hz", "+0%", "analytic"),
-        VoicePreset("raphael_natural", "Grande Sábio • Natural", "pt-BR-ThalitaMultilingualNeural", "-2%", "+0Hz", "+0%", "natural"),
+        VoicePreset("raphael",   "Elivea • Elivea", "pt-BR-FranciscaNeural", "-4%", "-2Hz", "+0%", "analytic"),
+        VoicePreset("raphael_natural", "Elivea • Natural", "pt-BR-ThalitaMultilingualNeural", "-2%", "+0Hz", "+0%", "natural"),
         # ── Jarvis: JARVIS BR (formal, masculine, Stark-class)
         VoicePreset("jarvis",    "JARVIS • Antonio",       "pt-BR-AntonioNeural",   "+0%", "-2Hz", "+0%", "formal"),
     ]
@@ -76,13 +76,13 @@ VOICE_PRESETS: dict[str, VoicePreset] = {
 
 # Legacy name map (old UI sent display names — keep them working)
 _LEGACY_ALIASES = {
-    "Great Sage Anime (Feminino)": "raphael",
+    "Elivea Anime (Feminino)": "raphael",
     "Jarvis Male (Masculino)": "jarvis",
     "Soft Sage (Feminino Suave)": "raphael",
     "Deep Sage (Masculino Grave)": "jarvis",
-    "Grande Sábio • Raphael (Calma Analítica)": "raphael",
-    "Grande Sábio • Raphael (Gisele Vechin)": "raphael",
-    "Grande Sábio • Raphael (estilo personagem)": "raphael",
+    "Elivea • Elivea (Calma Analítica)": "raphael",
+    "Elivea • Elivea (Gisele Vechin)": "raphael",
+    "Elivea • Elivea (estilo personagem)": "raphael",
     "JARVIS BR • Antonio (M. Formal)": "jarvis",
     "JARVIS • Antonio": "jarvis",
     # Legacy non-existent presets → fall back to raphael
@@ -102,14 +102,14 @@ NEURAL_VOICES = {p.label: p.voice_id for p in VOICE_PRESETS.values()}
 
 # Tudo no disco F ASCII — evita acento que quebra MCI e fica invisível
 def _get_project_tmp() -> Path:
-    for cand in [Path("F:/GreatSageTemp"), Path(__file__).resolve().parents[1] / "temp", Path("F:/programação/J.A.R.V.I.S/GreatSageAI_Clone/temp"), Path(tempfile.gettempdir()) / "greatsage_tts"]:
+    for cand in [Path("F:/EliveaTemp"), Path(__file__).resolve().parents[1] / "temp", Path("F:/programação/J.A.R.V.I.S/EliveaAI_Clone/temp"), Path(tempfile.gettempdir()) / "elvea_tts"]:
         try:
             cand.mkdir(parents=True, exist_ok=True)
             if str(cand).upper().startswith("F:"):
                 return cand
         except Exception:
             continue
-    p = Path("F:/GreatSageTemp/greatsage_tts")
+    p = Path("F:/EliveaTemp/elvea_tts")
     p.mkdir(parents=True, exist_ok=True)
     return p
 
@@ -158,28 +158,44 @@ _URGENT_PATTERN = re.compile(r'(urgente|agora|rápido|já|imediato|depressa|pres
 _EMPATHY_PATTERN = re.compile(r'(triste|difícil|problema|errado|quebrou|não funciona|deu erro|frustrado)', re.IGNORECASE)
 _EMPHASIS_PATTERN = re.compile(r'\b(nunca|sempre|absolutamente|totalmente|completamente|definitivamente|\d+%)\b', re.IGNORECASE)
 
-# Breathing pause durations (seconds) — tuned for natural, human-like delivery
-# Vary based on emotional context and sentence complexity
-_PAUSE_AFTER_PERIOD = 0.35       # SPEED: was 0.50, reduced 30%
-_PAUSE_AFTER_EXCLAMATION = 0.25   # SPEED: was 0.40, reduced 38%
-_PAUSE_AFTER_QUESTION = 0.35      # SPEED: was 0.50, reduced 30%
-_PAUSE_BETWEEN_LONG = 0.50        # SPEED: was 0.70, reduced 29%
-_PAUSE_BETWEEN_SHORT = 0.20       # SPEED: was 0.30, reduced 33%
-_PAUSE_BREATH_INTRO = 0.40        # SPEED: was 0.60, reduced 33%
-_PAUSE_EMPHASIS = 0.25            # SPEED: was 0.35, reduced 29%
-_PAUSE_HESITATION = 0.30          # SPEED: was 0.45, reduced 33%
-_PAUSE_EMPATHY = 0.40             # SPEED: was 0.55, reduced 27%
-_PAUSE_JOY = 0.18                 # SPEED: was 0.25, reduced 28%
-_PAUSE_URGENCY = 0.10             # SPEED: was 0.15, reduced 33%
+# Breathing pause durations (seconds) — natural human-like delivery
+# Restored from over-optimized values; each pause mimics real speech rhythm
+_PAUSE_AFTER_PERIOD = 0.48       # Natural period pause — speaker finishes thought
+_PAUSE_AFTER_EXCLAMATION = 0.38  # Excitement lingers slightly
+_PAUSE_AFTER_QUESTION = 0.52     # Questions get extra wait (listener processes)
+_PAUSE_BETWEEN_LONG = 0.65       # Long sentence → need to breathe
+_PAUSE_BETWEEN_SHORT = 0.22      # Short fragment → quick connect to next
+_PAUSE_BREATH_INTRO = 0.55       # Opening phrase → deliberate breath
+_PAUSE_EMPHASIS = 0.42           # Emphasis → pause to let weight sink in
+_PAUSE_HESITATION = 0.50         # Hesitation → natural uncertainty pause
+_PAUSE_EMPATHY = 0.55            # Empathetic → gentle, caring pause
+_PAUSE_JOY = 0.25                # Joy → energetic, barely pauses
+_PAUSE_URGENCY = 0.12            # Urgency → breathless speed
+_PAUSE_SEMICOLON = 0.30          # Semicolon → brief connector pause
+_PAUSE_COMMA = 0.15              # Comma → micro-breath
+_PAUSE_DASH = 0.20               # Dash → rhetorical pause
 
-# Dynamic prosody: pitch/volume adjustments based on emotional content
+# Intra-sentence micro-pause injection (adds natural breathing within long phrases)
+_MICRO_PAUSE_COMMA = ', ... '    # Comma becomes a breathing pause
+_MICRO_PAUSE_COLON = ', ... '    # Colon → deliberate pause before explanation
+_MICRO_PAUSE_SEMICOLON = '; ... ' # Semicolon → clause connector pause
+_MICRO_PAUSE_DASH = ', ... '     # Dash → rhetorical beat
+_MICRO_PAUSE_PERIOD = '. ... '   # Period inside long sentence → full stop + breath
+
+# Dynamic prosody: rate/pitch/volume adjustments per emotional context
+# These modify edge-tts parameters PER SENTENCE for real variation
 _PROSODY_BOOST = {
-    'joy': {'rate': '+8%', 'pitch': '+3Hz', 'volume': '+5%'},
-    'urgency': {'rate': '+12%', 'pitch': '+2Hz', 'volume': '+3%'},
-    'emphasis': {'rate': '-5%', 'pitch': '+1Hz', 'volume': '+8%'},
-    'hesitation': {'rate': '-8%', 'pitch': '-2Hz', 'volume': '-2%'},
-    'empathy': {'rate': '-10%', 'pitch': '-3Hz', 'volume': '-5%'},
-    'neutral': {'rate': '+0%', 'pitch': '+0Hz', 'volume': '+0%'},
+    'joy':         {'rate': '+6%',  'pitch': '+4Hz',  'volume': '+4%'},
+    'urgency':     {'rate': '+14%', 'pitch': '+3Hz',  'volume': '+6%'},
+    'emphasis':    {'rate': '-6%',  'pitch': '+2Hz',  'volume': '+10%'},
+    'hesitation':  {'rate': '-10%', 'pitch': '-3Hz',  'volume': '-3%'},
+    'empathy':     {'rate': '-12%', 'pitch': '-4Hz',  'volume': '-5%'},
+    'greeting':    {'rate': '-3%',  'pitch': '+2Hz',  'volume': '+3%'},
+    'question':    {'rate': '-2%',  'pitch': '+5Hz',  'volume': '+2%'},
+    'exclamation': {'rate': '+5%',  'pitch': '+4Hz',  'volume': '+8%'},
+    'list':        {'rate': '-4%',  'pitch': '+0Hz',  'volume': '+0%'},
+    'narration':   {'rate': '-8%',  'pitch': '-2Hz',  'volume': '-2%'},
+    'neutral':     {'rate': '+0%',  'pitch': '+0Hz',  'volume': '+0%'},
 }
 
 _SYMBOL_SPEECH = [
@@ -412,8 +428,33 @@ def _en_to_pt(text: str) -> str:
 
 
 def clean_for_speech(text: str) -> str:
-    """Strips markdown / URLs / symbols and translates English → Portuguese for natural speech."""
+    """Strips markdown / code / emojis / URLs / symbols and translates English → Portuguese.
+    Code blocks and emojis are completely removed — the AI never speaks them."""
     t = text
+    # ── Remove emojis (all Unicode emoji ranges) ──
+    emoji_pat = (
+        r'[\U0001F600-\U0001F64F'  # emoticons
+        r'\U0001F300-\U0001F5FF'   # symbols & pictographs
+        r'\U0001F680-\U0001F6FF'   # transport & map
+        r'\U0001F1E0-\U0001F1FF'   # flags
+        r'\U00002702-\U000027B0'   # dingbats
+        r'\U000024C2-\U0001F251'   # enclosed chars
+        r'\U0001f926-\U0001f937'   # supplemental
+        r'\U00010000-\U0010ffff'   # supplementary
+        r'\u200d\u2640-\u2642\u2600-\u2B55\u23cf\u23e9\u231a\ufe0f\u3030]+'
+    )
+    t = re.sub(emoji_pat, '', t)
+    # Also remove common emoji-like characters
+    t = re.sub(r'[\u2600-\u27BF]', '', t)  # misc symbols
+    t = re.sub(r'[\u2300-\u23FF]', '', t)  # technical symbols
+    # ── Remove code blocks first (``` ... ``` and ` inline code) ──
+    t = re.sub(r'```[\w]*\n[\s\S]*?```', '', t)  # fenced code blocks
+    t = re.sub(r'`[^`]+`', '', t)  # inline code
+    t = re.sub(r'(?m)^\s*[#>]\s?.*$', '', t)  # comment lines and blockquotes
+    # Remove common code-like patterns
+    t = re.sub(r'(?m)^(?:from |import |def |class |if __name__|\s*print\().*$', '', t)
+    t = re.sub(r'(?m)^\s*\w+\s*[= (].*[:=].*$', '', t)  # assignment / function calls
+    # Remove markdown formatting
     for pat, rep in _SYMBOL_SPEECH:
         t = re.sub(pat, rep, t)
     t = _en_to_pt(t)
@@ -545,6 +586,11 @@ class SpeechEngine:
         self._flush_seq = 0                # every seq <= this was flushed away
         self._mci_alias: str | None = None
 
+        # Persistent asyncio loop — avoids 200ms overhead per asyncio.run() call
+        self._loop = asyncio.new_event_loop()
+        self._loop_thread = threading.Thread(target=self._run_event_loop, daemon=True, name="gs-tts-loop")
+        self._loop_thread.start()
+
         # Load SFX from video reference
         self._sfx = {}
         self._load_sfx()
@@ -553,6 +599,10 @@ class SpeechEngine:
         self._play_thread = threading.Thread(target=self._play_loop, daemon=True, name="gs-tts-play")
         self._synth_thread.start()
         self._play_thread.start()
+
+    def _run_event_loop(self):
+        """Run persistent asyncio event loop in background thread."""
+        self._loop.run_forever()
 
     def _load_sfx(self):
         """Load SFX files from config directory with named categories."""
@@ -588,7 +638,7 @@ class SpeechEngine:
         threading.Thread(target=_play, daemon=True).start()
 
     def play_notify(self):
-        """Play a notification sound (Great Sage activation)."""
+        """Play a notification sound (Elivea activation)."""
         self.play_sfx("activation")
 
     def play_analysis(self):
@@ -629,6 +679,16 @@ class SpeechEngine:
     def speak(self, text: str, callback_done=None):
         """Queue a full text for spoken playback (sentence-streamed)."""
         logger.info(f"speak() called: \"{text[:80]}...\"")
+        # Reset sentence counter for new response (position rhythm)
+        self._sentence_count = 0
+        # Start speaking immediately for short text (< 100 chars)
+        if len(text) <= 100:
+            s = clean_for_speech(text)
+            if s:
+                self._enqueue(s)
+                if callback_done:
+                    threading.Timer(0.5, callback_done).start()
+            return
         self.speak_stream([text], callback_done=callback_done)
 
     # Legacy alias
@@ -639,11 +699,14 @@ class SpeechEngine:
         """Consume an iterable/generator of text; sentences speak as they arrive.
 
         Returns immediately. `text_chunks` may be a live LLM token generator.
+        SPEED: reuse existing consumer thread instead of spawning new one.
         """
         logger.info(f"speak_stream() called")
-        threading.Thread(target=self._stream_consumer,
-                         args=(text_chunks, callback_done),
-                         daemon=True, name="gs-tts-stream").start()
+        # Start consumer in existing daemon thread pool
+        t = threading.Thread(target=self._stream_consumer,
+                             args=(text_chunks, callback_done),
+                             daemon=True, name="gs-tts-stream")
+        t.start()
 
     def stop_speaking(self):
         """Instantly flush the pipeline and silence audio (barge-out)."""
@@ -690,7 +753,7 @@ class SpeechEngine:
         def _beep():
             try:
                 logger.info("Boot chime playing")
-                # Ethereal ascending sequence — Raphael's awakening
+                # Ethereal ascending sequence — Elivea's awakening
                 for f, d in [(523, 60), (659, 60), (784, 70), (880, 80),
                              (1047, 100), (1175, 60), (1319, 50), (1568, 180)]:
                     winsound.Beep(f, d)
@@ -763,18 +826,25 @@ class SpeechEngine:
             if callback_done:
                 threading.Timer(0.5, callback_done).start()
 
+    _sentence_count = 0  # tracks position in a multi-sentence response
+
     def _calc_pause(self, sentence: str) -> float:
         """Calculate natural breathing pause after a sentence (seconds).
 
-        Natural delivery: varied rhythm based on emotional content and sentence type.
-        Short sentences get shorter pauses, emotional ones get emotional pauses.
+        Mimics human speech rhythm:
+        - First sentence of a response gets a slightly longer pause (establishing)
+        - Lists get uniform rhythmic pauses
+        - Questions get extra pause (listener processes)
+        - Emotional content modifies the rhythm
+        - Long sentences → longer breath
         """
         slen = len(sentence)
+        self._sentence_count += 1
 
         # Base pause from sentence length and punctuation
-        if slen > 80:
+        if slen > 100:
             pause = _PAUSE_BETWEEN_LONG
-        elif slen < 25:
+        elif slen < 20:
             pause = _PAUSE_BETWEEN_SHORT
         elif sentence.rstrip().endswith('?'):
             pause = _PAUSE_AFTER_QUESTION
@@ -783,18 +853,35 @@ class SpeechEngine:
         else:
             pause = _PAUSE_AFTER_PERIOD
 
+        # Position rhythm: first sentence → deliberate breath, last → shorter
+        if self._sentence_count == 1:
+            pause = max(pause, _PAUSE_BREATH_INTRO)  # Opening: deliberate
+        elif self._sentence_count == 2:
+            pause = pause * 1.1  # Second: slight linger
+
+        # Punctuation micro-adjustments
+        if sentence.rstrip().endswith('...'):
+            pause += 0.15   # Trailing ellipsis → contemplative extra beat
+        if sentence.rstrip().endswith('—'):
+            pause += 0.10   # Em-dash ending → dramatic pause
+        if sentence.rstrip().endswith(':'):
+            pause += 0.08   # Colon ending → anticipatory pause
+
         # Emotional prosody — varies pause based on detected tone
         tone = _detect_sentence_tone(sentence)
-        if tone == 'emphasis':
-            pause = _PAUSE_EMPHASIS
-        elif tone == 'hesitation':
-            pause = _PAUSE_HESITATION
-        elif tone in ('thanks', 'greeting'):
-            pause = _PAUSE_EMPATHY
-        elif tone == 'exclamation':
-            pause = _PAUSE_JOY
+        tone_pauses = {
+            'emphasis':    _PAUSE_EMPHASIS,
+            'hesitation':  _PAUSE_HESITATION,
+            'thanks':      _PAUSE_EMPATHY,
+            'greeting':    _PAUSE_EMPATHY,
+            'exclamation': _PAUSE_JOY,
+            'question':    _PAUSE_AFTER_QUESTION,
+            'list':        _PAUSE_SEMICOLON,
+        }
+        if tone in tone_pauses:
+            pause = tone_pauses[tone]
 
-        # Fine-tune by emotional pattern matching on full text
+        # Pattern-based fine-tuning
         if _URGENT_PATTERN.search(sentence):
             pause = min(pause, _PAUSE_URGENCY)
         elif _EMPATHY_PATTERN.search(sentence):
@@ -802,7 +889,12 @@ class SpeechEngine:
         elif _HAPPY_PATTERN.search(sentence):
             pause = min(pause, _PAUSE_JOY)
 
-        return pause
+        # Add slight randomness for human-like variation (±15%)
+        import random
+        jitter = random.uniform(0.85, 1.15)
+        pause *= jitter
+
+        return round(pause, 3)
 
     def _get_prosody_adjustment(self, sentence: str) -> dict:
         """Get dynamic prosody adjustments (rate, pitch, volume) for a sentence.
@@ -823,27 +915,83 @@ class SpeechEngine:
         return _PROSODY_BOOST['neutral']
 
     def _apply_prosody(self, text: str, sentence: str) -> str:
-        """Apply emotional prosody to text for edge-tts synthesis.
+        """Apply emotional prosody + intra-sentence micro-pauses.
 
-        Returns modified text with emphasis markers that edge-tts interprets
-        naturally through its neural voice engine.
+        Three layers:
+        1. Micro-pauses: commas/colons/dashes → breathing pauses (', ... ')
+        2. Emphasis: key words get ALL CAPS for neural voice stress
+        3. Sentence shaping: ellipses for dramatic effect, rhythm breaks
         """
+        # Layer 1: Intra-sentence micro-pauses (natural breathing within phrases)
+        text = self._add_micro_pauses(text)
+
+        # Layer 2: Emphasis markers for neural voice stress
         prosody = self._get_prosody_adjustment(sentence)
-        # edge-tts doesn't support SSML directly, but we can influence prosody
-        # through text preprocessing: emphasis words get caps, pauses via commas
         if prosody['rate'].startswith('+'):
-            # Energetic: add emphasis to key words
+            # Energetic/urgent: emphasize key words with caps
             for word in _EMPHASIS_WORDS:
                 if word in text.lower():
-                    # Capitalize emphasis word for neural voice stress
                     text = re.sub(r'\b' + re.escape(word) + r'\b',
                                  lambda m: m.group(0).upper() if m.group(0).islower() else m.group(0).title(),
                                  text, count=1)
                     break
+        elif prosody['rate'].startswith('-'):
+            # Calm/empathetic: soften emphasis, add gentle rhythm
+            # Add ellipses at strategic points for contemplative pacing
+            text = re.sub(r'\b(não|talvez|acho|acho que|creio)\b',
+                         r'\1, ...', text, count=1)
+
+        # Layer 3: Dramatic shaping for long sentences
+        if len(text) > 120:
+            # Insert a breath at mid-point connector words
+            connectors = [' mas ', ' porém ', ' além disso ', ' portanto ',
+                         ' ou seja ', ' isto é ', ' por exemplo ']
+            for conn in connectors:
+                idx = text.find(conn)
+                if 30 < idx < len(text) - 20:
+                    text = text[:idx] + conn.strip() + ', ...' + text[idx + len(conn):]
+                    break
+
+        return text
+
+    def _add_micro_pauses(self, text: str) -> str:
+        """Inject breathing micro-pauses within long phrases.
+
+        Natural speakers pause briefly at commas, colons, semicolons, and dashes.
+        edge-tts doesn't interpret these as pauses by default, so we expand them
+        into 'comma + ellipsis' patterns that the neural voice reads as micro-breaths.
+        Only applies to sentences > 60 chars to avoid over-pausing short phrases.
+        """
+        if len(text) < 60:
+            return text
+
+        # Don't double-inject if already has '...' patterns
+        if '...' in text:
+            return text
+
+        # Semicolons → clause boundary pause
+        text = text.replace('; ', _MICRO_PAUSE_SEMICOLON)
+
+        # Colons → explanatory pause (but not in URLs or times)
+        text = re.sub(r'(?<!\d)(?<!\w):(?!//)(?!\d)', _MICRO_PAUSE_COLON, text)
+
+        # Em-dashes → rhetorical pause
+        text = re.sub(r'\s*[—–]\s*', _MICRO_PAUSE_DASH, text)
+
+        # Long comma lists: only expand if comma-separated segments > 20 chars each
+        # This prevents over-pausing in simple lists like 'a, b, c'
+        parts = text.split(', ')
+        if len(parts) > 2 and all(len(p) > 20 for p in parts[:3]):
+            text = ', ... '.join(parts)
+
+        # Clean up: collapse multiple '...' sequences
+        text = re.sub(r'\.{3,}', '...', text)
+        text = re.sub(r'\s+', ' ', text).strip()
+
         return text
 
     # --- Speed optimization: skip voice styling for short text ---
-    _VOICE_STYLING_MIN_LEN = 60  # chars — below this, skip ffmpeg+convert (saves ~1.5s)
+    _VOICE_STYLING_MIN_LEN = 200  # chars — skip ffmpeg+convert for most sentences (saves ~1.5s each)
 
     def _enqueue(self, sentence: str):
         s = clean_for_speech(sentence)
@@ -858,6 +1006,10 @@ class SpeechEngine:
             self._queue.append(u)
             gen = self._generation
 
+        # SPEED: reuse thread pool instead of spawning new thread per sentence
+        if not hasattr(self, '_synth_pool'):
+            self._synth_pool = []
+        # Find or create a free worker
         def _synth_one():
             try:
                 # SPEED: check TTS cache first — instant playback for common phrases
@@ -880,8 +1032,11 @@ class SpeechEngine:
                 # Get dynamic prosody for this sentence
                 prosody = self._get_prosody_adjustment(sentence)
 
-                # Synthesize with edge-tts (applies emotional prosody)
-                asyncio.run(self._synthesize(s, path, prosody=prosody))
+                # Synthesize with edge-tts (persistent loop — no per-call overhead)
+                future = asyncio.run_coroutine_threadsafe(
+                    self._synthesize(s, path, prosody=prosody), self._loop
+                )
+                future.result(timeout=15)  # 15s max per sentence
                 if not path.exists() or path.stat().st_size == 0:
                     logger.error(f"TTS synth produced empty/missing file: {path}")
                     u.canceled = True
@@ -911,27 +1066,51 @@ class SpeechEngine:
             finally:
                 u.ready.set()
 
-        threading.Thread(target=_synth_one, daemon=True).start()
+        # SPEED: start synth immediately without waiting
+        t = threading.Thread(target=_synth_one, daemon=True)
+        t.start()
 
     async def _synthesize(self, text: str, out_path: Path, prosody: dict = None):
-        """Synthesize text with dynamic prosody adjustments.
+        """Synthesize text with blended dynamic prosody.
 
-        Applies emotional prosody (rate, pitch, volume) per-sentence for
-        natural, human-like variation in delivery.
+        Merges emotional prosody with the base voice preset:
+        - Base preset sets the overall character (calm, analytical)
+        - Emotional boost ADDS to the base (e.g., base -4% + urgency +14% = net +10%)
+        - This creates real variation while maintaining voice identity
         """
-        # Apply dynamic prosody from emotional analysis
-        rate = self.preset.rate
-        pitch = self.preset.pitch
-        volume = self.preset.volume
+        # Parse base preset values
+        def _parse_pct(s):
+            return int(s.replace('%', '').replace('+', ''))
+        def _parse_hz(s):
+            return int(s.replace('Hz', '').replace('+', ''))
+
+        base_rate = _parse_pct(self.preset.rate)
+        base_pitch = _parse_hz(self.preset.pitch)
+        base_vol = _parse_pct(self.preset.volume)
 
         if prosody:
-            # Merge dynamic prosody with base preset
-            if prosody.get('rate') and prosody['rate'] != '+0%':
-                rate = prosody['rate']
-            if prosody.get('pitch') and prosody['pitch'] != '+0Hz':
-                pitch = prosody['pitch']
-            if prosody.get('volume') and prosody['volume'] != '+0%':
-                volume = prosody['volume']
+            # Blend: base + emotional adjustment (clamped to natural range)
+            emo_rate = _parse_pct(prosody.get('rate', '+0%'))
+            emo_pitch = _parse_hz(prosody.get('pitch', '+0Hz'))
+            emo_vol = _parse_pct(prosody.get('volume', '+0%'))
+
+            # Blend ratios: 70% base identity + 30% emotional influence
+            blended_rate = int(base_rate * 0.7 + (base_rate + emo_rate) * 0.3)
+            blended_pitch = int(base_pitch * 0.7 + (base_pitch + emo_pitch) * 0.3)
+            blended_vol = int(base_vol * 0.7 + (base_vol + emo_vol) * 0.3)
+
+            # Clamp to natural speech range
+            blended_rate = max(-20, min(20, blended_rate))
+            blended_pitch = max(-10, min(10, blended_pitch))
+            blended_vol = max(-15, min(15, blended_vol))
+
+            rate = f"{blended_rate:+d}%"
+            pitch = f"{blended_pitch:+d}Hz"
+            volume = f"{blended_vol:+d}%"
+        else:
+            rate = self.preset.rate
+            pitch = self.preset.pitch
+            volume = self.preset.volume
 
         logger.debug(f"TTS synth: voice={self.preset.voice_id} rate={rate} pitch={pitch} vol={volume}")
         communicate = edge_tts.Communicate(
@@ -944,18 +1123,45 @@ class SpeechEngine:
         await communicate.save(str(out_path))
 
     def _synth_loop(self):
-        """Pre-warms edge-tts connection and keeps asyncio loop alive."""
-        # Speed: pre-warm edge-tts on first load (saves ~500ms on first speak)
+        """Pre-warms edge-tts connection + pre-caches common first phrases."""
+        # Pre-warm edge-tts (saves ~500ms on first speak)
         try:
             async def _prewarm():
                 comm = edge_tts.Communicate("", self.preset.voice_id)
-                # Just initialize the connection, don't save
                 async for _ in comm.stream():
                     pass
-            asyncio.run(_prewarm())
+            future = asyncio.run_coroutine_threadsafe(_prewarm(), self._loop)
+            future.result(timeout=10)
             logger.debug("TTS pre-warm OK")
         except Exception as e:
             logger.debug(f"TTS pre-warm skipped: {e}")
+
+        # Pre-cache common first-response phrases (instant playback)
+        try:
+            common = [
+                "Claro, Mestre.",
+                "Entendido, Mestre.",
+                "Processando.",
+                "Elívea online, Mestre.",
+            ]
+            for phrase in common:
+                try:
+                    clean = clean_for_speech(phrase)
+                    if clean:
+                        path = _TMP_DIR / f"precache_{hash(clean) & 0xFFFF:04x}.mp3"
+                        if not path.exists():
+                            async def _synth_pre(phrase=clean, p=path):
+                                comm = edge_tts.Communicate(phrase, self.preset.voice_id,
+                                                            rate=self.preset.rate, pitch=self.preset.pitch)
+                                await comm.save(str(p))
+                            f = asyncio.run_coroutine_threadsafe(_synth_pre(), self._loop)
+                            f.result(timeout=10)
+                except Exception:
+                    pass
+            logger.debug("TTS pre-cache OK")
+        except Exception as e:
+            logger.debug(f"TTS pre-cache skipped: {e}")
+
         while True:
             time.sleep(60)
 

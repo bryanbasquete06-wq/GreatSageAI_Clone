@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Sistema de Voz (v3)
+Elívea — Sistema de Voz (v3)
 ====================================
 TTS rápido via edge-tts + os.startfile
 STT via speech_recognition
-Wake word detection: "Grande Sabio"
+Wake word detection: "Elívea"
 Always-listening mode
 """
 
@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Optional, Callable, List
 from enum import Enum
 
-logger = logging.getLogger("greatsage.voice")
+logger = logging.getLogger("elvea.voice")
 
 # Vozes disponíveis
 PT_VOICES = {

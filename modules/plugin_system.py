@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Plugin System
+Elívea — Plugin System
 ================================
 Sistema de plugins para extensibilidade.
 """
@@ -15,7 +15,7 @@ from typing import Any, Callable, Optional
 
 
 class PluginManager:
-    """Gerenciador de plugins do Great Sage."""
+    """Gerenciador de plugins do Elívea."""
 
     _PLUGINS_DIR = Path(__file__).resolve().parent.parent / "plugins"
     _CONFIG_FILE = Path(__file__).resolve().parent.parent / "config" / "plugins.json"

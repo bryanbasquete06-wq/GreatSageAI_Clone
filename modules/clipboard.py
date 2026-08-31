@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Clipboard Awareness
+Elívea — Clipboard Awareness
 ====================================
 Detecta o que o usuario copiou e contextualiza automaticamente.
 """
@@ -21,7 +21,7 @@ class ClipboardMonitor:
         self._running = False
         self._thread: Optional[threading.Thread] = None
         self.on_change = None  # callback(content: str)
-        self._interval = 1.0
+        self._interval = 2.0  # 2 seconds — reduces CPU and avoids spam
 
     def start(self):
         if self._running:
@@ -49,6 +49,15 @@ class ClipboardMonitor:
 
     @staticmethod
     def _read_clipboard() -> str:
+        """Read clipboard — win32 first (no window), fallback to PowerShell (silent)."""
+        # Try win32 API first (zero windows, fastest)
+        try:
+            result = ClipboardMonitor._read_clipboard_win32()
+            if result:
+                return result
+        except Exception:
+            pass
+        # Fallback to PowerShell (with CREATE_NO_WINDOW)
         try:
             return ClipboardMonitor._read_clipboard_fallback()
         except Exception:
@@ -85,10 +94,12 @@ class ClipboardMonitor:
     @staticmethod
     def _read_clipboard_fallback() -> str:
         try:
-            import subprocess
+            import subprocess, sys
+            flags = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
             result = subprocess.run(
-                ["powershell", "-Command", "Get-Clipboard"],
-                capture_output=True, text=True, timeout=5
+                ["powershell", "-NoProfile", "-Command", "Get-Clipboard"],
+                capture_output=True, text=True, timeout=5,
+                creationflags=flags
             )
             return result.stdout.strip()
         except Exception:

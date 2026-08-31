@@ -10,7 +10,7 @@ from PySide6.QtGui import QColor, QKeySequence, QShortcut
 from typing import List, Tuple, Callable, Optional
 import logging
 
-logger = logging.getLogger("greatsage.palette")
+logger = logging.getLogger("elvea.palette")
 
 class CommandPalette(QFrame):
     command_executed = Signal(str, object)

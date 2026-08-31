@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Continuous Learning
+Elívea — Continuous Learning
 ====================================
 Aprende interacoes e preferencias do usuario ao longo do tempo.
 """

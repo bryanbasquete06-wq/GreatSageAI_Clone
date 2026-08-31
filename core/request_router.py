@@ -1,5 +1,5 @@
 """
-Great Sage AI — Request Understanding Router v2
+Elívea — Request Understanding Router v2
 ================================================
 Camada leve (zero API) que analisa cada pedido antes do LLM principal:
 
@@ -360,7 +360,7 @@ class RequestRouter:
         elif req.kind == QueryKind.EXPLAIN:
             hints.append("Explique com clareza; use exemplos práticos e analogias quando útil.")
         elif req.kind == QueryKind.CREATIVE:
-            hints.append("Seja criativa mas mantenha o tom do Grande Sábio — analítica, precisa, elegante.")
+            hints.append("Seja criativa mas mantenha o tom do Elívea — analítica, precisa, elegante.")
         elif req.kind == QueryKind.SYSTEM:
             hints.append("Execute a ação de sistema solicitada; confirme o resultado.")
         elif req.kind == QueryKind.RESEARCH:

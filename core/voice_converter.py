@@ -1,7 +1,7 @@
 """
-Great Sage — Character Voice Styler v10
+Elívea — Character Voice Styler v10
 ======================================
-Advanced DSP styling to match the Great Sage / Raphael character voice
+Advanced DSP styling to match the Elivea / Elivea character voice
 from Tensei Shitara Slime Daitaiken:
 
   - Full, natural feminine register (F0 target ~250 Hz)
@@ -289,7 +289,7 @@ def _add_chorus(samples, sr, delay_ms=20, depth=0.12, rate=0.25):
 
 
 def _ring_modulate(x: np.ndarray, sr: int, freq: float = 90.0, depth: float = 0.08) -> np.ndarray:
-    """Subtle ring modulation for robotic/digital quality (Great Sage flavor).
+    """Subtle ring modulation for robotic/digital quality (Elivea flavor).
     
     Very light modulation at a low frequency adds a slight mechanical
     shimmer without making it sound like a broken robot.
@@ -432,5 +432,5 @@ def convert_voice(input_wav: str, output_wav: str) -> bool:
 
 
 if __name__ == "__main__":
-    print("Great Sage Voice Styler v10")
+    print("Elivea Voice Styler v10")
     print(f"Profile: {PROFILE_JSON}")

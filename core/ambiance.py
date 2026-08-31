@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI - Ambiance Engine (Dynamic)
+Elivea - Ambiance Engine (Dynamic)
 Todas as frases sao geradas via templates + contexto. Nunca se repetem.
 """
 from __future__ import annotations

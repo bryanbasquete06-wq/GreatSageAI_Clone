@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Great Sage AI — Task Scheduler
+Elívea — Task Scheduler
 ================================
 Agendamento de tarefas com lembretes e automacoes.
 """
