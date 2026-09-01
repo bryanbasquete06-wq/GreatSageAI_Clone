@@ -592,6 +592,23 @@ class SageEngine:
             router.save_budgets()
             return "Budget de todos os providers resetado. 🔄"
 
+        # ═══ TOKEN USAGE & SAVINGS ═══
+        if t in ["usage", "uso", "tokens", "token usage", "uso de tokens"]:
+            try:
+                from core.token_tracker import get_token_tracker
+                tracker = get_token_tracker()
+                return tracker.format_usage_text(7)
+            except Exception as e:
+                return f"Erro ao obter uso de tokens: {e}"
+
+        if t in ["savings", "economia", "cost savings", "quanto economizei", "quanto economizei"]:
+            try:
+                from core.token_tracker import get_token_tracker
+                tracker = get_token_tracker()
+                return tracker.format_savings_text(1)
+            except Exception as e:
+                return f"Erro ao obter economia: {e}"
+
         # ═══ MULTI-MODAL ═══
         if t.startswith("analise imagem ") or t.startswith("analyze image "):
             path = t.replace("analise imagem ", "").replace("analyze image ", "")
@@ -767,6 +784,10 @@ class SageEngine:
 • `router` — Status de todos os providers gratuitos
 • `capacity` — Capacidade combinada (RPM, RPD, tokens/dia)
 • `router reset` — Resetar budgets diarios
+
+**Uso & Economia:**
+• `usage` — Uso de tokens dos últimos 7 dias
+• `savings` — Relatório de economia vs APIs pagas
 
 **Imagens:**
 • `analise imagem [caminho]` — Analisar imagem

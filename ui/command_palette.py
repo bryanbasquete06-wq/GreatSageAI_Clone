@@ -97,6 +97,12 @@ def get_all_commands() -> List[PaletteCommand]:
         PaletteCommand("approve shadow", "Approve Shadow", "Apply Shadow Dev changes", "Deep Dev", icon="✅"),
         PaletteCommand("discard shadow", "Discard Shadow", "Discard Shadow Dev changes", "Deep Dev", icon="❌"),
 
+        # Usage & Savings
+        PaletteCommand("usage", "Token Usage", "Show token usage last 7 days", "System", icon="📊"),
+        PaletteCommand("savings", "Cost Savings", "Weekly savings vs paid APIs", "System", icon="💰"),
+        PaletteCommand("router", "Provider Status", "Show all free API providers", "System", icon="🔄"),
+        PaletteCommand("capacity", "Combined Capacity", "Total RPM/RPD/TPD", "System", icon="⚡"),
+
         # Memory
         PaletteCommand("o que voce lembra", "View Memories", "Show stored memories", "Memory", icon="🔮"),
         PaletteCommand("limpar memória", "Clear Memory", "Clear conversation history", "Memory", icon="🧹"),

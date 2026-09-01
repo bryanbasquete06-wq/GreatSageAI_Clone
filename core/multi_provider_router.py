@@ -771,6 +771,20 @@ class MultiProviderRouter:
                     tokens_est = len(response) // 4 if response else 0
                     budget.record_request(tokens=tokens_est, latency_ms=latency)
 
+                # Log to TokenTracker for cost-savings reports
+                try:
+                    from core.token_tracker import get_token_tracker
+                    get_token_tracker().record(
+                        provider=provider.name,
+                        tokens=tokens_est,
+                        model=getattr(provider, 'model', ''),
+                        task_type=classify_query_complexity(query, context).name.lower(),
+                        latency_ms=latency,
+                        success=True,
+                    )
+                except Exception:
+                    pass  # Don't let tracker errors affect the request
+
                 metadata["attempted"].append({
                     "provider": provider.name,
                     "success": True,
