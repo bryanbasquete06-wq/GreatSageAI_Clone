@@ -82,3 +82,8 @@ config/raphael_ref.mp3
 
 # Audit logs
 config/audit/
+
+# Memory backups and corrupted files
+config/backups/
+config/memory.corrupted.*.db
+config/memory.fresh.db
