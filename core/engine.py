@@ -36,6 +36,7 @@ from core.request_router import RequestRouter
 from core.deep_dev import DeepDevEngine
 from core.weekly_digest import WeeklyDigestEngine
 from core.intelligence import HallucinationGuard, SelfCorrectionEngine, QualityScorer, KnowledgeGraph, IntentPredictor
+from core.multi_provider_router import get_router, ProviderTier, QueryComplexity, classify_query_complexity
 
 logger = logging.getLogger("elvea.engine")
 
@@ -529,6 +530,25 @@ class SageEngine:
         if t in ["plugins", "plugin list"]:
             return self.plugins.list_plugins()
 
+        # ═══ MULTI-PROVIDER ROUTER ═══
+        if t in ["router", "providers", "api status", "apis"]:
+            return self._get_router_status()
+
+        if t in ["router capacity", "capacidade", "capacity"]:
+            return self._get_router_capacity()
+
+        if t.startswith("use ") and any(k in t for k in ["groq", "gemini", "cerebras", "mistral", "openrouter", "nvidia", "cloudflare", "ollama"]):
+            provider_name = t.replace("use ", "").strip()
+            return f"Provider forçado: *{provider_name}*. Próxima requisição usará este provider. 🔄"
+
+        if t in ["router reset", "reset budget"]:
+            router = get_router()
+            for name in router.budgets:
+                router.budgets[name].requests_day = 0
+                router.budgets[name].tokens_day = 0
+            router.save_budgets()
+            return "Budget de todos os providers resetado. 🔄"
+
         # ═══ MULTI-MODAL ═══
         if t.startswith("analise imagem ") or t.startswith("analyze image "):
             path = t.replace("analise imagem ", "").replace("analyze image ", "")
@@ -833,3 +853,38 @@ class SageEngine:
   Funcao: Enriquecimento de contexto, CoT, profiling do usuario
 
 *Todos os 6 sistemas rodando em cada interação.* ⚔️"""
+
+    def _get_router_status(self) -> str:
+        """Status completo do Multi-Provider Router."""
+        try:
+            router = get_router()
+            return router.get_status_text()
+        except Exception as e:
+            return f"Erro ao obter status do router: {e}"
+
+    def _get_router_capacity(self) -> str:
+        """Capacidade combinada de todos os providers gratuitos."""
+        try:
+            router = get_router()
+            status = router.get_status()
+            cap = status.get("capacity", {})
+            return f"""🔄 **Capacidade Multi-Provider — Elívea**
+
+**Estratégia:** Mesmo QI (system prompt + persona + raciocínio),
+distribuído entre {status['available_providers']} APIs gratuitas.
+
+**Capacidade Combinada:**
+  ⚡ RPM total: {cap.get('combined_rpm', '?')} requests/minuto
+  📊 RPD total: {cap.get('combined_rpd', '?')} requests/dia
+  🧠 TPD total: {cap.get('combined_tpd', '?')}
+  🎯 Modelos gratuitos: {cap.get('free_models_available', '?')}
+
+**Como funciona:**
+  1. Query simples → provider mais rápido (Groq/Cerebras)
+  2. Query complexa → provider mais inteligente (NVIDIA/Gemini)
+  3. Se um falha → fallback automático pro próximo
+  4. Se todos falharem → modo offline com RAG local
+
+*O router distribui automaticamente. Não precisa fazer nada.* ⚔️"""
+        except Exception as e:
+            return f"Erro ao obter capacidade: {e}"
