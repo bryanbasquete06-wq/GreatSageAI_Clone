@@ -1439,6 +1439,13 @@ class EliveaMainWindow(QMainWindow):
         self.ai_status.setFixedHeight(145)
         right_layout.addWidget(self.ai_status)
 
+        # Provider Status (real-time API health + usage bars)
+        from ui.provider_status_panel import ProviderStatusPanel
+        self.provider_status = ProviderStatusPanel()
+        self.provider_status.setFixedHeight(340)
+        self.provider_status.sig_detail_requested.connect(self._on_provider_detail)
+        right_layout.addWidget(self.provider_status)
+
         # Quick Actions
         self.quick_actions = QuickActionsWidget()
         self.quick_actions.setFixedHeight(115)
@@ -1872,6 +1879,38 @@ class EliveaMainWindow(QMainWindow):
             pass
 
     # ------------------------------------------------------ interactions
+
+    def _on_provider_detail(self, provider_name: str):
+        """Handle click on a provider row — show detailed status in chat."""
+        try:
+            from core.multi_provider_router import get_router
+            router = get_router()
+            status = router.get_status()
+            info = status.get("providers", {}).get(provider_name, {})
+            if not info:
+                self.submit_command(f"router")
+                return
+            display = {
+                "groq": "Groq", "gemini": "Gemini", "cerebras": "Cerebras",
+                "openrouter": "OpenRouter", "mistral": "Mistral",
+                "nvidia_nim": "NVIDIA NIM", "cloudflare": "Cloudflare",
+                "ovhcloud": "OVHcloud", "siliconflow": "SiliconFlow",
+                "huggingface": "HuggingFace", "ollama": "Ollama",
+                "kilo_code": "Kilo Code",
+            }.get(provider_name, provider_name)
+            icon = "🟢" if info.get("available") else "🔴"
+            detail = (
+                f"{icon} {display}\n"
+                f"Tier: {info.get('tier', '?')} | Quality: {info.get('quality', '?')}\n"
+                f"Context: {info.get('context_window', '?')} tokens\n"
+                f"Requests today: {info.get('requests_today', 0)}/{info.get('rpm_limit', '?')} RPM\n"
+                f"Total tokens: {info.get('total_tokens', 0):,}\n"
+                f"Avg latency: {info.get('avg_latency', '?')} | Errors: {info.get('error_rate', '?')}"
+            )
+            self.add_master_message(f"📊 Provider: {display}")
+            self.add_ai_message(detail)
+        except Exception:
+            self.submit_command("router")
 
     def _on_quick_action(self, cmd: str):
         """Handle quick action buttons — intercept special commands."""
