@@ -2,7 +2,7 @@
 Elívea — CodeDock Syntax Highlighter Engine
 =====================================================
 Highlighter de sintaxe leve (QSyntaxHighlighter) usado pelo editor da Ala de
-Programação. As cores seguem a paleta viva do tema ＜Elivea＞ (ui.qt_ui.C),
+Programação. As cores seguem a paleta viva do tema ＜Elívea＞ (ui.qt_ui.C),
 então o editor muda junto com os 5 temas em tempo real.
 
 Linguagens: Python, Java, Kotlin, C, C++, C#, Rust, Go, SQL, JS, TS, HTML,

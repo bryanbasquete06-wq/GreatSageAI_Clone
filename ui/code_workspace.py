@@ -233,7 +233,7 @@ class CodeWorkspaceWindow(QMainWindow):
         self.workspace = Path(ws).expanduser().resolve() if ws else PROJECT_ROOT
         self.workspace.mkdir(parents=True, exist_ok=True)
 
-        self.setWindowTitle("⌨ ALA DE PROGRAMAÇÃO — CodeDock ＜Elivea＞")
+        self.setWindowTitle("⌨ ALA DE PROGRAMAÇÃO — CodeDock ＜Elívea＞")
         self.resize(1300, 800)
         self.setMinimumSize(1020, 640)
 

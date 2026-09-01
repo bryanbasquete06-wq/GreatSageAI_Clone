@@ -6,7 +6,7 @@ Orquestra o sistema completo:
      Voz → VoicePipeline (VAD + Whisper V3 Turbo)
      LLM → EliveaLLM (Groq GPT-OSS 120B em STREAMING)
      Voz → SpeechEngine (TTS neural por frases, fala enquanto pensa)
-     UI → EliveaMainWindow (interface ＜Elivea＞ estilo Tensura)
+     UI → EliveaMainWindow (interface ＜Elívea＞ estilo Tensura)
 
 by: bryan
 """
@@ -270,7 +270,7 @@ class EliveaApp:
 
         # --- new infrastructure
         self.log = get_logger("elvea.app")
-        self.log.info("Elivea inicializando")
+        self.log.info("Elívea inicializando")
 
         try:
             self.persistent_memory = PersistentMemory()

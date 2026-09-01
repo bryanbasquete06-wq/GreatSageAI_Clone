@@ -74,7 +74,7 @@ class Elivea:
             return False
 
     def speak(self, text: str):
-        print(f"Elivea: {text}")
+        print(f"Elívea: {text}")
         if not self.voice_enabled:
             return
 
@@ -559,7 +559,7 @@ class EliveaGui:
 
         self.status = tk.Label(
             root,
-            text="Aguardando palavra de ativação: Elivea",
+            text="Aguardando palavra de ativação: Elívea",
             bg="#050505",
             fg="#ffed4e",
             font=("Segoe UI", 10, "bold"),
@@ -693,13 +693,13 @@ class EliveaGui:
                         self.root.after(0, self.submit_command)
                     else:
                         self.root.after(0, self.append_message, "Elívea", "Não consegui capturar o comando. Tente novamente.")
-                        self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Elivea")
+                        self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Elívea")
                 else:
                     self.root.after(0, self.append_message, "Elívea", "Não foi possível ativar por voz neste ambiente.")
-                    self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Elivea")
+                    self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Elívea")
             except Exception as exc:
                 self.root.after(0, self.append_message, "Elívea", f"Não consegui ouvir: {exc}")
-                self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Elivea")
+                self.root.after(0, self.status.configure, "text", "Aguardando palavra de ativação: Elívea")
 
         t = threading.Thread(target=_listen, daemon=True)
         t.start()

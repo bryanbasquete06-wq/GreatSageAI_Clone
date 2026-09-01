@@ -305,7 +305,7 @@ def criar_atalho_desktop(base_dir: Path, logger: logging.Logger) -> bool:
         # --- Tenta copiar .exe pré-compilados ---
         desktop_exes = base_dir / "desktop_exes"
         ai_exe_src = desktop_exes / "Elívea AI.exe"
-        inst_exe_src = desktop_exes / "Instalador Elivea.exe"
+        inst_exe_src = desktop_exes / "Instalador Elívea.exe"
 
         ai_ok = False
         inst_ok = False
@@ -318,7 +318,7 @@ def criar_atalho_desktop(base_dir: Path, logger: logging.Logger) -> bool:
                 ai_ok = True
 
         if inst_exe_src.exists():
-            dst = desktop / "Instalador Elivea.exe"
+            dst = desktop / "Instalador Elívea.exe"
             shutil.copy2(str(inst_exe_src), str(dst))
             if dst.exists():
                 logger.info(f"{COR_DOURADO}[ OK ] .exe do Instalador copiado para {dst}{COR_RESET}")
@@ -534,7 +534,7 @@ class InstaladorElivea:
             # 1b. Atalho desktop com ícone (exigido: baixar totalmente + ícone)
             print(f"{COR_BRANCO}[ INFO ] Criando atalho na Área de Trabalho com ícone...{COR_RESET}")
             if criar_atalho_desktop(self.base_dir, self.logger):
-                print(f"{COR_DOURADO}[ OK ] Atalhos criados: Elívea AI + Instalador Elivea.{COR_RESET}")
+                print(f"{COR_DOURADO}[ OK ] Atalhos criados: Elívea AI + Instalador Elívea.{COR_RESET}")
             else:
                 print(f"{COR_AMARELO}[ ALERTA ] Atalho não criado — verifique permissões.{COR_RESET}")
 
@@ -569,7 +569,7 @@ class InstaladorElivea:
             codigo = self._iniciar_ia()
             if codigo == 0:
                 print(f"\n{COR_BRANCO}[ INFO ] Elivea iniciado — verifique a janela e a bandeja do sistema.{COR_RESET}")
-                print(f"{COR_DIM}Log: logs/elvea_install.log | Atalhos: Desktop/Elívea AI + Instalador Elivea{COR_RESET}")
+                print(f"{COR_DIM}Log: logs/elvea_install.log | Atalhos: Desktop/Elívea AI + Instalador Elívea{COR_RESET}")
                 time.sleep(4)
             return codigo
 
@@ -633,7 +633,7 @@ class InstaladorElivea:
                 creationflags=creationflags,
                 close_fds=True,
             )
-            print(f"{COR_DOURADO}[ OK ] Elivea em execução.{COR_RESET}")
+            print(f"{COR_DOURADO}[ OK ] Elívea em execução.{COR_RESET}")
             return 0
         except FileNotFoundError as exc:
             self.logger.error(f"[ ERRO ] Interpretador não encontrado: {exc}")

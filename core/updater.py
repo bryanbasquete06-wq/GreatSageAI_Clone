@@ -64,4 +64,4 @@ class AutoUpdater:
     @classmethod
     def get_status(cls) -> str:
         current = cls.get_current_version()
-        return f"Elivea v{current}"
+        return f"Elívea v{current}"

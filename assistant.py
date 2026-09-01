@@ -31,7 +31,7 @@ class EliveaAssistant:
         self.running = True
 
     def initialize(self):
-        """Boot sequence for Elivea System."""
+        """Boot sequence for Elívea System."""
         self.tui.print_banner()
 
         status_msg = (
@@ -88,14 +88,14 @@ class EliveaAssistant:
 
         if cmd_lower in ("help", "ajuda"):
             help_text = (
-                "[Notice] Elivea Directive Protocols:\n"
+                "[Notice] Elívea Directive Protocols:\n"
                 "  - sys / status   : Display real-time hardware telemetry\n"
                 "  - ls [path]      : List contents of directory\n"
                 "  - find <term>    : Search file system for target pattern\n"
                 "  - search <query> : Execute web search\n"
                 "  - open <url>     : Open URL in default web browser\n"
                 "  - mark-l status  : Check Mark-L core bridge status\n"
-                "  - exit / quit    : Terminate Elivea process"
+                "  - exit / quit    : Terminate Elívea process"
             )
             self.tui.render_notice(help_text, title="DIRECTIVE ASSIST")
             return

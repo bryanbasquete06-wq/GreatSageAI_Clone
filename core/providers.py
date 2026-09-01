@@ -419,7 +419,7 @@ class OpenRouterProvider(CodeProvider):
                         headers={"Authorization": f"Bearer {self.api_key}",
                                  "Content-Type": "application/json",
                                  "HTTP-Referer": "https://elvea.local",
-                                 "X-Title": "Elivea CodeDock"},
+                                 "X-Title": "Elívea CodeDock"},
                         json=payload, timeout=120,
                     ))
                 latency = time.perf_counter() - t0

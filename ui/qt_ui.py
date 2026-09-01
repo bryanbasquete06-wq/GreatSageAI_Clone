@@ -1,5 +1,5 @@
 """
-Elívea — Tensura Holographic Interface (＜Elivea＞)
+Elívea — Tensura Holographic Interface (＜Elívea＞)
 ==========================================================
 Interface inspirada no anime "Tensei Shitara Slime Daitaiken" (Tensura):
 
@@ -65,7 +65,7 @@ except ImportError:
 
 THEMES: dict[str, dict[str, str]] = {
     "tensura_gold": dict(
-        name="Tensura Dourado ＜Elivea＞",
+        name="Tensura Dourado ＜Elívea＞",
         BG="#060913", PANEL="#131008", PANEL2="#1d180c", GHOST="#332708",
         BORDER="#5c4708", BORDER_B="#a8801c", BORDER_A="#7a5e10",
         PRI="#ffd24a", ACC="#ffedb0", ACC2="#f5a623", GOLD="#ffe27a",
@@ -73,7 +73,7 @@ THEMES: dict[str, dict[str, str]] = {
         TEXT_MED="#e0c98a", WHITE="#ffffff",
     ),
     "tensura": dict(
-        name="Tensura Blue ＜Elivea＞",
+        name="Tensura Blue ＜Elívea＞",
         BG="#020817", PANEL="#06122b", PANEL2="#0a1c3d", GHOST="#0e2c55",
         BORDER="#0f3a6e", BORDER_B="#1e5fa8", BORDER_A="#16457e",
         PRI="#4fd8ff", ACC="#aef0ff", ACC2="#22b8f0", GOLD="#ffd76a",
@@ -177,14 +177,14 @@ def set_windows_autostart(enable: bool) -> bool:
 
 
 # ===========================================================================
-# ＜Elivea＞ Magic Circle — the centerpiece
+# ＜Elívea＞ Magic Circle — the centerpiece
 # ===========================================================================
 
 RUNES = list("ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ")
 
 
 class MagicCircleWidget(QWidget):
-    """Elivea magic circle: rune ring, counter-rotating arcs, heptagram,
+    """Elívea magic circle: rune ring, counter-rotating arcs, heptagram,
     pulsing core and radial mic visualizer — all animated at 30 fps."""
 
     def __init__(self, parent=None):
@@ -548,10 +548,10 @@ class MagicCircleWidget(QWidget):
                 qp(cx + r2 * math.cos(ang), cy + r2 * math.sin(ang)),
             )
 
-        # ---- title ＜Elivea＞
+        # ---- title ＜Elívea＞
         p.setPen(QPen(qcol(C.ACC, 235), 1))
         p.setFont(font_cjk(17))
-        p.drawText(QRectF(0, cy + R * 1.02, W, 30), Qt.AlignmentFlag.AlignCenter, "＜Elivea＞")
+        p.drawText(QRectF(0, cy + R * 1.02, W, 30), Qt.AlignmentFlag.AlignCenter, "＜Elívea＞")
         p.setFont(font_mono(9))
         p.setPen(QPen(qcol(C.PRI, 200), 1))
         p.drawText(QRectF(0, cy + R * 1.02 + 28, W, 16), Qt.AlignmentFlag.AlignCenter, "G R E A T   S A G E   —   R A P H A E L")
@@ -782,7 +782,7 @@ class ChatBubble(QFrame):
             }}
         """)
         if sage:
-            self.lbl_header.setText("『Elivea』 ＜Elivea＞")
+            self.lbl_header.setText("『Elívea』 ＜Elívea＞")
             self.lbl_header.setStyleSheet(f"color: {C.PRI}; background: transparent; border: none;")
             self.lbl_body.setStyleSheet(f"color: {C.TEXT}; background: transparent; border: none;")
         else:
@@ -1150,12 +1150,12 @@ class BootOverlay(QWidget):
                 p.setPen(QPen(qcol(GOLD, a), size))
                 p.drawPoint(int(px), int(py))
 
-        # ── Title: ＜Elivea＞ ──
+        # ── Title: ＜Elívea＞ ──
         if self._name_alpha > 0.01:
             na = int(255 * self._name_alpha)
             p.setPen(QPen(qcol(GOLD_BRIGHT, na), 1))
             p.setFont(QFont("Microsoft YaHei UI", 30, QFont.Weight.Bold))
-            p.drawText(QRectF(0, cy + R * 1.2, W, 50), Qt.AlignmentFlag.AlignCenter, "＜Elivea＞")
+            p.drawText(QRectF(0, cy + R * 1.2, W, 50), Qt.AlignmentFlag.AlignCenter, "＜Elívea＞")
             # Subtitle line
             p.setFont(QFont("Consolas", 10, QFont.Weight.Bold))
             p.setPen(QPen(qcol(GOLD, int(na * 0.85)), 1))
@@ -1213,7 +1213,7 @@ class ConfigDialog(QWidget):
     def __init__(self, main_win, voices: list[str], current_voice: str, parent=None):
         super().__init__(parent)
         self.main_win = main_win
-        self.setWindowTitle("Configurações — Elivea")
+        self.setWindowTitle("Configurações — Elívea")
         self.resize(560, 420)
         self.setStyleSheet(f"background-color: {C.PANEL}; color: {C.TEXT};")
 
@@ -1325,7 +1325,7 @@ class EliveaMainWindow(QMainWindow):
         self._t0_cmd = 0.0
         self._real_exit = False
 
-        self.setWindowTitle("＜Elivea＞ Elívea — Elivea • Gisele Vechin [by: bryan]")
+        self.setWindowTitle("＜Elívea＞ Elívea — Elivea • Gisele Vechin [by: bryan]")
         self.resize(1400, 850)
         self.setMinimumSize(1100, 700)
         self.setStyleSheet(f"background-color: {C.BG}; color: {C.TEXT};")
@@ -1683,7 +1683,7 @@ class EliveaMainWindow(QMainWindow):
         """Speak the awakening line with the TTS engine."""
         try:
             if self.speech:
-                self.speech.speak("Habilidade única desbloqueada: Elivea")
+                self.speech.speak("Habilidade única desbloqueada: Elívea")
         except Exception:
             pass
 
@@ -2056,7 +2056,7 @@ Comandos de Voz:
         from ui.usage_dashboard import UsageDashboard
         if not getattr(self, '_usage_win', None) or not self._usage_win.isVisible():
             self._usage_win = UsageDashboard()
-            self._usage_win.setWindowTitle("Usage Tracker - Elivea")
+            self._usage_win.setWindowTitle("Usage Tracker - Elívea")
             self._usage_win.resize(500, 700)
         self._usage_win.show()
         self._usage_win.raise_()
@@ -2123,7 +2123,7 @@ Comandos de Voz:
             try:
                 collected: list[str] = []
                 system_prompt = (
-                    "You are Elivea (Elivea), an elite AI coding engine. "
+                    "You are Elívea (Elivea), an elite AI coding engine. "
                     "Generate PRODUCTION-QUALITY code — not stubs, not examples. "
                     "Rules: "
                     "1) Return ONLY raw code, zero markdown, zero fences, zero explanations. "

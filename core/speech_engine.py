@@ -67,8 +67,8 @@ VOICE_PRESETS: dict[str, VoicePreset] = {
     p.key: p for p in [
         # ── Elivea: Elívea — natural, humana, Gisele Vinchin
         # Antes -10%/-5Hz ficava lento e grave demais (robótico). Agora mais natural:
-        VoicePreset("raphael",   "Elivea • Elivea", "pt-BR-FranciscaNeural", "-4%", "-2Hz", "+0%", "analytic"),
-        VoicePreset("raphael_natural", "Elivea • Natural", "pt-BR-ThalitaMultilingualNeural", "-2%", "+0Hz", "+0%", "natural"),
+        VoicePreset("raphael",   "Elívea • Elívea", "pt-BR-FranciscaNeural", "-4%", "-2Hz", "+0%", "analytic"),
+        VoicePreset("raphael_natural", "Elívea • Natural", "pt-BR-ThalitaMultilingualNeural", "-2%", "+0Hz", "+0%", "natural"),
         # ── Jarvis: JARVIS BR (formal, masculine, Stark-class)
         VoicePreset("jarvis",    "JARVIS • Antonio",       "pt-BR-AntonioNeural",   "+0%", "-2Hz", "+0%", "formal"),
     ]
@@ -76,13 +76,13 @@ VOICE_PRESETS: dict[str, VoicePreset] = {
 
 # Legacy name map (old UI sent display names — keep them working)
 _LEGACY_ALIASES = {
-    "Elivea Anime (Feminino)": "raphael",
+    "Elívea Anime (Feminino)": "raphael",
     "Jarvis Male (Masculino)": "jarvis",
     "Soft Sage (Feminino Suave)": "raphael",
     "Deep Sage (Masculino Grave)": "jarvis",
-    "Elivea • Elivea (Calma Analítica)": "raphael",
-    "Elivea • Elivea (Gisele Vechin)": "raphael",
-    "Elivea • Elivea (estilo personagem)": "raphael",
+    "Elívea • Elívea (Calma Analítica)": "raphael",
+    "Elívea • Elívea (Gisele Vechin)": "raphael",
+    "Elívea • Elívea (estilo personagem)": "raphael",
     "JARVIS BR • Antonio (M. Formal)": "jarvis",
     "JARVIS • Antonio": "jarvis",
     # Legacy non-existent presets → fall back to raphael
@@ -753,7 +753,7 @@ class SpeechEngine:
         def _beep():
             try:
                 logger.info("Boot chime playing")
-                # Ethereal ascending sequence — Elivea's awakening
+                # Ethereal ascending sequence — Elívea's awakening
                 for f, d in [(523, 60), (659, 60), (784, 70), (880, 80),
                              (1047, 100), (1175, 60), (1319, 50), (1568, 180)]:
                     winsound.Beep(f, d)

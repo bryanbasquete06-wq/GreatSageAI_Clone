@@ -225,7 +225,7 @@ class Dashboard:
 
     def get_dashboard_summary(self, memory=None) -> str:
         """Get complete dashboard summary."""
-        parts = ["**Dashboard de Atividade do Elivea**\n"]
+        parts = ["**Dashboard de Atividade do Elívea**\n"]
 
         # Token usage
         parts.append(self.get_token_summary())

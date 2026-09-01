@@ -38,7 +38,7 @@ class EliveaTUI:
         if HAS_RICH:
             panel = Panel(
                 Text(banner_art, style="bold yellow"),
-                title="[bold bright_yellow] Elivea [/bold bright_yellow]",
+                title="[bold bright_yellow] Elívea [/bold bright_yellow]",
                 subtitle="[dim yellow]Mode: Active | Persona: Elivea | Core: Mark-L Compatible | by: bryan[/dim yellow]",
                 border_style=self.border_color,
                 expand=False
@@ -63,7 +63,7 @@ class EliveaTUI:
             for k, v in metrics.items():
                 print(f"  {k}: {v}")
 
-    def render_notice(self, text: str, title: str = "Elivea NOTICE"):
+    def render_notice(self, text: str, title: str = "Elívea NOTICE"):
         if HAS_RICH:
             panel = Panel(
                 Text(text, style="bright_yellow"),
@@ -79,7 +79,7 @@ class EliveaTUI:
 
     def get_input(self) -> str:
         if HAS_RICH:
-            return Prompt.ask("[bold yellow]Elivea>[/bold yellow] [bold bright_yellow]Master[/bold bright_yellow]")
+            return Prompt.ask("[bold yellow]Elívea>[/bold yellow] [bold bright_yellow]Master[/bold bright_yellow]")
         else:
             return input("\nElívea> Master: ")
 

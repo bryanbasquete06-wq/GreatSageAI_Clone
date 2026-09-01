@@ -30,7 +30,7 @@ def main():
     os.system("") # ANSI no CMD
 
     print(f"{C_Y}{'=' * 70}")
-    print(" ＜Elivea＞ Elívea — CONSOLE v3")
+    print(" ＜Elívea＞ Elívea — CONSOLE v3")
     print(" Pipeline de voz unificado • Whisper V3 Turbo • TTS neural streaming")
     print(f"{'=' * 70}{C_0}\n")
 
@@ -58,7 +58,7 @@ def main():
         print(f"{C_G}[ respondido em {time.perf_counter() - t0:.1f}s — STT {pipeline.last_stt_ms}ms/{pipeline.last_stt_engine} | TTFT {app.llm.last_ttft_ms}ms]{C_0}")
 
     pipeline.on_transcript = _on_speech
-    pipeline.on_wake = lambda: print(f"{C_Y}［Elivea ativado — à escuta, Mestre］{C_0}")
+    pipeline.on_wake = lambda: print(f"{C_Y}［Elívea ativado — à escuta, Mestre］{C_0}")
 
     print(f"{C_Y}Digite comandos abaixo ('sair' encerra).{C_0}\n")
     while True:

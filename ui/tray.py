@@ -23,7 +23,7 @@ class EliveaTrayApp:
     def __init__(self, assistant_callback=None):
         self.assistant_callback = assistant_callback
         self.root = tk.Tk()
-        self.root.title("Elivea (by: bryan)")
+        self.root.title("Elívea (by: bryan)")
         self.root.configure(bg="#0f0c02")
 
         # Configure window properties for Taskbar HUD
@@ -62,7 +62,7 @@ class EliveaTrayApp:
         # Title & Indicator
         self.lbl_title = tk.Label(
             self.header_frame,
-            text=" ◈ Elivea ",
+            text=" ◈ Elívea ",
             fg="#ffd700",
             bg="#261f05",
             font=("Consolas", 10, "bold")
@@ -128,7 +128,7 @@ class EliveaTrayApp:
             highlightthickness=0
         )
         self.txt_output.pack(fill=tk.BOTH, expand=True, padx=6, pady=4)
-        self.txt_output.insert(tk.END, "[Notice] Elivea Active (by: bryan).\nType 'sys' or query Master...\n")
+        self.txt_output.insert(tk.END, "[Notice] Elívea Active (by: bryan).\nType 'sys' or query Master...\n")
         self.txt_output.config(state=tk.DISABLED)
 
     def toggle_expand(self):
@@ -192,7 +192,7 @@ class EliveaTrayApp:
             self.root.after(0, self.root.destroy)
 
         menu = pystray.Menu(
-            pystray.MenuItem("Abrir Elivea HUD", on_restore, default=True),
+            pystray.MenuItem("Abrir Elívea HUD", on_restore, default=True),
             pystray.MenuItem("Expandir/Recolher Painel", on_toggle_expand),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Sair", on_quit)

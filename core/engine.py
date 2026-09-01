@@ -120,7 +120,7 @@ class SageEngine:
         self.on_error: Optional[Callable[[str], None]] = None
         self.on_voice: Optional[Callable[[str], None]] = None
 
-        logger.info(f"Elivea Engine v2 | User: {self.user_name}")
+        logger.info(f"Elívea Engine v2 | User: {self.user_name}")
         logger.info(f"Providers: {[p.name for p in self.llm.providers if p.available]}")
 
     def greet(self) -> str:
@@ -924,7 +924,7 @@ class SageEngine:
         except Exception:
             sys_info = ""
 
-        return f"""📊 **Status do Elivea**
+        return f"""📊 **Status do Elívea**
 
 **Providers LLM (Legacy):**
 {chr(10).join(status_lines)}

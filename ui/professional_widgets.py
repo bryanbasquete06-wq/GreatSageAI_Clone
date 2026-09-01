@@ -623,7 +623,7 @@ class RuneCoreWidget(QWidget):
         p.setFont(_font(8, bold=False))
         p.setPen(QPen(_alpha(TEXT_DIM, 140), 1))
         p.drawText(QRectF(cx - R * 0.7, cy + R * 1.12 + 16, R * 1.4, 12),
-                   Qt.AlignmentFlag.AlignCenter, "＜Elivea＞ Elivea CORE")
+                   Qt.AlignmentFlag.AlignCenter, "＜Elívea＞ Elívea CORE")
 
         # ─── ONBOARDING AWAKENING OVERLAY ───
         if self._onboarding_phase > 0:
@@ -1095,7 +1095,7 @@ class HistoryDrawer(QWidget):
             p.setFont(_font(7, bold=False))
             p.setPen(QPen(QColor(TEXT_MED), 120))
             p.drawText(QRectF(item_rect.x() + 10, iy + 22, item_rect.width() - 20, 14),
-                       Qt.AlignmentFlag.AlignLeft, f"＜Elivea＞ {resp}")
+                       Qt.AlignmentFlag.AlignLeft, f"＜Elívea＞ {resp}")
 
             # Timestamp + source
             ts = conv.get('timestamp', '')
@@ -1475,7 +1475,7 @@ class _OldChatSidebarRemoved:
                 p.setPen(QPen(QColor(GOLD), 150))
             else:
                 p.setPen(QPen(QColor("#66aaff"), 150))
-            label = "Você" if is_user else "＜Elivea＞"
+            label = "Você" if is_user else "＜Elívea＞"
             p.drawText(QRectF(bubble_x + 8, msg_y + 4, bubble_w - 16, 12),
                        Qt.AlignmentFlag.AlignLeft, label)
 
@@ -1508,7 +1508,7 @@ class _OldChatSidebarRemoved:
                 dots = "●" * ((int(time.time() * 3) % 3) + 1)
                 p.setFont(_font(8))
                 p.setPen(QPen(QColor("#66aaff"), 120))
-                p.drawText(QRectF(10, ty, W - 20, 14), Qt.AlignmentFlag.AlignLeft, f"＜Elivea＞ pensando {dots}")
+                p.drawText(QRectF(10, ty, W - 20, 14), Qt.AlignmentFlag.AlignLeft, f"＜Elívea＞ pensando {dots}")
                 drawn_h += 18
 
         # ── Streaming text ──
@@ -2478,7 +2478,7 @@ class CodeScratchpadWidget(GlassPanel):
         self._modified = False
 
         # Initial content
-        self.add_line("// Elivea Code Scratchpad", "comment")
+        self.add_line("// Elívea Code Scratchpad", "comment")
         self.add_line("// AI outputs, code snippets, and results appear here", "comment")
         self.add_line("", "text")
 
@@ -3245,7 +3245,7 @@ class StatusBar(QWidget):
         p.setPen(QPen(_alpha(GOLD, 50), 1))
         p.drawText(QRectF(W - 240, 0, 110, H),
                    Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
-                   "v2.0 — ＜Elivea＞")
+                   "v2.0 — ＜Elívea＞")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -4112,11 +4112,11 @@ class AbilityAwakeningOverlay(QWidget):
                             p.setPen(QPen(_alpha(GOLD, ga_dim), 1))
                             p.setFont(QFont("Microsoft YaHei UI", 48, QFont.Weight.Bold))
                             p.drawText(QRectF(offset_x, cy - 60 + offset_y, W, 100),
-                                       Qt.AlignmentFlag.AlignCenter, "＜Elivea＞")
+                                       Qt.AlignmentFlag.AlignCenter, "＜Elívea＞")
             # Main text
             p.setPen(QPen(_alpha(GOLD_BRIGHT, ga), 1))
             p.setFont(QFont("Microsoft YaHei UI", 48, QFont.Weight.Bold))
-            p.drawText(QRectF(0, cy - 60, W, 100), Qt.AlignmentFlag.AlignCenter, "＜Elivea＞")
+            p.drawText(QRectF(0, cy - 60, W, 100), Qt.AlignmentFlag.AlignCenter, "＜Elívea＞")
             # Subtitle
             p.setFont(QFont("Consolas", 11, QFont.Weight.Bold))
             p.setPen(QPen(_alpha(GOLD, int(ga * 0.8)), 1))

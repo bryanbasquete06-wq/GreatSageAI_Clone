@@ -310,9 +310,9 @@ def create_shortcuts():
     print(c("green", f"  ✓ {ai_bat.name}"))
     
     # Installer shortcut (for re-running setup)
-    inst_bat = desktop / "Configurar Elivea.bat"
+    inst_bat = desktop / "Configurar Elívea.bat"
     inst_bat.write_text(
-        f'@echo off\r\ntitle Configurar Elivea\r\ncd /d "{INSTALL_DIR}"\r\n'
+        f'@echo off\r\ntitle Configurar Elívea\r\ncd /d "{INSTALL_DIR}"\r\n'
         f'"{python_exe}" installer.py\r\nif errorlevel 1 pause\r\n',
         encoding="ascii", errors="replace"
     )

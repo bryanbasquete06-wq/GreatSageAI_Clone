@@ -112,7 +112,7 @@ def _get_dashboard_html() -> str:
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elivea - Dashboard</title>
+<title>Elívea - Dashboard</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',sans-serif;background:#0a0a0f;color:#e0e0e0;min-height:100vh}
@@ -138,7 +138,7 @@ body{font-family:'Segoe UI',sans-serif;background:#0a0a0f;color:#e0e0e0;min-heig
 </head>
 <body>
 <div class="header">
-<h1>&#10024; Elivea - Dashboard</h1>
+<h1>&#10024; Elívea - Dashboard</h1>
 <p>Painel de monitoramento em tempo real</p>
 </div>
 <div class="container">

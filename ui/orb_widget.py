@@ -1,5 +1,5 @@
 """
-Elívea — Elivea Orb (＜Elivea＞ Flutuante)
+Elívea — Elivea Orb (＜Elívea＞ Flutuante)
 ===================================================
 Esfera de luz flutuante estilo o anime Tensura: quando o Rimuru anda
 pelo mundo, o Elívea o acompanha como um orbe brilhante. Aqui, sempre
@@ -65,7 +65,7 @@ class EliveaOrb(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
         self.setFixedSize(ORBSIZE, ORBSIZE)
-        self.setToolTip("＜Elivea＞ Elívea — clique para abrir, botão direito para o menu")
+        self.setToolTip("＜Elívea＞ Elívea — clique para abrir, botão direito para o menu")
 
         self.state = "idle"
         self._t = 0.0
@@ -378,7 +378,7 @@ class EliveaOrb(QWidget):
         """)
 
         states = {"idle": "Em espera", "listening": "Escutando", "thinking": "Processando", "speaking": "Falando"}
-        title = QAction(f"＜Elivea＞ {states.get(self.state, '—')}", m)
+        title = QAction(f"＜Elívea＞ {states.get(self.state, '—')}", m)
         title.setEnabled(False)
         m.addAction(title)
         m.addSeparator()
@@ -396,7 +396,7 @@ class EliveaOrb(QWidget):
         m.addAction(a_mode)
 
         m.addSeparator()
-        a_exit = QAction("Encerrar Elivea", m)
+        a_exit = QAction("Encerrar Elívea", m)
         a_exit.triggered.connect(self._exit_app)
         m.addAction(a_exit)
 

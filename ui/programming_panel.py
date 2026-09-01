@@ -1393,7 +1393,7 @@ class ProgrammingPanel(QWidget):
 
         self._editor = CodeEditorWidget()
         self._editor.setPlainText(
-            "# Elivea Code Editor\n"
+            "# Elívea Code Editor\n"
             "# Descreva o que quer criar no prompt acima e clique Generate\n"
             "# Ou escreva codigo diretamente aqui\n\n"
             "def hello():\n"
@@ -1440,7 +1440,7 @@ class ProgrammingPanel(QWidget):
         output_layout.addWidget(out_header)
 
         self._output = OutputPanel()
-        self._output.setPlainText("Elivea Programming Panel v3.0\nAguardando comandos...\n")
+        self._output.setPlainText("Elívea Programming Panel v3.0\nAguardando comandos...\n")
         output_layout.addWidget(self._output)
 
         center_splitter.addWidget(output_frame)

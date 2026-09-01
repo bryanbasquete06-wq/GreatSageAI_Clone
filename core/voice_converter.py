@@ -432,5 +432,5 @@ def convert_voice(input_wav: str, output_wav: str) -> bool:
 
 
 if __name__ == "__main__":
-    print("Elivea Voice Styler v10")
+    print("Elívea Voice Styler v10")
     print(f"Profile: {PROFILE_JSON}")

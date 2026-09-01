@@ -42,7 +42,7 @@ from modules.web import WebModule
 class EliveaGUI:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("Elivea - (by: bryan)")
+        self.root.title("Elívea - (by: bryan)")
         self.root.geometry("620x520")
         self.root.configure(bg="#0c0a02")
 

@@ -44,7 +44,7 @@ class SetupWizard(QWidget):
     ]
 
     VOICE_OPTIONS = [
-        ("Elivea (Padrão)", "raphael"),
+        ("Elívea (Padrão)", "raphael"),
         ("Jarvis", "jarvis"),
     ]
 

@@ -168,7 +168,7 @@ class MagicCircle(QWidget):
         p.setFont(font_cjk(int(r * 0.18)))
         p.setPen(qcol(GOLD, 200))
         p.drawText(cx - r, cy + r * 0.3, r * 2, r * 0.3,
-                   Qt.AlignmentFlag.AlignCenter, "＜Elivea＞")
+                   Qt.AlignmentFlag.AlignCenter, "＜Elívea＞")
 
         p.end()
 
@@ -355,7 +355,7 @@ class InstallerWindow(QMainWindow):
         title.setStyleSheet(f"color: {GOLD}; background: transparent;")
         title_col.addWidget(title)
 
-        sub = QLabel("＜Elivea＞ — Setup Wizard")
+        sub = QLabel("＜Elívea＞ — Setup Wizard")
         sub.setFont(font_mono(9, bold=False))
         sub.setStyleSheet(f"color: {TEXT_DIM}; background: transparent;")
         title_col.addWidget(sub)
@@ -573,7 +573,7 @@ class InstallerWindow(QMainWindow):
         wake_label.setStyleSheet(f"color: {TEXT_MED}; background: transparent;")
         p3.add_widget(wake_label)
 
-        self.wake_input = QLineEdit("Ok Elivea")
+        self.wake_input = QLineEdit("Ok Elívea")
         self.wake_input.setFont(font_mono(8, bold=False))
         self.wake_input.setStyleSheet(f"""
             QLineEdit {{ background: {PANEL2}; color: {TEXT}; border: 1px solid {BORDER};
@@ -892,9 +892,9 @@ class InstallerWindow(QMainWindow):
             created.append(str(ai_bat))
 
             # Installer shortcut
-            inst_bat = desktop / "Instalador Elivea.bat"
+            inst_bat = desktop / "Instalador Elívea.bat"
             inst_bat.write_text(
-                f'@echo off\r\ntitle Instalador Elivea\r\ncd /d "{self._project_dir}"\r\n'
+                f'@echo off\r\ntitle Instalador Elívea\r\ncd /d "{self._project_dir}"\r\n'
                 f'"{python_exe}" installer.py\r\nif errorlevel 1 pause\r\n',
                 encoding="ascii", errors="replace"
             )
@@ -903,7 +903,7 @@ class InstallerWindow(QMainWindow):
             self.shortcut_info.setText(
                 f"✓ Atalhos criados na Área de Trabalho:\n"
                 f"  • Elívea AI.bat\n"
-                f"  • Instalador Elivea.bat"
+                f"  • Instalador Elívea.bat"
             )
             self._log(f"✓ Atalhos criados: {len(created)}", GREEN)
             self.steps.set_step(4, "done")
@@ -979,7 +979,7 @@ class InstallerWindow(QMainWindow):
                     self.test_info.setText(
                         "🎉 Instalação concluída!\n\n"
                         "O Elívea foi iniciado.\n"
-                        "Use 'Ok Elivea' para ativar por voz.\n"
+                        "Use 'Ok Elívea' para ativar por voz.\n"
                         "Ou digite diretamente na caixa de texto."
                     )
                 else:
@@ -1013,7 +1013,7 @@ class InstallerWindow(QMainWindow):
 
 def main():
     app = QApplication(sys.argv)
-    app.setApplicationName("Instalador Elivea")
+    app.setApplicationName("Instalador Elívea")
     app.setStyleSheet(f"background: {BG}; color: {TEXT};")
 
     icon_path = Path(__file__).resolve().parent.parent / "elvea.ico"

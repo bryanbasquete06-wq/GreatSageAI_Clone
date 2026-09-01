@@ -184,7 +184,7 @@ class ChatBubbleWidget(QWidget):
             label = "Você"
         else:
             p.setPen(QPen(QColor("#77bbff"), int(160 * self._opacity)))
-            label = "＜Elivea＞"
+            label = "＜Elívea＞"
         p.drawText(QRectF(label_x, by + 4, bubble_w - 16, 12), Qt.AlignmentFlag.AlignLeft, label)
 
         # ── Message text ──
@@ -240,7 +240,7 @@ class TypingIndicator(QWidget):
         # Avatar + Label
         p.setFont(_font(7))
         p.setPen(QPen(QColor("#77bbff"), 140))
-        p.drawText(QRectF(16, 5, 120, 12), Qt.AlignmentFlag.AlignLeft, "＜Elivea＞")
+        p.drawText(QRectF(16, 5, 120, 12), Qt.AlignmentFlag.AlignLeft, "＜Elívea＞")
 
         # Animated dots with pulse waves
         dot_y = 19
