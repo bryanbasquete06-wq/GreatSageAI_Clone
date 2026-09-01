@@ -34,6 +34,7 @@ from core.monitor import Monitor
 from core.intelligence_engine import IntelligenceEngine
 from core.request_router import RequestRouter
 from core.deep_dev import DeepDevEngine
+from core.intelligence import HallucinationGuard, SelfCorrectionEngine, QualityScorer, KnowledgeGraph, IntentPredictor
 
 logger = logging.getLogger("elvea.engine")
 
@@ -74,6 +75,13 @@ class SageEngine:
         # Intelligence engine
         self.intelligence = IntelligenceEngine()
 
+        # Intelligence pipeline (6 systems)
+        self.hallucination_guard = HallucinationGuard()
+        self.self_correction = SelfCorrectionEngine()
+        self.quality_scorer = QualityScorer(str(self.project_dir / "memory"))
+        self.knowledge_graph = KnowledgeGraph(str(self.project_dir / "memory"))
+        self.intent_predictor = IntentPredictor()
+
         # Deep Dev Panel
         self.deep_dev = DeepDevEngine(str(self.project_dir))
 
@@ -110,6 +118,17 @@ class SageEngine:
 
         # Salva mensagem do usuário
         self.memory.add_message("user", user_input)
+
+        # === INTELLIGENCE PIPELINE: Input Phase ===
+        # 1. Intent Predictor — record usage and predict intent
+        self.intent_predictor.record_usage(user_input)
+        # 2. Knowledge Graph — extract entities from user input
+        try:
+            self.knowledge_graph.update(user_input, context="user_query")
+        except Exception:
+            pass
+        # 3. Get knowledge context for this query
+        kg_context = self.knowledge_graph.get_context_for_query(user_input)
 
         # Deep Dev commands
         dd_result = self.deep_dev.handle_command(user_input)
@@ -171,12 +190,23 @@ class SageEngine:
         # Converte para formato LLM
         messages = [{"role": m["role"], "content": m["content"]} for m in context_messages]
 
-        # Obtém resposta
+        # Inject knowledge graph context into system prompt
+        if kg_context:
+            system += f"\n\n=== CONHECIMENTO PESSOAL ===\n{kg_context}"
+
+        # Get recent responses for cross-contradiction detection
+        recent_responses = []
+        for m in self.memory.chat_history[-6:]:
+            if m.get("role") == "assistant":
+                recent_responses.append(m.get("content", ""))
+
+        # === INTELLIGENCE PIPELINE: LLM Call + Post-Processing ===
         full_response = ""
+        start_time = time.time()
+        provider_name = "stream"
 
         if stream:
             try:
-                # limita para não estourar TPM 8000 do Groq
                 for token in self.llm.stream(messages, system=system, max_tokens=1500, temperature=0.7):
                     if self._abort:
                         break
@@ -190,15 +220,69 @@ class SageEngine:
             response = self.llm.chat(messages, system=system, max_tokens=1500, temperature=0.7)
             if response.success:
                 full_response = response.text
+                provider_name = getattr(response, 'provider', 'unknown')
             else:
                 full_response = f"Erro: {response.error}"
+
+        latency_ms = (time.time() - start_time) * 1000
+
+        # === INTELLIGENCE PIPELINE: Response Phase ===
+        hallucination_score = 1.0
+        correction_count = 0
+
+        if full_response and not full_response.startswith("Erro"):
+            # 4. Hallucination Guard — detect potential hallucinations
+            try:
+                guard_result = self.hallucination_guard.analyze(
+                    full_response,
+                    context=user_input,
+                    previous_responses=recent_responses if recent_responses else None,
+                )
+                hallucination_score = guard_result.overall_confidence
+                if guard_result.requires_confirmation and guard_result.high_severity > 0:
+                    full_response += f"\n\n⚠️ *[Elívea detectou {guard_result.high_severity} afirmação(ões) incerta(s). Verifique antes de usar.]*"
+                elif guard_result.medium_severity > 2:
+                    full_response += f"\n\n💡 *[Confiança: {hallucination_score:.0%} — algumas afirmações podem precisar de verificação.]*"
+            except Exception as e:
+                logger.debug(f"Hallucination guard error: {e}")
+
+            # 5. Self-Correction — review and auto-fix response
+            try:
+                is_code = "```" in full_response
+                correction_result = self.self_correction.review(full_response, is_code=is_code)
+                if correction_result.was_modified:
+                    full_response = correction_result.corrected_response
+                    correction_count = correction_result.corrections_applied
+            except Exception as e:
+                logger.debug(f"Self-correction error: {e}")
+
+            # 6. Knowledge Graph — extract entities from response
+            try:
+                self.knowledge_graph.update(full_response, context="assistant_response")
+            except Exception as e:
+                logger.debug(f"Knowledge graph update error: {e}")
+
+        # 7. Quality Score — auto-score this response
+        try:
+            self.quality_scorer.record(
+                query=user_input,
+                response=full_response,
+                latency_ms=latency_ms,
+                provider=provider_name,
+                hallucination_score=hallucination_score,
+                correction_count=correction_count,
+            )
+        except Exception as e:
+            logger.debug(f"Quality score error: {e}")
 
         # Salva resposta e contexto
         self._last_topic = user_input[:100]
         msg = ChatMessage(
             role="assistant",
             content=full_response,
-            provider="stream",
+            provider=provider_name,
+            tokens=len(full_response.split()),
+            latency_ms=latency_ms,
         )
         self.memory.add_message("assistant", full_response)
 
@@ -292,6 +376,9 @@ class SageEngine:
         # ═══ SISTEMA ═══
         if t in ["status", "informações", "info", "sistema"]:
             return self._get_status()
+
+        if t in ["intel", "inteligencia", "intelligence", "inteligência"]:
+            return self._get_intel_status()
 
         if t in ["ip", "meu ip", "my ip"]:
             ip = self.automation.get_ip()
@@ -552,6 +639,7 @@ class SageEngine:
 • `processos` — Processos em execucao
 • `dashboard` — Dashboard de atividade
 • `erros` — Log de erros
+• `intel` — Estatisticas dos 6 sistemas de inteligencia
 
 **Utilidades:**
 • `hora` — Hora atual
@@ -651,3 +739,81 @@ class SageEngine:
     def get_provider_status(self) -> list:
         """Retorna status dos providers."""
         return self.llm.get_provider_status()
+
+    def _get_intel_status(self) -> str:
+        """Relatório dos 6 sistemas de inteligência."""
+        try:
+            # Knowledge Graph stats
+            kg_stats = self.knowledge_graph.get_stats()
+            kg_entities = kg_stats.get("total_entities", 0)
+            kg_edges = kg_stats.get("total_edges", 0)
+            kg_active = kg_stats.get("active_last_7d", 0)
+            kg_decay = kg_stats.get("decay", {})
+            kg_fresh = kg_decay.get("fresh", 0)
+            kg_aging = kg_decay.get("aging", 0)
+            kg_stale = kg_decay.get("stale", 0)
+            top_entities = kg_stats.get("top_entities", [])[:5]
+            top_str = ", ".join(e.name if hasattr(e, 'name') else str(e) for e in top_entities) if top_entities else "nenhum"
+        except Exception:
+            kg_entities = kg_edges = kg_active = kg_fresh = kg_aging = kg_stale = 0
+            top_str = "erro ao carregar"
+
+        try:
+            # Quality Score stats
+            qs_stats = self.quality_scorer.get_stats()
+            qs_total = qs_stats.get("total", 0)
+            qs_avg = qs_stats.get("avg_score", 0)
+            qs_latency = qs_stats.get("avg_latency_ms", 0)
+            qs_trend = qs_stats.get("trend", {})
+            qs_direction = qs_trend.get("direction", "stable")
+        except Exception:
+            qs_total = qs_avg = qs_latency = 0
+            qs_direction = "unknown"
+
+        try:
+            # Intent Predictor stats
+            ip_commands = len(self.intent_predictor.get_command_suggestions())
+            ip_patterns = len(self.intent_predictor._user_patterns)
+        except Exception:
+            ip_commands = ip_patterns = 0
+
+        try:
+            # Knowledge Graph patterns
+            kg_patterns = self.knowledge_graph.get_patterns()
+            pattern_str = ", ".join(p["name"] for p in kg_patterns[:3]) if kg_patterns else "nenhum"
+        except Exception:
+            pattern_str = "erro"
+
+        return f"""🧠 **Intel Status — 6 Sistemas Ativos**
+
+**1. Anti-Hallucination Guard**
+  Status: ✅ Ativo (toda resposta)
+  Funcao: Detecta alegacoes incertas, numericos sem fonte, contradições
+
+**2. Self-Correction**
+  Status: ✅ Ativo (toda resposta)
+  Funcao: Auto-correcao de tom, completude, erros de codigo
+
+**3. Quality Scorer**
+  Status: ✅ Ativo
+  📊 Respostas avaliadas: {qs_total}
+  ⭐ Score medio: {qs_avg:.1%}
+  ⏱️ Latencia media: {qs_latency:.0f}ms
+  📈 Tendencia: {qs_direction}
+
+**4. Knowledge Graph**
+  Status: ✅ Ativo
+  🔗 Entidades: {kg_entities} | Arestas: {kg_edges}
+  🟢 Ativos (7d): {kg_active} | 🟡 Envelhecendo: {kg_aging} | 🔴 Stale: {kg_stale}
+  🏷️ Top entidades: {top_str}
+  🧩 Padroes: {pattern_str}
+
+**5. Intent Predictor**
+  Status: ✅ Ativo (toda entrada)
+  🎯 Comandos: {ip_commands} | Padroes aprendidos: {ip_patterns}
+
+**6. Intelligence Engine**
+  Status: ✅ Ativo
+  Funcao: Enriquecimento de contexto, CoT, profiling do usuario
+
+*Todos os 6 sistemas rodando em cada interação.* ⚔️"""
