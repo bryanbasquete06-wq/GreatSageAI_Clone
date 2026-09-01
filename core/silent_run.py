@@ -63,10 +63,18 @@ def patch_os_system():
             kwargs.setdefault('creationflags', subprocess.CREATE_NO_WINDOW)
         return _original_run(*args, **kwargs)
 
-    def _silent_popen(*args, **kwargs):
-        if sys.platform == 'win32':
-            kwargs.setdefault('creationflags', subprocess.CREATE_NO_WINDOW)
-        return _original_popen(*args, **kwargs)
+    # Must be a CLASS (not function) so asyncio can subclass it:
+    #   class Popen(subprocess.Popen): ...
+    class _SilentPopen(_original_popen):
+        """Subclass of Popen that defaults to CREATE_NO_WINDOW on Windows."""
+        def __new__(cls, *args, **kwargs):
+            if sys.platform == 'win32':
+                kwargs.setdefault('creationflags', subprocess.CREATE_NO_WINDOW)
+            return _original_popen(*args, **kwargs)
+
+        def __init__(self, *args, **kwargs):
+            # __new__ already created the real Popen; nothing to init
+            pass
 
     subprocess.run = _silent_run
-    subprocess.Popen = _silent_popen
+    subprocess.Popen = _SilentPopen
