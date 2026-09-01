@@ -502,6 +502,12 @@ class MultiProviderRouter:
         self._budget_file = self.data_dir / "provider_budgets.json"
         self._init_budgets()
         self._load_saved_budgets()
+
+        # Health Monitor — circuit breaker + auto-removal
+        from core.provider_health_monitor import get_health_monitor
+        self.health_monitor = get_health_monitor()
+        self.health_monitor.register_providers([p.name for p in self.providers])
+
         logger.info(f"MultiProviderRouter inicializado com {len(self.providers)} providers")
 
     def _init_budgets(self):
@@ -580,6 +586,10 @@ class MultiProviderRouter:
 
         # Check error rate (if >50%, skip)
         if budget and budget.error_rate() > 0.5 and budget.total_requests > 5:
+            return False
+
+        # Health Monitor — circuit breaker check
+        if not self.health_monitor.is_available(provider.name):
             return False
 
         return True
@@ -785,6 +795,14 @@ class MultiProviderRouter:
                 except Exception:
                     pass  # Don't let tracker errors affect the request
 
+                # Health Monitor — record success
+                try:
+                    self.health_monitor.record_success(
+                        provider.name, latency_ms=latency, tokens=tokens_est
+                    )
+                except Exception:
+                    pass
+
                 metadata["attempted"].append({
                     "provider": provider.name,
                     "success": True,
@@ -812,6 +830,13 @@ class MultiProviderRouter:
                     "error": last_error[:100],
                 })
                 logger.warning(f"Router: {provider.name} falhou: {last_error[:80]}")
+
+                # Health Monitor — record error
+                try:
+                    self.health_monitor.record_error(provider.name, last_error[:200])
+                except Exception:
+                    pass
+
                 continue
 
         # All providers failed

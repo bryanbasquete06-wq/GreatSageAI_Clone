@@ -609,6 +609,24 @@ class SageEngine:
             except Exception as e:
                 return f"Erro ao obter economia: {e}"
 
+        # ═══ HEALTH MONITOR ═══
+        if t in ["health", "saude", "saúde", "provider health", "circuito"]:
+            try:
+                from core.provider_health_monitor import get_health_monitor
+                monitor = get_health_monitor()
+                return monitor.format_health_text()
+            except Exception as e:
+                return f"Erro ao obter saúde dos providers: {e}"
+
+        if t in ["health recover", "recover providers", "recuperar providers"]:
+            try:
+                from core.provider_health_monitor import get_health_monitor
+                monitor = get_health_monitor()
+                monitor.force_recover_all()
+                return "🔄 Todos os providers foram forçados a voltar ao rotation."
+            except Exception as e:
+                return f"Erro ao recuperar providers: {e}"
+
         # ═══ MULTI-MODAL ═══
         if t.startswith("analise imagem ") or t.startswith("analyze image "):
             path = t.replace("analise imagem ", "").replace("analyze image ", "")
@@ -788,6 +806,10 @@ class SageEngine:
 **Uso & Economia:**
 • `usage` — Uso de tokens dos últimos 7 dias
 • `savings` — Relatório de economia vs APIs pagas
+
+**Saúde dos Providers:**
+• `health` — Monitor de saúde + circuit breaker
+• `health recover` — Forçar todos os providers de volta
 
 **Imagens:**
 • `analise imagem [caminho]` — Analisar imagem

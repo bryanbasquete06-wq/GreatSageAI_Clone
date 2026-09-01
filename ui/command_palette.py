@@ -102,6 +102,8 @@ def get_all_commands() -> List[PaletteCommand]:
         PaletteCommand("savings", "Cost Savings", "Weekly savings vs paid APIs", "System", icon="💰"),
         PaletteCommand("router", "Provider Status", "Show all free API providers", "System", icon="🔄"),
         PaletteCommand("capacity", "Combined Capacity", "Total RPM/RPD/TPD", "System", icon="⚡"),
+        PaletteCommand("health", "Provider Health", "Health monitor + circuit breaker", "System", icon="🏥"),
+        PaletteCommand("health recover", "Recover Providers", "Force all providers back online", "System", icon="🔄"),
 
         # Memory
         PaletteCommand("o que voce lembra", "View Memories", "Show stored memories", "Memory", icon="🔮"),
