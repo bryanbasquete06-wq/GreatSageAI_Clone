@@ -64,7 +64,33 @@ class PersistentMemory:
         self._init_db()
 
     def _init_db(self):
+        # Handle corrupted database — backup and recreate
+        db_existed = self.db_path.exists()
+        needs_recreate = False
+        if db_existed:
+            try:
+                conn = sqlite3.connect(str(self.db_path))
+                conn.execute("SELECT COUNT(*) FROM memories")
+                conn.close()
+            except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
+                logger.warning(f"[Memory] Database corrupted: {e} — recovering...")
+                needs_recreate = True
+                # Backup corrupted DB
+                backup = self.db_path.with_suffix(f".corrupted.{int(datetime.now().timestamp())}.db")
+                try:
+                    self.db_path.rename(backup)
+                    logger.info(f"[Memory] Corrupted DB backed up to: {backup.name}")
+                except Exception:
+                    try:
+                        import shutil
+                        shutil.copy2(str(self.db_path), str(backup))
+                        self.db_path.unlink()
+                    except Exception:
+                        pass  # worst case: SQLite will overwrite below
+
         with sqlite3.connect(str(self.db_path)) as conn:
+            # Enable WAL mode for better crash resilience
+            conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("""CREATE TABLE IF NOT EXISTS memories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 category TEXT NOT NULL,
@@ -90,6 +116,8 @@ class PersistentMemory:
             conn.execute("CREATE INDEX IF NOT EXISTS idx_fingerprint ON memories(fingerprint)")
             conn.execute("CREATE INDEX IF NOT EXISTS idx_created ON memories(created_at)")
             conn.commit()
+            if needs_recreate:
+                logger.info("[Memory] Fresh database created after recovery")
 
     @staticmethod
     def _fingerprint(content: str) -> str:
