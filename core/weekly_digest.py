@@ -244,9 +244,9 @@ class WeeklyDigestEngine:
         corrections = [e.get("correction_count", 0) for e in recent]
         providers = Counter(e.get("provider", "unknown") for e in recent)
 
-        avg_score = sum(scores) / len(scores)
-        avg_latency = sum(latencies) / len(latencies)
-        avg_halluc = sum(halluc_scores) / len(halluc_scores)
+        avg_score = sum(scores) / len(scores) if scores else 0
+        avg_latency = sum(latencies) / len(latencies) if latencies else 0
+        avg_halluc = sum(halluc_scores) / len(halluc_scores) if halluc_scores else 0
         total_corrections = sum(corrections)
 
         content_lines = [
@@ -434,7 +434,7 @@ class WeeklyDigestEngine:
         hall_scores = [e.get("hallucination_score", 1.0) for e in recent]
         corrections = [e.get("correction_count", 0) for e in recent]
 
-        avg_halluc = sum(hall_scores) / len(hall_scores)
+        avg_halluc = sum(hall_scores) / len(hall_scores) if hall_scores else 0
         total_corrections = sum(corrections)
         high_risk = sum(1 for s in hall_scores if s < 0.7)
         clean = sum(1 for s in hall_scores if s >= 0.9)

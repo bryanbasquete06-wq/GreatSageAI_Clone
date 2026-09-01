@@ -246,8 +246,8 @@ class QualityScorer:
 
         anomalies = []
         scores = [e.auto_score for e in self._history[-20:]]
-        mean = sum(scores) / len(scores)
-        std = (sum((s - mean) ** 2 for s in scores) / len(scores)) ** 0.5
+        mean = sum(scores) / len(scores) if scores else 0
+        std = (sum((s - mean) ** 2 for s in scores) / len(scores)) ** 0.5 if scores else 0
 
         for i, entry in enumerate(self._history[-20:]):
             if abs(entry.auto_score - mean) > 2 * std:
@@ -300,7 +300,7 @@ class QualityScorer:
         recent = [e.auto_score for e in self._history[-10:]]
         previous = [e.auto_score for e in self._history[-20:-10]]
 
-        recent_avg = sum(recent) / len(recent)
+        recent_avg = sum(recent) / len(recent) if recent else 0
         previous_avg = sum(previous) / len(previous) if previous else recent_avg
 
         change = recent_avg - previous_avg

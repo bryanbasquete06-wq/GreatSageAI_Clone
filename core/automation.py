@@ -40,6 +40,8 @@ class DesktopAutomation:
 
     def click(self, x: int = None, y: int = None):
         """Clica em uma posição (ou posição atual)."""
+        if not self.available:
+            return
         if x is not None and y is not None:
             self._pyautogui.click(x, y)
         else:
@@ -47,10 +49,14 @@ class DesktopAutomation:
 
     def move_mouse(self, x: int, y: int, duration: float = 0.3):
         """Move o mouse suavemente."""
+        if not self.available:
+            return
         self._pyautogui.moveTo(x, y, duration=duration)
 
     def drag(self, x1: int, y1: int, x2: int, y2: int, duration: float = 0.5):
         """Arrasta de um ponto para outro."""
+        if not self.available:
+            return
         self._pyautogui.moveTo(x1, y1)
         self._pyautogui.drag(x2 - x1, y2 - y1, duration=duration)
 
@@ -58,14 +64,20 @@ class DesktopAutomation:
 
     def type_text(self, text: str, interval: float = 0.02):
         """Digita texto."""
+        if not self.available:
+            return
         self._pyautogui.typewrite(text, interval=interval)
 
     def press_key(self, *keys):
         """Pressiona tecla(s). Ex: press_key('ctrl', 'c')"""
+        if not self.available:
+            return
         self._pyautogui.hotkey(*keys)
 
     def press_once(self, key: str):
         """Pressiona uma tecla uma vez."""
+        if not self.available:
+            return
         self._pyautogui.press(key)
 
     # ─── Apps ─────────────────────────────────────────────────────

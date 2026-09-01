@@ -312,11 +312,14 @@ def auto_fix_issue(issue: DiagnosticIssue, dry_run: bool = True) -> tuple[bool, 
                     return False, "Fix would introduce syntax error"
 
                 if not dry_run:
-                    # Backup
-                    backup = fp.with_suffix(".py.bak")
-                    backup.write_text(src, encoding="utf-8")
-                    fp.write_text(new_src, encoding="utf-8")
-                    return True, f"Fixed bare except at line {issue.line}"
+                    try:
+                        # Backup
+                        backup = fp.with_suffix(".py.bak")
+                        backup.write_text(src, encoding="utf-8")
+                        fp.write_text(new_src, encoding="utf-8")
+                        return True, f"Fixed bare except at line {issue.line}"
+                    except OSError as e:
+                        return False, f"Could not write file: {e}"
                 else:
                     return True, f"[DRY RUN] Would fix bare except at line {issue.line}"
 

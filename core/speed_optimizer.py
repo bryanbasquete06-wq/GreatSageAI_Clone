@@ -359,7 +359,7 @@ class SpeedTracker:
             entries = [e for e in self._entries if e["stage"] == stage][-last_n:]
         if not entries:
             return 0.0
-        return sum(e["ms"] for e in entries) / len(entries)
+        return sum(e["ms"] for e in entries) / len(entries) if entries else 0
 
     def report(self) -> str:
         """Human-readable timing report."""
@@ -374,7 +374,7 @@ class SpeedTracker:
         lines = ["⚡ Speed Report:"]
         for stage, times in sorted(stages.items()):
             recent = times[-20:]
-            avg = sum(recent) / len(recent)
+            avg = sum(recent) / len(recent) if recent else 0
             mn = min(recent)
             mx = max(recent)
             lines.append(f"  {stage:25s} avg={avg:6.0f}ms  min={mn:6.0f}ms  max={mx:6.0f}ms  (n={len(times)})")

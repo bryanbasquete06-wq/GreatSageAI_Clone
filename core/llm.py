@@ -496,7 +496,10 @@ class LLMProvider:
         resp = self._client.post("http://localhost:11434/api/chat", json=payload, stream=True, timeout=120)
         for line in resp.iter_lines():
             if line:
-                data = json.loads(line)
+                try:
+                    data = json.loads(line)
+                except (json.JSONDecodeError, ValueError):
+                    continue
                 content = data.get("message", {}).get("content", "")
                 if content:
                     yield content
@@ -744,7 +747,7 @@ class LLMEngine:
                                     c_words = set(content.lower().split())
                                     overlap = len(q_words & c_words)
                                     if overlap > 0:
-                                        scored.append((content, overlap / len(q_words)))
+                                        scored.append((content, overlap / len(q_words) if q_words else 0))
                                 scored.sort(key=lambda x: x[1], reverse=True)
                                 if scored:
                                     rag_context = "\n\n".join([f"[Keyword {s:.2f}] {c[:600]}" for c, s in scored[:3]])

@@ -165,72 +165,170 @@ class SignalBridge(QObject):
 
 class EliveaApp:
     def __init__(self):
-        # --- engines
-        self.persona = PersonaManager()
-        self.llm = EliveaLLM()
-        self.nine_router = NineRouterBridge(llm_engine=self.llm)  # Tokens infinitos via rotação
-        self.bridge = MarkLBridge()
-        self.speech = SpeechEngine(voice_key="raphael")
-        self.pipeline = VoicePipeline()
-        self.autonomous = AutonomousEngine()
-        self.autonomous.start_autonomous_loop()
+        import logging as _log
+        _startup_log = _log.getLogger("elvea.startup")
+        self._init_errors = []  # Track non-fatal init errors
+
+        # --- engines (critical path — individual protection) ---
+        try:
+            self.persona = PersonaManager()
+        except Exception as e:
+            _startup_log.warning(f"PersonaManager init failed: {e}")
+            self.persona = None
+            self._init_errors.append("PersonaManager")
+
+        try:
+            self.llm = EliveaLLM()
+        except Exception as e:
+            _startup_log.error(f"EliveaLLM init failed: {e}")
+            raise  # LLM is critical — cannot start without it
+
+        try:
+            self.nine_router = NineRouterBridge(llm_engine=self.llm)
+        except Exception as e:
+            _startup_log.warning(f"NineRouterBridge init failed: {e}")
+            self.nine_router = None
+            self._init_errors.append("NineRouterBridge")
+
+        try:
+            self.bridge = MarkLBridge()
+        except Exception as e:
+            _startup_log.warning(f"MarkLBridge init failed: {e}")
+            self.bridge = None
+            self._init_errors.append("MarkLBridge")
+
+        try:
+            self.speech = SpeechEngine(voice_key="raphael")
+        except Exception as e:
+            _startup_log.warning(f"SpeechEngine init failed: {e}")
+            self.speech = None
+            self._init_errors.append("SpeechEngine")
+
+        try:
+            self.pipeline = VoicePipeline()
+        except Exception as e:
+            _startup_log.warning(f"VoicePipeline init failed: {e}")
+            self.pipeline = None
+            self._init_errors.append("VoicePipeline")
+
+        try:
+            self.autonomous = AutonomousEngine()
+            self.autonomous.start_autonomous_loop()
+        except Exception as e:
+            _startup_log.warning(f"AutonomousEngine init failed: {e}")
+            self.autonomous = None
+            self._init_errors.append("AutonomousEngine")
 
         # --- UI signal bridge
         self.signals = SignalBridge()
         self._first_interaction = True
 
-        # --- wire voice pipeline
-        self.pipeline.set_speech_engine(self.speech)
-        self.pipeline.on_transcript = self._on_voice_transcript
-        self.pipeline.on_wake = self._on_wake_word
-        self.pipeline.on_state_changed = self._on_pipeline_state
-        self.pipeline.rms_callback = self._on_mic_rms
-        self.pipeline.start()
+        # --- wire voice pipeline (only if both components are available)
+        if self.pipeline and self.speech:
+            try:
+                self.pipeline.set_speech_engine(self.speech)
+                self.pipeline.on_transcript = self._on_voice_transcript
+                self.pipeline.on_wake = self._on_wake_word
+                self.pipeline.on_state_changed = self._on_pipeline_state
+                self.pipeline.rms_callback = self._on_mic_rms
+                self.pipeline.start()
+            except Exception as e:
+                _startup_log.warning(f"Voice pipeline wiring failed: {e}")
 
-        # --- wire speech playback states → UI
-        self.speech.on_playback_start = lambda: self.signals.sig_state.emit("speaking")
-        self.speech.on_playback_end = lambda: self.signals.sig_state.emit(
-            "listening" if self.pipeline.mode == "always_on" else "idle")
-        self.speech.on_error = lambda msg: self.signals.sig_sage_full.emit(
-            f"⚠️ {msg}")
+            # --- wire speech playback states → UI
+            try:
+                self.speech.on_playback_start = lambda: self.signals.sig_state.emit("speaking")
+                self.speech.on_playback_end = lambda: self.signals.sig_state.emit(
+                    "listening" if self.pipeline.mode == "always_on" else "idle")
+                self.speech.on_error = lambda msg: self.signals.sig_sage_full.emit(
+                    f"⚠️ {msg}")
+            except Exception as e:
+                _startup_log.warning(f"Speech UI wiring failed: {e}")
 
         # --- initialize new modules
-        TaskScheduler.start()
-        PluginManager.load_all_enabled()
-        LearningEngine.record_preference("session_start", __import__("datetime").datetime.now().isoformat())
+        try:
+            TaskScheduler.start()
+        except Exception as e:
+            _startup_log.warning(f"TaskScheduler start failed: {e}")
+
+        try:
+            PluginManager.load_all_enabled()
+        except Exception as e:
+            _startup_log.warning(f"PluginManager load failed: {e}")
+
+        try:
+            LearningEngine.record_preference("session_start", __import__("datetime").datetime.now().isoformat())
+        except Exception as e:
+            _startup_log.debug(f"LearningEngine record failed: {e}")
 
         # --- Mark-L tools
-        self.mark_l_tools = self.bridge.actions if self.bridge.is_connected() else {}
+        try:
+            self.mark_l_tools = self.bridge.actions if self.bridge and self.bridge.is_connected() else {}
+        except Exception as e:
+            self.mark_l_tools = {}
+            _startup_log.warning(f"MarkL tools failed: {e}")
 
         # --- new infrastructure
         self.log = get_logger("elvea.app")
         self.log.info("Elivea inicializando")
-        self.persistent_memory = PersistentMemory()
-        self.proactive = ProactiveEngine(memory=self.persistent_memory)
 
-        # --- Smart Improvements (20 features) ---
-        self.session_mem = SessionMemory()
-        self.learning_dashboard = LearningDashboard(memory=self.persistent_memory)
-        self.error_learner = ErrorLearner(memory=self.persistent_memory)
-        self.code_patterns = CodePatternLearner(memory=self.persistent_memory)
-        self.voice_learner = VoiceCommandLearner(memory=self.persistent_memory)
-        self.smart_reminders = SmartReminders(memory=self.persistent_memory)
-        self.summarizer = ConversationSummarizer(memory=self.persistent_memory)
-        self.mood_tracker = MoodTracker(memory=self.persistent_memory)
-        self.response_feedback = ResponseFeedback(memory=self.persistent_memory)
-        self.smart_defaults = SmartDefaults(memory=self.persistent_memory)
-        self.snippet_cache = CodeSnippetCache()
-        self.conversation_branching = ConversationBranching()
-        self.code_review = ProactiveCodeReview(memory=self.persistent_memory)
-        self.file_recs = SmartFileRecommendations()
-        self.adaptive_length = AdaptiveResponseLength()
-        self.personality_learner = PersonalityLearning()
-        self.knowledge_graph = KnowledgeGraph()
-        self.smart_aliases = SmartAliases()
-        self.health_monitor = HealthMonitor()
+        try:
+            self.persistent_memory = PersistentMemory()
+        except Exception as e:
+            _startup_log.error(f"PersistentMemory init failed: {e}")
+            raise  # Memory is critical
+
+        try:
+            self.proactive = ProactiveEngine(memory=self.persistent_memory)
+        except Exception as e:
+            _startup_log.warning(f"ProactiveEngine init failed: {e}")
+            self.proactive = None
+            self._init_errors.append("ProactiveEngine")
+
+        # --- Smart Improvements (20 features) — bulk protection ---
+        _smart_modules = {}
+        _smart_init_map = {
+            "session_mem": lambda: SessionMemory(),
+            "learning_dashboard": lambda: LearningDashboard(memory=self.persistent_memory),
+            "error_learner": lambda: ErrorLearner(memory=self.persistent_memory),
+            "code_patterns": lambda: CodePatternLearner(memory=self.persistent_memory),
+            "voice_learner": lambda: VoiceCommandLearner(memory=self.persistent_memory),
+            "smart_reminders": lambda: SmartReminders(memory=self.persistent_memory),
+            "summarizer": lambda: ConversationSummarizer(memory=self.persistent_memory),
+            "mood_tracker": lambda: MoodTracker(memory=self.persistent_memory),
+            "response_feedback": lambda: ResponseFeedback(memory=self.persistent_memory),
+            "smart_defaults": lambda: SmartDefaults(memory=self.persistent_memory),
+            "snippet_cache": lambda: CodeSnippetCache(),
+            "conversation_branching": lambda: ConversationBranching(),
+            "code_review": lambda: ProactiveCodeReview(memory=self.persistent_memory),
+            "file_recs": lambda: SmartFileRecommendations(),
+            "adaptive_length": lambda: AdaptiveResponseLength(),
+            "personality_learner": lambda: PersonalityLearning(),
+            "knowledge_graph": lambda: KnowledgeGraph(),
+            "smart_aliases": lambda: SmartAliases(),
+            "health_monitor": lambda: HealthMonitor(),
+        }
+        for name, factory in _smart_init_map.items():
+            try:
+                _smart_modules[name] = factory()
+            except Exception as e:
+                _startup_log.debug(f"Smart module '{name}' init skipped: {e}")
+                self._init_errors.append(name)
+        # Set all successful modules as attributes
+        for name, obj in _smart_modules.items():
+            setattr(self, name, obj)
+        # Set failed modules to None so code can check
+        for name in _smart_init_map:
+            if not hasattr(self, name):
+                setattr(self, name, None)
 
         # Usage tracker — real-time provider monitoring
-        self.usage_tracker = UsageTracker()
+        try:
+            self.usage_tracker = UsageTracker()
+        except Exception as e:
+            _startup_log.warning(f"UsageTracker init failed: {e}")
+            self.usage_tracker = None
+            self._init_errors.append("UsageTracker")
 
         # Message Monitor — auto-reply to WhatsApp, Telegram, Discord, Email
         try:
@@ -247,32 +345,47 @@ class EliveaApp:
         # SPEED: pre-warm TTS cache + LLM connections
         try:
             from core.speed_optimizer import get_tts_cache, get_connection_pool
-            tts_cache = get_tts_cache()
-            tts_cache.preload(
-                self.speech.preset.voice_id,
-                self.speech.preset.rate,
-                self.speech.preset.pitch,
-            )
+            if self.speech:
+                tts_cache = get_tts_cache()
+                tts_cache.preload(
+                    self.speech.preset.voice_id,
+                    self.speech.preset.rate,
+                    self.speech.preset.pitch,
+                )
             pool = get_connection_pool()
             pool.warm_all(self.llm.providers)
         except Exception:
             pass
 
-        self.cot = ChainOfThought(llm=self.llm)
-        self.autonomous_planner = AutonomousPlanner(llm=self.llm)
+        try:
+            self.cot = ChainOfThought(llm=self.llm)
+        except Exception as e:
+            _startup_log.warning(f"ChainOfThought init failed: {e}")
+            self.cot = None
+
+        try:
+            self.autonomous_planner = AutonomousPlanner(llm=self.llm)
+        except Exception as e:
+            _startup_log.warning(f"AutonomousPlanner init failed: {e}")
+            self.autonomous_planner = None
+
         # Code analyzer uses functions directly
         self.code_analyzer = None  # Using module functions directly
 
         # --- Wire autonomous self-improvement ---
         # When the autonomous engine detects critical issues,
         # the self-improver kicks in automatically to fix them.
-        self.autonomous.on_issue_detected(
-            lambda health: SelfImproverModule.on_autonomous_diagnostic(
-                health, llm=self.llm,
-                on_step=lambda text: self.signals.sig_sage_delta.emit(text),
-            )
-        )
-        self.log.info("Autonomous self-improvement wired")
+        if self.autonomous:
+            try:
+                self.autonomous.on_issue_detected(
+                    lambda health: SelfImproverModule.on_autonomous_diagnostic(
+                        health, llm=self.llm,
+                        on_step=lambda text: self.signals.sig_sage_delta.emit(text),
+                    )
+                )
+                self.log.info("Autonomous self-improvement wired")
+            except Exception as e:
+                _startup_log.warning(f"Self-improvement wiring failed: {e}")
 
         # ═══════════════════════════════════════════════════════════════
         # MODULE 1: Clipboard Monitor

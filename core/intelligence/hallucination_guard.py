@@ -244,7 +244,7 @@ class HallucinationGuard:
             if any(re.search(sp, line) for sp in self.SOURCE_PATTERNS):
                 sourced += 1
 
-        return sourced / len(claim_lines)
+        return sourced / len(claim_lines) if claim_lines else 0
 
     def _build_summary(self, flags: List[HallucinationFlag], confidence: float,
                        source_coverage: float) -> str:

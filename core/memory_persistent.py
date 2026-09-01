@@ -320,10 +320,18 @@ class PersistentMemory:
         return f"Memória relevante:\n{context}"
 
     def _row_to_entry(self, row) -> MemoryEntry:
+        try:
+            tags = json.loads(row["tags"])
+        except (json.JSONDecodeError, TypeError):
+            tags = []
+        try:
+            metadata = json.loads(row["metadata"])
+        except (json.JSONDecodeError, TypeError):
+            metadata = {}
         return MemoryEntry(
             id=row["id"], category=row["category"], content=row["content"],
-            importance=row["importance"], tags=json.loads(row["tags"]),
-            metadata=json.loads(row["metadata"]), created_at=row["created_at"],
+            importance=row["importance"], tags=tags,
+            metadata=metadata, created_at=row["created_at"],
             accessed_at=row["accessed_at"], access_count=row["access_count"],
             fingerprint=row["fingerprint"] if "fingerprint" in row.keys() else "")
 

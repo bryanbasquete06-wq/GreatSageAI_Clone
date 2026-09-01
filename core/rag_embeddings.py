@@ -219,7 +219,7 @@ class RAGWithEmbeddings:
             overlap = len(query_words & doc_words)
             if overlap > 0:
                 # score normalizado por query len, com bonus por tamanho
-                scores.append((doc, overlap / len(query_words)))
+                scores.append((doc, overlap / len(query_words) if query_words else 0))
         scores.sort(key=lambda x: x[1], reverse=True)
         return scores[:top_k]
 
