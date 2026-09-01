@@ -27,7 +27,7 @@ import tkinter as tk
 from tkinter import scrolledtext
 
 # Ensure project root in sys.path
-root_dir = Path(__file__).resolve().parent.parent
+root_dir = Path(__file__).resolve().parent
 if str(root_dir) not in sys.path:
     sys.path.insert(0, str(root_dir))
 
