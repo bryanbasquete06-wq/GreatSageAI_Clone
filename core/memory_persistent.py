@@ -78,26 +78,29 @@ class PersistentMemory:
         db_existed = self.db_path.exists()
         needs_recreate = False
         if db_existed:
+            is_corrupt = False
             try:
-                conn = sqlite3.connect(str(self.db_path))
-                conn.execute("SELECT COUNT(*) FROM memories")
-                conn.close()
-            except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
-                logger.warning(f"[Memory] Database corrupted: {e} — recovering...")
-                needs_recreate = True
-                # Backup corrupted DB
-                backup = self.db_path.with_suffix(f".corrupted.{int(datetime.now().timestamp())}.db")
+                conn = sqlite3.connect(str(self.db_path), timeout=1)
                 try:
-                    self.db_path.rename(backup)
-                    logger.info(f"[Memory] Corrupted DB backed up to: {backup.name}")
-                except Exception:
-                    try:
-                        import shutil
-                        shutil.copy2(str(self.db_path), str(backup))
-                        self.db_path.unlink()
-                    except Exception:
-                        pass  # worst case: SQLite will overwrite below
+                    conn.execute("SELECT COUNT(*) FROM memories")
+                finally:
+                    conn.close()
+                    del conn  # Ensure reference is released
+            except (sqlite3.DatabaseError, sqlite3.OperationalError) as e:
+                is_corrupt = True
+                logger.warning(f"[Memory] Database corrupted: {e} — recovering...")
 
+            if is_corrupt:
+                needs_recreate = True
+                # Try to force-remove corrupted DB
+                removed = self._force_remove_corrupted()
+                if not removed:
+                    # Windows locked the file — use a backup path
+                    fallback = self.db_path.with_suffix(".fresh.db")
+                    logger.warning(f"[Memory] Could not remove corrupted DB — using fallback: {fallback.name}")
+                    self.db_path = fallback
+
+        # Create fresh database
         with sqlite3.connect(str(self.db_path)) as conn:
             # Enable WAL mode for better crash resilience
             conn.execute("PRAGMA journal_mode=WAL")
@@ -128,6 +131,46 @@ class PersistentMemory:
             conn.commit()
             if needs_recreate:
                 logger.info("[Memory] Fresh database created after recovery")
+
+    def _force_remove_corrupted(self) -> bool:
+        """Force-remove corrupted DB and all sidecar files (WAL, SHM, journal).
+        On Windows, uses rename-to-temp then delete strategy to handle locks.
+        Returns True if the main .db file was successfully removed.
+        """
+        import shutil, time as _time
+
+        # Try to save a backup of the corrupted file first
+        backup = self.db_path.with_suffix(f".corrupted.{int(datetime.now().timestamp())}.db")
+        try:
+            shutil.copy2(str(self.db_path), str(backup))
+            logger.info(f"[Memory] Corrupted DB backed up to: {backup.name}")
+        except Exception:
+            pass  # Not critical
+
+        # Remove all related files: .db, .db-wal, .db-shm, .db-journal
+        for suffix in ["-journal", "-wal", "-shm", ""]:
+            fpath = self.db_path.with_suffix(self.db_path.suffix + suffix)
+            for attempt in range(3):
+                try:
+                    if fpath.exists():
+                        fpath.unlink()
+                    break
+                except OSError:
+                    _time.sleep(0.2)  # Wait for Windows file locks
+                    try:
+                        if fpath.exists():
+                            tmp = fpath.with_suffix(f".tmp_{attempt}")
+                            fpath.rename(tmp)
+                            tmp.unlink()
+                    except Exception:
+                        pass
+
+        main_removed = not self.db_path.exists()
+        if main_removed:
+            logger.info("[Memory] Corrupted DB fully removed")
+        else:
+            logger.warning(f"[Memory] Could not remove corrupted DB: {self.db_path.name}")
+        return main_removed
 
     @staticmethod
     def _fingerprint(content: str) -> str:
