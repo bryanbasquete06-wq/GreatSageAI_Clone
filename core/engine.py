@@ -38,6 +38,15 @@ from core.weekly_digest import WeeklyDigestEngine
 from core.intelligence import HallucinationGuard, SelfCorrectionEngine, QualityScorer, KnowledgeGraph, IntentPredictor
 from core.multi_provider_router import get_router, ProviderTier, QueryComplexity, classify_query_complexity
 
+# Default max_tokens per complexity (router handles provider selection)
+_ROUTER_MAX_TOKENS = {
+    QueryComplexity.TRIVIAL: 256,
+    QueryComplexity.SIMPLE: 512,
+    QueryComplexity.MODERATE: 1024,
+    QueryComplexity.COMPLEX: 2048,
+    QueryComplexity.EXPERT: 4096,
+}
+
 logger = logging.getLogger("elvea.engine")
 
 
@@ -76,6 +85,9 @@ class SageEngine:
         self.monitor = Monitor(str(self.project_dir / "memory"))
         # Intelligence engine
         self.intelligence = IntelligenceEngine()
+
+        # Multi-Provider Router (smart token distribution across 12+ free APIs)
+        self.router = get_router()
 
         # Intelligence pipeline (6 systems)
         self.hallucination_guard = HallucinationGuard()
@@ -210,24 +222,55 @@ class SageEngine:
         start_time = time.time()
         provider_name = "stream"
 
+        # Classify query complexity to set appropriate max_tokens
+        _complexity = classify_query_complexity(user_input)
+        _max_tokens = _ROUTER_MAX_TOKENS.get(_complexity, 1500)
+        logger.info(f"Query complexity: {_complexity.name} → max_tokens={_max_tokens}")
+
         if stream:
             try:
-                for token in self.llm.stream(messages, system=system, max_tokens=1500, temperature=0.7):
+                # PRIMARY: Multi-Provider Router (smart selection across 12+ free APIs)
+                for token in self.router.route_stream(
+                    messages, system=system, max_tokens=_max_tokens, temperature=0.7
+                ):
                     if self._abort:
                         break
                     full_response += token
                     if self.on_token:
                         self.on_token(token)
-            except Exception as e:
-                logger.error(f"Stream error: {e}")
-                full_response = f"Erro no stream: {e}"
+            except Exception as router_err:
+                logger.warning(f"Router stream falhou: {router_err}, tentando LLMEngine")
+                try:
+                    # FALLBACK: original LLMEngine chain
+                    for token in self.llm.stream(messages, system=system, max_tokens=_max_tokens, temperature=0.7):
+                        if self._abort:
+                            break
+                        full_response += token
+                        if self.on_token:
+                            self.on_token(token)
+                except Exception as e:
+                    logger.error(f"Stream error: {e}")
+                    full_response = f"Erro no stream: {e}"
         else:
-            response = self.llm.chat(messages, system=system, max_tokens=1500, temperature=0.7)
-            if response.success:
-                full_response = response.text
-                provider_name = getattr(response, 'provider', 'unknown')
-            else:
-                full_response = f"Erro: {response.error}"
+            try:
+                # PRIMARY: Multi-Provider Router
+                text, provider_name, metadata = self.router.route_request(
+                    messages, system=system, max_tokens=_max_tokens, temperature=0.7
+                )
+                full_response = text
+                logger.info(f"Router response via {provider_name} ({metadata.get('complexity', '?')})")
+            except Exception as router_err:
+                logger.warning(f"Router request falhou: {router_err}, tentando LLMEngine")
+                try:
+                    # FALLBACK: original LLMEngine
+                    response = self.llm.chat(messages, system=system, max_tokens=_max_tokens, temperature=0.7)
+                    if response.success:
+                        full_response = response.text
+                        provider_name = getattr(response, 'provider', 'unknown')
+                    else:
+                        full_response = f"Erro: {response.error}"
+                except Exception as e:
+                    full_response = f"Erro: {e}"
 
         latency_ms = (time.time() - start_time) * 1000
 
@@ -720,11 +763,16 @@ class SageEngine:
 • `monitor` — Dashboard completo
 • `status sessao` — Stats da sessao
 
+**Multi-Provider Router:**
+• `router` — Status de todos os providers gratuitos
+• `capacity` — Capacidade combinada (RPM, RPD, tokens/dia)
+• `router reset` — Resetar budgets diarios
+
 **Imagens:**
 • `analise imagem [caminho]` — Analisar imagem
 • `gere imagem [prompt]` — Gerar imagem com IA
 
-*Ou simplesmente me pergunte qualquer coisa.*"""
+*Ou simplesmente me pergunte qualquer cosa.*"""
 
     def _get_status(self) -> str:
         """Gera relatório de status completo."""
@@ -733,6 +781,16 @@ class SageEngine:
         for p in providers:
             icon = "✅" if p["available"] else "❌"
             status_lines.append(f"  {icon} **{p['name']}** — {p['model']}")
+
+        # Router status
+        try:
+            router_status = self.router.get_status()
+            r_available = router_status.get("available_providers", 0)
+            r_total = router_status.get("total_providers", 0)
+            r_capacity = router_status.get("capacity", {})
+            router_line = f"  🔄 {r_available}/{r_total} providers ativos | RPM: {r_capacity.get('combined_rpm', '?')} | Modelos: {r_capacity.get('free_models_available', '?')}"
+        except Exception:
+            router_line = "  ⚠️ Router indisponível"
 
         try:
             import psutil
@@ -744,8 +802,11 @@ class SageEngine:
 
         return f"""📊 **Status do Elivea**
 
-**Providers LLM:**
+**Providers LLM (Legacy):**
 {chr(10).join(status_lines)}
+
+**Multi-Provider Router (Novo):**
+{router_line}
 
 **Memória:**
   📝 Mensagens: {len(self.memory.chat_history)}
