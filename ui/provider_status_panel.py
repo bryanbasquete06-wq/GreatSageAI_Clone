@@ -17,7 +17,7 @@ import time
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
-    from PySide6.QtCore import Qt, QTimer, QRectF, QPointF, pyqtSignal
+    from PySide6.QtCore import Qt, QTimer, QRectF, QPointF, Signal as pyqtSignal
     from PySide6.QtGui import (
         QPainter, QPen, QBrush, QColor, QFont, QRadialGradient,
         QLinearGradient, QPainterPath,
