@@ -1330,36 +1330,239 @@ class EliveaMainWindow(QMainWindow):
         self.setMinimumSize(1100, 700)
         self.setStyleSheet(f"background-color: {C.BG}; color: {C.TEXT};")
 
-        self._build_ui()
+        # Lazy-init placeholders — created on first access, not at startup
+        self._programming_panel = None
+        self._deep_dev_panel = None
+        self._code_workspace = None
+        self._conv_history_map = None
+        self._history_drawer = None
+        self._cmd_drawer = None
+        self._ambient_particles = None
+        self._micro = None
+        self._toast = None
+        self._awakening = None
+        self._orb = None
+
+        self._build_ui_fast()
         self._start_telemetry()
 
-        # Cinematic awakening overlay — anime-style ability awakening
-        from ui.professional_widgets import AbilityAwakeningOverlay, AwakeningSFX
-        self.awakening = AbilityAwakeningOverlay(self)
-        self.awakening.done.connect(self._on_awakening_done)
-        self.awakening.show()
-        self.awakening.raise_()
-        # SFX are played internally by the overlay's _tick
-        # Voice during overlay (2.0s from app start — during explosion phase)
-        QTimer.singleShot(2000, lambda: self._speak_awakening())
+        # Defer heavy overlays to after window is shown
+        QTimer.singleShot(100, self._show_awakening_overlay)
 
-        # Elivea companion orb (visible when the window leaves the screen)
-        from ui.orb_widget import EliveaOrb
-        self.orb = EliveaOrb(self)
+    # --- Lazy properties for hidden panels ---
+
+    @property
+    def programming_panel(self):
+        if self._programming_panel is None:
+            from ui.programming_panel import ProgrammingPanel
+            self._programming_panel = ProgrammingPanel()
+            center = self.centralWidget()
+            self._programming_panel.setParent(center)
+            self._programming_panel.hide()
+            self._programming_panel.sig_close.connect(self._close_programming_panel)
+            self._programming_panel.set_generate_handler(self._on_programming_generate)
+            self._programming_panel.set_root_path(str(Path(__file__).resolve().parent.parent))
+        return self._programming_panel
+
+    @property
+    def deep_dev_panel(self):
+        if self._deep_dev_panel is None:
+            from ui.deep_dev_panel import DeepDevPanelWidget
+            center = self.centralWidget()
+            self._deep_dev_panel = DeepDevPanelWidget()
+            self._deep_dev_panel.setParent(center)
+            self._deep_dev_panel.hide()
+            self._deep_dev_panel.sig_close.connect(self._close_deep_dev_panel)
+            self._deep_dev_panel.sig_execute.connect(self._on_deep_dev_execute)
+            self._deep_dev_panel.sig_approve.connect(self._on_deep_dev_approve)
+            self._deep_dev_panel.sig_discard.connect(self._on_deep_dev_discard)
+        return self._deep_dev_panel
+
+    @property
+    def code_workspace(self):
+        if self._code_workspace is None:
+            from ui.professional_widgets import CodeWorkspaceWidget
+            center = self.centralWidget()
+            self._code_workspace = CodeWorkspaceWidget()
+            self._code_workspace.setParent(center)
+            self._code_workspace.hide()
+            self._code_workspace.set_on_close(self._close_code_workspace)
+            self._code_workspace.set_on_run(self._run_code)
+            self._code_workspace.set_on_generate(self._on_generate_code)
+        return self._code_workspace
+
+    @property
+    def conv_history_map(self):
+        if self._conv_history_map is None:
+            from ui.professional_widgets import ConversationHistoryMap
+            self._conv_history_map = ConversationHistoryMap(self)
+            self._conv_history_map.setVisible(False)
+            self._conv_history_map.set_on_node_click(self._on_history_node_click)
+            self._conv_history_map.set_on_history_click(self._open_history_drawer)
+        return self._conv_history_map
+
+    @property
+    def history_drawer(self):
+        if self._history_drawer is None:
+            from ui.professional_widgets import HistoryDrawer
+            self._history_drawer = HistoryDrawer(self)
+            self._history_drawer.setVisible(False)
+            self._history_drawer.set_on_close(lambda: self.history_drawer.setVisible(False))
+            self._history_drawer.set_on_select(self._on_history_select)
+        return self._history_drawer
+
+    @property
+    def cmd_drawer(self):
+        if self._cmd_drawer is None:
+            from ui.professional_widgets import CommandCenterDrawer
+            self._cmd_drawer = CommandCenterDrawer(self)
+            self._cmd_drawer.set_on_execute(self.submit_command)
+            self._cmd_drawer.setGeometry(self.rect())
+            self._cmd_drawer.hide()
+        return self._cmd_drawer
+
+    @property
+    def ambient_particles(self):
+        if self._ambient_particles is None:
+            from ui.professional_widgets import AmbientParticles
+            self._ambient_particles = AmbientParticles(self)
+            self._ambient_particles.lower()
+        return self._ambient_particles
+
+    @property
+    def micro(self):
+        if self._micro is None:
+            from ui.professional_widgets import MicroInteractions
+            self._micro = MicroInteractions(self)
+            self._micro.raise_()
+        return self._micro
+
+    @property
+    def toast(self):
+        if self._toast is None:
+            from ui.professional_widgets import NotificationToast
+            self._toast = NotificationToast(self)
+        return self._toast
+
+    @property
+    def awakening(self):
+        if self._awakening is None:
+            from ui.professional_widgets import AbilityAwakeningOverlay
+            self._awakening = AbilityAwakeningOverlay(self)
+            self._awakening.done.connect(self._on_awakening_done)
+        return self._awakening
+
+    @property
+    def orb(self):
+        if self._orb is None:
+            from ui.orb_widget import EliveaOrb
+            self._orb = EliveaOrb(self)
+        return self._orb
+
+    def _show_awakening_overlay(self):
+        """Show awakening overlay after window is visible."""
+        try:
+            self.awakening.show()
+            self.awakening.raise_()
+            QTimer.singleShot(2000, lambda: self._speak_awakening())
+        except Exception:
+            pass
+
+    # --- Backward-compat hidden widgets (lazy) ---
+    # These are stub widgets referenced by legacy code but hidden from view.
+
+    def _lazy_compat(self, name, factory):
+        if not hasattr(self, f'_compat_{name}'):
+            setattr(self, f'_compat_{name}', factory())
+            getattr(self, f'_compat_{name}').hide()
+        return getattr(self, f'_compat_{name}')
+
+    @property
+    def chat(self):
+        from ui.qt_ui import ChatFlow
+        return self._lazy_compat('chat', ChatFlow)
+
+    @property
+    def circle(self):
+        from ui.qt_ui import MagicCircleWidget
+        return self._lazy_compat('circle', MagicCircleWidget)
+
+    @property
+    def waveform(self):
+        from ui.qt_ui import WaveformWidget
+        return self._lazy_compat('waveform', WaveformWidget)
+
+    @property
+    def m_cpu(self):
+        return self._lazy_compat('m_cpu', lambda: MetricBar('CPU'))
+
+    @property
+    def m_ram(self):
+        return self._lazy_compat('m_ram', lambda: MetricBar('RAM'))
+
+    @property
+    def m_mic(self):
+        return self._lazy_compat('m_mic', lambda: MetricBar('MIC'))
+
+    @property
+    def chip_state(self):
+        return self._lazy_compat('chip_state', lambda: StatusChip('◉', 'IDLE'))
+
+    @property
+    def chip_stt(self):
+        return self._lazy_compat('chip_stt', lambda: StatusChip('🎙', 'STT'))
+
+    @property
+    def chip_ttft(self):
+        return self._lazy_compat('chip_ttft', lambda: StatusChip('⚡', 'TTFT'))
+
+    @property
+    def chip_model(self):
+        return self._lazy_compat('chip_model', lambda: StatusChip('◈', 'LLM'))
+
+    @property
+    def btn_theme(self):
+        return self._lazy_compat('btn_theme', QPushButton)
+
+    @property
+    def btn_voice(self):
+        return self._lazy_compat('btn_voice', QPushButton)
+
+    @property
+    def btn_usage(self):
+        return self._lazy_compat('btn_usage', QPushButton)
+
+    @property
+    def btn_config(self):
+        return self._lazy_compat('btn_config', QPushButton)
+
+    @property
+    def btn_ptt(self):
+        return self._lazy_compat('btn_ptt', QPushButton)
+
+    @property
+    def btn_mode(self):
+        return self._lazy_compat('btn_mode', QPushButton)
+
+    @property
+    def btn_stop(self):
+        return self._lazy_compat('btn_stop', QPushButton)
+
+    @property
+    def entry(self):
+        return self._lazy_compat('entry', QLineEdit)
 
     # ------------------------------------------------------------------- UI
 
-    def _build_ui(self):
+    def _build_ui_fast(self):
+        """Build only the essential visible UI — hidden panels are lazy-loaded."""
         from ui.professional_widgets import (
-            RuneCoreWidget, TopBarWidget, InputBarWidget,
-            CommandCenterDrawer, GlassPanel, BG,
+            RuneCoreWidget, TopBarWidget, BG,
             SystemMonitorWidget, QuickActionsWidget, AIStatusWidget, RecentCommandsWidget,
-            CodeScratchpadWidget, CodeWorkspaceWidget, ConversationHistoryMap, HistoryDrawer,
-            AmbientParticles, StatusBar, NotificationToast, MicroInteractions
+            CodeScratchpadWidget, StatusBar,
         )
         from ui.chat_panel import ChatSidebar
-        from ui.deep_dev_panel import DeepDevPanelWidget
-        from ui.command_palette import CommandPalette
+
         central = QWidget()
         central.setStyleSheet(f"background: {BG};")
         self.setCentralWidget(central)
@@ -1382,7 +1585,7 @@ class EliveaMainWindow(QMainWindow):
         self.chat_sidebar.set_on_history_toggle(self.toggle_history_map)
         body.addWidget(self.chat_sidebar, stretch=0)
 
-        # ---- Center: RuneCore + Code Workspace (overlay) ----
+        # ---- Center: RuneCore (lightweight) ----
         center = QWidget()
         center.setStyleSheet("background: transparent;")
         center_layout = QVBoxLayout(center)
@@ -1390,31 +1593,9 @@ class EliveaMainWindow(QMainWindow):
         center_layout.setSpacing(0)
         self.rune_core = RuneCoreWidget()
         center_layout.addWidget(self.rune_core, stretch=1)
-        # Code Workspace (hidden by default, overlay on top)
-        self.code_workspace = CodeWorkspaceWidget()
-        self.code_workspace.setParent(center)
-        self.code_workspace.hide()
-        self.code_workspace.set_on_close(self._close_code_workspace)
-        self.code_workspace.set_on_run(self._run_code)
-        self.code_workspace.set_on_generate(self._on_generate_code)
-
-        # Programming Panel (full IDE — hidden by default)
-        from ui.programming_panel import ProgrammingPanel
-        self.programming_panel = ProgrammingPanel()
-        self.programming_panel.setParent(center)
-        self.programming_panel.hide()
-        self.programming_panel.sig_close.connect(self._close_programming_panel)
-        self.programming_panel.set_generate_handler(self._on_programming_generate)
-        self.programming_panel.set_root_path(str(Path(__file__).resolve().parent.parent))
-        # Deep Dev Panel (floating overlay - hidden by default)
-        self.deep_dev_panel = DeepDevPanelWidget()
-        self.deep_dev_panel.setParent(center)
-        self.deep_dev_panel.hide()
-        self.deep_dev_panel.sig_close.connect(self._close_deep_dev_panel)
-        self.deep_dev_panel.sig_execute.connect(self._on_deep_dev_execute)
-        self.deep_dev_panel.sig_approve.connect(self._on_deep_dev_approve)
-        self.deep_dev_panel.sig_discard.connect(self._on_deep_dev_discard)
+        # ProgrammingPanel, DeepDevPanel, CodeWorkspace are lazy — NOT created here
         body.addWidget(center, stretch=2)
+        self._center_widget = center  # Store ref for lazy panel parenting
 
         # ---- Right: Useful panels ----
         right = QWidget()
@@ -1429,41 +1610,34 @@ class EliveaMainWindow(QMainWindow):
         right_layout.setContentsMargins(4, 4, 4, 4)
         right_layout.setSpacing(6)
 
-        # System Monitor
         self.sys_monitor = SystemMonitorWidget()
         self.sys_monitor.setFixedHeight(130)
         right_layout.addWidget(self.sys_monitor)
 
-        # AI Status
         self.ai_status = AIStatusWidget()
         self.ai_status.setFixedHeight(145)
         right_layout.addWidget(self.ai_status)
 
-        # Provider Status (real-time API health + usage bars)
         from ui.provider_status_panel import ProviderStatusPanel
         self.provider_status = ProviderStatusPanel()
         self.provider_status.setFixedHeight(340)
         self.provider_status.sig_detail_requested.connect(self._on_provider_detail)
         right_layout.addWidget(self.provider_status)
 
-        # Quick Actions
         self.quick_actions = QuickActionsWidget()
         self.quick_actions.setFixedHeight(115)
         self.quick_actions.set_on_action(self._on_quick_action)
         right_layout.addWidget(self.quick_actions)
 
-        # Recent Commands
         self.recent_cmds = RecentCommandsWidget()
         self.recent_cmds.setFixedHeight(120)
         right_layout.addWidget(self.recent_cmds)
 
-        # Notifications
         from ui.professional_widgets import NotificationWidget
         self.notifications = NotificationWidget()
         self.notifications.setFixedHeight(140)
         right_layout.addWidget(self.notifications)
 
-        # Code Scratchpad
         self.code_scratchpad = CodeScratchpadWidget()
         self.code_scratchpad.setFixedHeight(160)
         right_layout.addWidget(self.code_scratchpad)
@@ -1477,56 +1651,18 @@ class EliveaMainWindow(QMainWindow):
         body.addWidget(right)
         root.addLayout(body, stretch=1)
 
-        # ============ HISTORY MAP (overlay on center, over RuneCore) ============
-        self.conv_history_map = ConversationHistoryMap(self)
-        self.conv_history_map.setVisible(False)
-        self.conv_history_map.set_on_node_click(self._on_history_node_click)
-        self.conv_history_map.set_on_history_click(self._open_history_drawer)
-
-        # ============ HISTORY DRAWER (full-screen overlay) ============
-        self.history_drawer = HistoryDrawer(self)
-        self.history_drawer.setVisible(False)
-        self.history_drawer.set_on_close(lambda: self.history_drawer.setVisible(False))
-        self.history_drawer.set_on_select(self._on_history_select)
-
         # ============ STATUS BAR ============
         self.status_bar = StatusBar()
         root.addWidget(self.status_bar)
 
-        # ============ AMBIENT PARTICLES (behind everything) ============
-        self.ambient_particles = AmbientParticles(self)
-        self.ambient_particles.lower()
-
-        # ============ MICRO-INTERACTIONS ============
-        self.micro = MicroInteractions(self)
-        self.micro.raise_()
-
-        # ============ NOTIFICATION TOAST ============
-        self.toast = NotificationToast(self)
-
-        # ============ COMMAND CENTER DRAWER ============
-        self.cmd_drawer = CommandCenterDrawer(self)
-        self.cmd_drawer.set_on_execute(self.submit_command)
-        self.cmd_drawer.setGeometry(self.rect())
-        self.cmd_drawer.hide()
-
-        # Hidden backward-compat widgets
-        self.chat = ChatFlow(); self.chat.hide()
-        self.circle = MagicCircleWidget(); self.circle.hide()
-        self.waveform = WaveformWidget(); self.waveform.hide()
-        self.m_cpu = MetricBar("CPU"); self.m_ram = MetricBar("RAM"); self.m_mic = MetricBar("MIC")
-        self.chip_state = StatusChip("◉", "IDLE"); self.chip_state.hide()
-        self.chip_stt = StatusChip("🎙", "STT"); self.chip_stt.hide()
-        self.chip_ttft = StatusChip("⚡", "TTFT"); self.chip_ttft.hide()
-        self.chip_model = StatusChip("◈", "LLM"); self.chip_model.hide()
-        self.btn_theme = QPushButton(); self.btn_theme.hide()
-        self.btn_voice = QPushButton(); self.btn_voice.hide()
-        self.btn_usage = QPushButton(); self.btn_usage.hide()
-        self.btn_config = QPushButton(); self.btn_config.hide()
-        self.btn_ptt = QPushButton(); self.btn_ptt.hide()
-        self.btn_mode = QPushButton(); self.btn_mode.hide()
-        self.btn_stop = QPushButton(); self.btn_stop.hide()
-        self.entry = QLineEdit(); self.entry.hide()
+        # Hidden backward-compat widgets — created lazily via properties
+        self._chat = None
+        self._circle = None
+        self._waveform = None
+        self._metric_bars = {}
+        self._status_chips = {}
+        self._hidden_buttons = {}
+        self._entry = None
 
         # Atalhos
         try:

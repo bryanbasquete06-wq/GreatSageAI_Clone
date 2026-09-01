@@ -87,7 +87,15 @@ class LLMProvider:
         self._init_client()
 
     def _init_client(self):
-        """Inicializa o client HTTP do provider."""
+        """Mark client as needing lazy init — heavy imports deferred to first use."""
+        self._client = None
+        self._client_initialized = False
+
+    def _ensure_client(self):
+        """Lazily initialize the provider client on first actual use."""
+        if self._client_initialized:
+            return
+        self._client_initialized = True
         c = self.config
         if c.provider == Provider.GROQ:
             try:
@@ -119,7 +127,6 @@ class LLMProvider:
                 import cerebras
                 self._client = cerebras.Cerebras(api_key=c.api_key)
             except ImportError:
-                # Fallback: usa API HTTP direta
                 import requests
                 self._client = requests.Session()
                 self._client.headers.update({
@@ -137,10 +144,11 @@ class LLMProvider:
     @property
     def available(self) -> bool:
         """Verifica se o provider está disponível."""
-        return self._client is not None and self.config.api_key != "" or self.config.provider == Provider.OLLAMA
+        return (self._client is not None or self._client_initialized is False) and self.config.api_key != "" or self.config.provider == Provider.OLLAMA
 
     def chat(self, messages: List[Dict], system: str = "", **kwargs) -> LLMResponse:
         """Envia mensagem e retorna resposta — com usage tracking."""
+        self._ensure_client()
         if not self.available:
             return LLMResponse(
                 text="", provider=self.name, model=self.config.model,
@@ -192,6 +200,7 @@ class LLMProvider:
 
     def stream(self, messages: List[Dict], system: str = "", **kwargs) -> Generator[str, None, None]:
         """Stream de resposta token a token — com usage tracking."""
+        self._ensure_client()
         if not self.available:
             yield f"[ERRO] Provider {self.name} não disponível"
             return

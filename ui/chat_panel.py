@@ -274,7 +274,7 @@ class TypingIndicator(QWidget):
         pulse_alpha = int(40 * (1.0 - pulse_phase))
         if pulse_alpha > 2:
             p.setPen(QPen(_alpha(GOLD, pulse_alpha), 0.8))
-            p.setBrush(Qt.BrushStyle.NoPen)
+            p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawEllipse(QPointF(base_x + 14, dot_y), pulse_r, pulse_r)
 
 

@@ -468,7 +468,7 @@ class RuneCoreWidget(QWidget):
             sr = R * (0.3 + s * 1.2)
             sa = int(100 * (1.0 - s) * g)
             p.setPen(QPen(_alpha(mc, max(5, sa)), 1.5))
-            p.setBrush(Qt.BrushStyle.NoPen)
+            p.setBrush(Qt.BrushStyle.NoBrush)
             p.drawEllipse(QRectF(cx - sr, cy - sr, sr * 2, sr * 2))
 
         # ─── FLOATING SPARK PARTICLES ───
@@ -561,7 +561,7 @@ class RuneCoreWidget(QWidget):
         # Layer 6: Subtle chromatic ring
         chrom_r = orb_r * 1.8
         p.setPen(QPen(_alpha(sc["star"], int(25 * pulse * g)), 0.6))
-        p.setBrush(Qt.BrushStyle.NoPen)
+        p.setBrush(Qt.BrushStyle.NoBrush)
         p.drawEllipse(QRectF(cx - chrom_r, cy - chrom_r, chrom_r * 2, chrom_r * 2))
 
         # ═══ THE STAR: 6-pointed hexagram (like the image) ═══
@@ -611,7 +611,7 @@ class RuneCoreWidget(QWidget):
                 ring_al = int(35 * (1.0 - phase) * pulse * g)
                 if ring_al > 1:
                     p.setPen(QPen(_alpha(sc["star"], ring_al), 0.5))
-                    p.setBrush(Qt.BrushStyle.NoPen)
+                    p.setBrush(Qt.BrushStyle.NoBrush)
                     p.drawEllipse(QRectF(-rr, -rr, rr * 2, rr * 2))
 
             p.restore()
@@ -1983,7 +1983,7 @@ class SystemMonitorWidget(GlassPanel):
 
         # Background arc
         p.setPen(QPen(_alpha(BORDER, 80), 4))
-        p.setBrush(Qt.BrushStyle.NoPen)
+        p.setBrush(Qt.BrushStyle.NoBrush)
         p.drawEllipse(QRectF(cx - r, cy - r, r * 2, r * 2))
 
         # Value arc
@@ -2094,7 +2094,7 @@ class SystemMonitorWidget(GlassPanel):
 
         # Line
         p.setPen(QPen(QColor(color), 1.2))
-        p.setBrush(Qt.BrushStyle.NoPen)
+        p.setBrush(Qt.BrushStyle.NoBrush)
         line_path = QPainterPath()
         for i, val in enumerate(data):
             px = x + i * step
@@ -3343,7 +3343,7 @@ class MicroInteractions(QWidget):
             a = int(alpha * 60)
             if a > 1:
                 p.setPen(QPen(_alpha(color, a), 1.5))
-                p.setBrush(Qt.BrushStyle.NoPen)
+                p.setBrush(Qt.BrushStyle.NoBrush)
                 p.drawEllipse(QPointF(x, y), radius, radius)
 
         # ── Confetti ──
