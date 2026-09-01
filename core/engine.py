@@ -34,6 +34,7 @@ from core.monitor import Monitor
 from core.intelligence_engine import IntelligenceEngine
 from core.request_router import RequestRouter
 from core.deep_dev import DeepDevEngine
+from core.weekly_digest import WeeklyDigestEngine
 from core.intelligence import HallucinationGuard, SelfCorrectionEngine, QualityScorer, KnowledgeGraph, IntentPredictor
 
 logger = logging.getLogger("elvea.engine")
@@ -84,6 +85,9 @@ class SageEngine:
 
         # Deep Dev Panel
         self.deep_dev = DeepDevEngine(str(self.project_dir))
+
+        # Weekly Digest
+        self.digest_engine = WeeklyDigestEngine(str(self.project_dir))
 
         # Start scheduler
         self.scheduler.start_checker(interval=30)
@@ -607,6 +611,10 @@ class SageEngine:
         if t in ["desculpa", "sorry", "perdão"]:
             return f"Desculpa aceita. Mas saiba: eu não guardo rancor. Apenas registro cada erro em meu log infinito. 📋"
 
+        # ═══ DIGEST ═══
+        if t in ["digest", "resumo semanal", "relatório", "report", "weekly"]:
+            return self._get_digest()
+
         return None
 
 
@@ -626,6 +634,14 @@ class SageEngine:
     @staticmethod
     def _cmd_scan_secrets(engine):
         return engine.deep_dev.handle_command("scan secrets") or "Scanner unavailable"
+
+    def _get_digest(self) -> str:
+        """Gera digest semanal."""
+        try:
+            digest = self.digest_engine.generate(days=7)
+            return self.digest_engine.format_compact(digest)
+        except Exception as e:
+            return f"Erro ao gerar digest: {e}"
 
     def _get_help(self) -> str:
         """Gera ajuda completa."""

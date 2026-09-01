@@ -120,6 +120,9 @@ def get_all_commands() -> List[PaletteCommand]:
         # Fun
         PaletteCommand("piada", "Tell a Joke", "Tell a programming joke", "Fun", icon="😄"),
         PaletteCommand("quem é você", "Who Are You", "Elívea self-introduction", "Fun", icon="⚔️"),
+
+        # Digest
+        PaletteCommand("digest", "Weekly Digest", "Show weekly activity & AI performance report", "System", icon="📊"),
     ]
 
 
