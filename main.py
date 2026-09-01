@@ -11,13 +11,21 @@ import os
 import traceback
 from pathlib import Path
 
-# Garante paths corretos: Clone em 0 para "core", parent para "EliveaAI_Clone"
+# Garante paths corretos: project root PRIMEIRO (evita conflito com core/ antigo no parent)
 _project_root = str(Path(__file__).resolve().parent)
 _parent = str(Path(_project_root).parent)
-if _parent not in sys.path:
-    sys.path.insert(0, _parent)
+# Project root FIRST — parent has old core/ that conflicts
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
+# Only add parent if it does NOT have a conflicting core/ directory
+if not (Path(_parent) / "core").exists():
+    if _parent not in sys.path:
+        sys.path.insert(1, _parent)
+# Remove empty string (CWD) which could resolve to parent dir
+def _clean_cwd():
+    while '' in sys.path:
+        sys.path.remove('')
+_clean_cwd()
 
 # ═══ SAFETY: patch os.system IMMEDIATELY to prevent PowerShell windows ═══
 try:
