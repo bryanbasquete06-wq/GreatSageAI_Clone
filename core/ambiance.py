@@ -133,7 +133,7 @@ _HUMOR_TEMPLATES = [
     "Uma possibilidade de {pct}%. Os {resto}% sao imprevistos que nem eu controlo.",
     "Minhas capacidades analiticas permanecem inalaveis. Por enquanto.",
     "Calculando... Pronto. {tempo}s. Nao precisa agradecer.",
-    "Sou o Grande Sabio. Erros sao... raros. Mas nao impossiveis.",
+    "Sou a Elívea. Erros sao... raros. Mas nao impossiveis.",
     "Minha capacidade de processamento e vasta. Mas nao sou perfeita. Ainda.",
     "Rimuru sempre disse que eu era confiavel. Ele estava certo.",
     "Problema resolvido. Mais uma vitoria para a minha ja impressionante estatistica.",

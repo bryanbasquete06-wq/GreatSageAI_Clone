@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title Great Sage AI - Raphael Class v3
+title Elívea - AI Assistant
 color 0B
 cls
 
@@ -12,7 +12,7 @@ if not defined PY if exist "%LOCALAPPDATA%\Python\bin\python.exe" set "PY=%LOCAL
 if not defined PY set "PY=python"
 
 echo  +------------------------------------------------------+
-echo    GREAT SAGE AI - RAPHAEL CLASS v3
+echo    ELÍVEA - AI ASSISTANT
 echo    Pipeline de voz unificado + TTS neural streaming
 echo  +------------------------------------------------------+
 echo.

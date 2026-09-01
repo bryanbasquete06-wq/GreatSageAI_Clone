@@ -130,7 +130,7 @@ def enhance_audio(audio: np.ndarray, sr: int) -> np.ndarray:
     return (np.clip(a, -1.0, 1.0) * 32767.0).astype(np.int16)
 
 WAKE_PHRASES = [
-    "great sage", "grande sabio", "grande sage", "grande sape",
+    "elívea", "elvea", "great sage", "grande sabio", "grande sage", "grande sape",
     "oi sabio", "ei sabio", "sabio", "raphael", "rafael", "acorde",
 ]
 

@@ -1,12 +1,12 @@
 @echo off
 chcp 65001 >nul 2>&1
-title Great Sage AI — Launcher
+title Elívea - Launcher — Launcher
 color 0A
 cd /d "%~dp0"
 
 echo.
 echo  ╔══════════════════════════════════════════════════╗
-echo  ║        大賢者 GREAT SAGE AI — LAUNCHER          ║
+echo  ║        大賢者 ELÍVEA — LAUNCHER          ║
 echo  ╚══════════════════════════════════════════════════╝
 echo.
 
@@ -37,7 +37,7 @@ if not exist ".env" (
     echo.
 )
 
-echo Iniciando Great Sage AI (terminal ficará invisível)...
+echo Iniciando Elívea (terminal ficará invisível)...
 :: Usa pythonw para não mostrar console preto feio — cai para python se pythonw não existir
 where pythonw >nul 2>&1
 if %errorlevel% equ 0 (

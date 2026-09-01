@@ -1,6 +1,6 @@
 @echo off
 REM ============================================
-REM Great Sage AI — Build Standalone Installer
+REM Elívea — Build Standalone Installer
 REM ============================================
 REM Compila o instalador em um .exe único que
 REM qualquer pessoa pode executar sem ter Python.
@@ -8,7 +8,7 @@ REM ============================================
 
 echo.
 echo ========================================
-echo   Great Sage AI - Build Installer v2.0
+echo   Elívea - Build Installer v2.0
 echo ========================================
 echo.
 
@@ -75,7 +75,7 @@ echo   O instalador esta em:
 echo   dist\Instalador_Elivea.exe
 echo.
 echo   Envie este arquivo para quem quiser
-echo   instalar o Grande Sabio AI.
+echo   instalar o Elívea.
 echo ========================================
 echo.
 

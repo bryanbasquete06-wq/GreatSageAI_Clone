@@ -1,6 +1,6 @@
 @echo off
 REM ============================================
-REM Great Sage AI — Build Script
+REM Elívea — Build Script
 REM ============================================
 REM Executa: build.bat
 REM Output: dist/EliveaAI/
@@ -8,7 +8,7 @@ REM ============================================
 
 echo.
 echo ========================================
-echo   Great Sage AI - Build Script v1.0
+echo   Elívea - Build Script v1.0
 echo ========================================
 echo.
 

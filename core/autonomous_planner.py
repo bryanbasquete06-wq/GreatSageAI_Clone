@@ -62,7 +62,7 @@ class TaskPlan:
 class AutonomousPlanner:
     """Planejador autônomo de tarefas multi-etapa."""
 
-    PLAN_PROMPT = """Você é o Grande Sábio, um planejador autônomo de tarefas.
+    PLAN_PROMPT = """Você é a Elívea, um planejador autônomo de tarefas.
 Decomponha a meta em passos concretos, executáveis e ordenados.
 
 META: {goal}

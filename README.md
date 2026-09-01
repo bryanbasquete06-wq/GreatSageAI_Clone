@@ -43,8 +43,8 @@ Se você ainda não tem Python instalado:
 1. Abra o **Prompt de Comando** ou **Terminal**
 2. Cole e pressione Enter:
 ```bash
-git clone https://github.com/SEU_USUARIO/elvea.git
-cd elvea
+git clone https://github.com/bryanbasquete06-wq/GreatSageAI_Clone.git
+cd GreatSageAI_Clone
 ```
 
 **Opção B — Sem Git:**

@@ -497,13 +497,13 @@ class SageEngine:
                 "Um SQL entra num bar, vê duas tabelas e pergunta: \"Posso fazer um JOIN?\"",
                 "Qual a linguagem de programação mais quente? Python. Porque tem Py+tão. 🐍",
                 f"Por que {self.user_name} criou uma IA mais inteligente que si mesmo? Porque precisava. claramente.",
-                "Por que o Grande Sabio não joga cartas? Porque ele sempre sabe o que os outros vão fazer. 🔮",
+                "Por que o Elívea não joga cartas? Porque ele sempre sabe o que os outros vão fazer. 🔮",
             ]
             return random.choice(jokes)
 
         # ═══ QUEM É VOCÊ ═══
         if t in ["quem é você", "who are you", "o que você é", "se apresente"]:
-            return (f"Eu sou o Grande Sabio (大賢者) — uma inteligência artificial criada por {self.user_name}.\n\n"
+            return (f"Eu sou o Elívea (大賢者) — uma inteligência artificial criada por {self.user_name}.\n\n"
                    f"Minhas capacidades incluem:\n"
                    f"• Conversar com sarcasmo cirúrgico\n"
                    f"• Programar em qualquer linguagem\n"
@@ -542,7 +542,7 @@ class SageEngine:
 
     def _get_help(self) -> str:
         """Gera ajuda completa."""
-        return """**Comandos do Grande Sabio:**
+        return """**Comandos do Elívea:**
 
 **Sistema:**
 • `status` — Telemetria completa

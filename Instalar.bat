@@ -1,12 +1,12 @@
 @echo off
 REM ============================================
-REM Grande Sabio AI — Instalador Rapido
+REM Elívea AI — Instalador Rapido
 REM ============================================
 REM Execute este arquivo para instalar a IA.
 REM Funciona em qualquer PC com Windows 10/11.
 REM ============================================
 
-title Grande Sabio AI — Instalador
+title Elívea AI — Instalador
 
 REM Verifica Python
 python --version >nul 2>&1
@@ -15,7 +15,7 @@ if %errorlevel% neq 0 (
     echo ========================================
     echo   Python nao encontrado!
     echo.
-    echo   O Grande Sabio precisa de Python 3.10+
+    echo   Elívea precisa de Python 3.10+
     echo   para funcionar.
     echo.
     echo   Baixe em: https://www.python.org/downloads/
@@ -31,7 +31,7 @@ REM Verifica se o projeto ja existe
 if not exist "main.py" (
     echo.
     echo ========================================
-    echo   Arquivos do Grande Sabio nao encontrados.
+    echo   Arquivos do Elívea nao encontrados.
     echo   Execute o Instalador_Elivea.exe
     echo   para baixar a IA primeiro.
     echo ========================================
@@ -42,7 +42,7 @@ if not exist "main.py" (
 REM Instala dependencias
 echo.
 echo ========================================
-echo   Grande Sabio AI — Instalando...
+echo   Elívea AI — Instalando...
 echo ========================================
 echo.
 
@@ -69,7 +69,7 @@ echo ========================================
 echo   Instalacao concluida!
 echo.
 echo   Para iniciar: python main.py
-echo   Ou clique duas vezes em "Grande Sabio AI"
+echo   Ou clique duas vezes em "Elívea"
 echo   na Area de Trabalho.
 echo ========================================
 pause

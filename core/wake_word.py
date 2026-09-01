@@ -18,7 +18,7 @@ from core.mic_manager import get_best_input_device
 
 
 class WakeWordDetector:
-    WAKE_PHRASES = ["great sage", "grande sábio", "grande sabio", "raphael", "sábio", "sabio", "ei sábio", "ei sabio", "sage"]
+    WAKE_PHRASES = ["elívea", "elvea","great sage", "grande sábio", "grande sabio", "raphael", "sábio", "sabio", "ei sábio", "ei sabio", "sage"]
 
     def __init__(self, on_wake_callback=None, sample_rate: int = 16000, groq_key: str | None = None):
         self.sample_rate = sample_rate

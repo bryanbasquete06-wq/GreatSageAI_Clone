@@ -44,6 +44,9 @@ ALL_VOICES = {**PT_VOICES, **EN_VOICES}
 
 # Wake words (case-insensitive)
 WAKE_WORDS = [
+    "elívea",
+    "elvea",
+    "great sage",
     "grande sabio",
     "grande sábio",
     "grande saber",

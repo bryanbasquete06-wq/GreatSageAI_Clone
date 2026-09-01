@@ -28,7 +28,7 @@ class ExecutionResult:
     error: str = ""
     language: str = ""
     execution_time_ms: float = 0
-    approved: bool = True  # compatibilidade com great_sage_app
+    approved: bool = True  # compatibilidade com elvea_app
 
 
 def execute_python(code: str, timeout: int = 10) -> ExecutionResult:
@@ -220,7 +220,7 @@ def format_result(result: ExecutionResult) -> str:
 
 
 class CodeExecutor:
-    """Compatibilidade com great_sage_app (EliveaLLM streaming)."""
+    """Compatibilidade com elvea_app (EliveaLLM streaming)."""
     @staticmethod
     def has_executable(text: str) -> bool:
         if not text:

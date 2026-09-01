@@ -1,4 +1,4 @@
-# Como Distribuir o Grande Sábio AI
+# Como Distribuir o Elívea AI
 
 ## Passo 1: Subir o código no GitHub
 

@@ -47,7 +47,7 @@ class Elivea:
     def __init__(self, voice_enabled: bool = False):
         self.voice_enabled = voice_enabled
         self.microphone_available = self._check_windows_voice()
-        self.wake_phrases = ["great sage", "sage", "grande sábio", "sábio"]
+        self.wake_phrases = ["elívea", "elvea", "great sage", "sage", "grande sábio", "sábio"]
 
     def _escape_powershell(self, value: str) -> str:
         return value.replace("`", "``").replace('"', '`"')

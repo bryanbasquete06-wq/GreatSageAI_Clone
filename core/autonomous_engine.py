@@ -9,7 +9,7 @@ Motor de auto-programação CONTÍNUA e PROATIVA que:
   4. Auto-aprendizado: registra o que funcionou/quebrou para melhorar decisões futuras
   5. Self-awareness: conhece seus próprios módulos e capacidades
 
-O Grande Sábio agora se auto-programa — sem que o Mestre peça.
+A Elívea agora se auto-programa — sem que o Mestre peça.
 """
 
 from __future__ import annotations

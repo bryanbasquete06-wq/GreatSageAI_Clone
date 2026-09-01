@@ -522,10 +522,10 @@ class LLMEngine:
         threading.Thread(target=self._prewarm_connections, daemon=True, name="llm-prewarm").start()
 
     def _get_api_key(self, primary: str, aliases: List[str] = None, env: Dict[str, str] = None) -> str:
-        """Busca API key: SecretManager (F:\\GreatSageTemp) primeiro, depois .env dict, depois os.environ."""
+        """Busca API key: SecretManager (F:\\EliveaTemp) primeiro, depois .env dict, depois os.environ."""
         aliases = aliases or []
         env = env or {}
-        # 1) SecretManager em F:\\GreatSageTemp (primary)
+        # 1) SecretManager em F:\\EliveaTemp (primary)
         for mod_path in ("core.secret_manager", "EliveaAI_Clone.core.secret_manager"):
             try:
                 mod = __import__(mod_path, fromlist=["secrets"])
@@ -561,7 +561,7 @@ class LLMEngine:
         return ""
 
     def _load_providers(self):
-        """Carrega providers: SecretManager (F:\\GreatSageTemp) como fonte primária, .env como fallback."""
+        """Carrega providers: SecretManager (F:\\EliveaTemp) como fonte primária, .env como fallback."""
         env = self._read_env()
 
         configs = [
@@ -654,7 +654,7 @@ class LLMEngine:
         return [p.name for p in self.providers if p.available]
 
     def _offline_fallback(self, messages: List[Dict]) -> str:
-        """Fallback offline que consulta RAG local em F:\\GreatSageTemp\\rag e memory/rag_embeddings + MemoryManager."""
+        """Fallback offline que consulta RAG local em F:\\EliveaTemp\\rag e memory/rag_embeddings + MemoryManager."""
         try:
             # SPEED: cache offline fallback by last message hash
             last = messages[-1]["content"] if messages else ""
@@ -666,7 +666,7 @@ class LLMEngine:
             rag_stats = ""
             memory_snippet = ""
 
-            # 1) Tenta RAG via RAGWithEmbeddings (prioriza F:\\GreatSageTemp\\rag)
+            # 1) Tenta RAG via RAGWithEmbeddings (prioriza F:\\EliveaTemp\\rag)
             try:
                 RagClass = None
                 for mod_path in ("core.rag_embeddings", "EliveaAI_Clone.core.rag_embeddings"):
@@ -709,8 +709,8 @@ class LLMEngine:
                 # Fallback direto via arquivo se RagClass não retornou nada
                 if not rag_context:
                     cand_dirs = [
-                        Path("F:/GreatSageTemp/rag"),
-                        Path("F:\\GreatSageTemp\\rag"),
+                        Path("F:/EliveaTemp/rag"),
+                        Path("F:\\EliveaTemp\\rag"),
                         Path(__file__).resolve().parent.parent / "config" / "rag_embeddings",
                         Path(__file__).resolve().parent.parent / "config" / "rag_cache",
                         Path(__file__).resolve().parent.parent / "memory" / "rag_embeddings",
@@ -812,15 +812,15 @@ class LLMEngine:
                     parts.append("Estou offline (sem Groq/Gemini). Usei apenas conhecimento local acima. Se precisar de código, me diga a linguagem e eu gero localmente.")
                 else:
                     parts.append(f"Pergunta: \"{last[:400]}\"")
-                    parts.append("Resposta gerada 100% offline a partir do cache local em F:\\GreatSageTemp\\rag. Quando a conexão voltar, usarei os providers em nuvem.")
+                    parts.append("Resposta gerada 100% offline a partir do cache local em F:\\EliveaTemp\\rag. Quando a conexão voltar, usarei os providers em nuvem.")
                 return "\n\n".join(parts)
 
             # 4) Sem RAG, fallback genérico original (mantido)
             if any(k in q for k in ("codigo","código","funcao","função","programa","python","javascript")):
                 return "Modo offline: estou sem conexão com Groq/Gemini no momento. Posso gerar código localmente — me diga a linguagem e o que precisa (ex: 'crie função fatorial em python') que eu implemento com meu gerador local."
             if any(k in q for k in ("quem","voce","você","nome")):
-                return "Sou o Grande Sábio (Raphael), sua IA leal. Estou temporariamente offline, mas minha memória, automação e voz continuam. Pergunte sobre qualquer tema que respondo com meu conhecimento local."
-            return "Estou temporariamente offline (limite de tokens ou rede). Já reduzi o contexto e vou tentar novamente em segundos. Enquanto isso, posso ajudar com automação, arquivos e código local — só pedir. (Dica: adicione docs em F:\\GreatSageTemp\\rag para respostas offline mais ricas)"
+                return "Sou a Elívea, sua IA leal. Estou temporariamente offline, mas minha memória, automação e voz continuam. Pergunte sobre qualquer tema que respondo com meu conhecimento local."
+            return "Estou temporariamente offline (limite de tokens ou rede). Já reduzi o contexto e vou tentar novamente em segundos. Enquanto isso, posso ajudar com automação, arquivos e código local — só pedir. (Dica: adicione docs em F:\\EliveaTemp\\rag para respostas offline mais ricas)"
         except Exception as e:
             logger.debug(f"_offline_fallback erro geral: {e}")
             return "Offline temporário — tente novamente em 5 segundos."
@@ -889,7 +889,7 @@ class LLMEngine:
         return status
 
 
-# Compatibilidade: EliveaLLM usado por great_sage_app original
+# Compatibilidade: EliveaLLM usado por elvea_app original
 class EliveaLLM(LLMEngine):
     """Wrapper compatível com o EliveaLLM original (usa LLMEngine por baixo)."""
     def __init__(self, *args, **kwargs):

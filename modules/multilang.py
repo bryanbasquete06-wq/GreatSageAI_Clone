@@ -27,7 +27,7 @@ class MultiLang:
     }
 
     _DETECT_PATTERNS = {
-        "pt": r"\b(obrigado|obrigada|por favor|nao|sim|como|onde|quando|por que|voce|eu|ele|ela|nos|voces|bom dia|boa tarde|boa noite|mestre|grande sabio)\b",
+        "pt": r"\b(obrigado|obrigada|por favor|nao|sim|como|onde|quando|por que|voce|eu|ele|ela|nos|voces|bom dia|boa tarde|boa noite|mestre|elívea)\b",
         "en": r"\b(thank you|please|yes|no|how|where|when|why|you|i|he|she|we|they|good morning|good afternoon|good evening|hello|hey)\b",
         "es": r"\b(gracias|por favor|si|no|como|donde|cuando|por que|tu|yo|el|ella|nosotros|ustedes|buenos dias|buenas tardes|hola)\b",
         "fr": r"\b(merci|s'il vous plait|oui|non|comment|ou|quand|pourquoi|vous|je|il|elle|nous|bonjour|bonsoir)\b",

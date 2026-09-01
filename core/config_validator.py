@@ -28,7 +28,7 @@ if HAS_PYDANTIC:
         voice: str = "pt-BR-FranciscaNeural"
         theme: str = "tensura_gold"
         wake_word_enabled: bool = True
-        wake_word: str = "great sage"
+        wake_word: str = "elívea"
         log_level: str = "INFO"
         max_history: int = 1000
 
