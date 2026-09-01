@@ -1359,6 +1359,7 @@ class EliveaMainWindow(QMainWindow):
         )
         from ui.chat_panel import ChatSidebar
         from ui.deep_dev_panel import DeepDevPanelWidget
+        from ui.command_palette import CommandPalette
         central = QWidget()
         central.setStyleSheet(f"background: {BG};")
         self.setCentralWidget(central)
@@ -1529,6 +1530,7 @@ class EliveaMainWindow(QMainWindow):
         QShortcut(QKeySequence("Ctrl+P"), self).activated.connect(lambda: self.open_code_workspace())
         QShortcut(QKeySequence("Ctrl+Shift+P"), self).activated.connect(lambda: self.open_programming_panel())
         QShortcut(QKeySequence("F1"), self).activated.connect(self._show_help)
+        QShortcut(QKeySequence("Ctrl+K"), self).activated.connect(self._open_command_palette)
 
     def _detect_theme_by_time(self) -> str:
         """Auto-select theme based on time of day."""
@@ -2364,6 +2366,23 @@ Comandos de Voz:
                 QTimer.singleShot(0, lambda: self.set_pipeline_state("idle"))
 
         threading.Thread(target=_worker, daemon=True).start()
+
+    def _open_command_palette(self):
+        """Open the Command Palette overlay."""
+        self.command_palette.show_palette()
+
+    def _on_palette_command(self, cmd_id: str):
+        """Handle command selected from palette."""
+        if cmd_id == "theme":
+            self._cycle_theme()
+        elif cmd_id == "voice":
+            self._cycle_voice()
+        elif cmd_id == "config":
+            self._open_config()
+        elif cmd_id == "ajuda":
+            self._show_help()
+        else:
+            self.submit_command(cmd_id)
 
     def mousePressEvent(self, ev):
         """Click ripple + pass to parent."""
