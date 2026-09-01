@@ -421,6 +421,17 @@ class SageEngine:
             self.memory.clear_history()
             return f"Histórico limpo. Como se nunca tivéssemos conversado. Que começo fresh, {self.user_name}. 🧹"
 
+        # ═══ MEMORY BACKUP ═══
+        if t in ["backup", "salvar backup", "create backup"]:
+            return self._do_backup()
+        if t in ["restore", "restaurar backup", "carregar backup"]:
+            return self._do_restore()
+        if t in ["backup status", "status backup", "backups"]:
+            return self._get_backup_status()
+        if t.startswith("restore "):
+            path_part = t.replace("restore ", "").strip()
+            return self._do_restore(path_part)
+
         # ═══ SISTEMA ═══
         if t in ["status", "informações", "info", "sistema"]:
             return self._get_status()
@@ -741,6 +752,73 @@ class SageEngine:
         except Exception as e:
             return f"Erro ao gerar digest: {e}"
 
+    def _do_backup(self) -> str:
+        """Create a manual memory backup."""
+        try:
+            result = self.persistent_memory.backup(label="manual")
+            if result["success"]:
+                size_kb = result["size_bytes"] / 1024
+                return (
+                    f"═══ Backup Criado ═══\n"
+                    f"Arquivo: {Path(result['backup']).name}\n"
+                    f"Tamanho: {size_kb:.1f} KB\n"
+                    f"Memórias: {result['memories']}\n"
+                    f"Timestamp: {result['timestamp']}\n"
+                    f"Backup salvo com sucesso. 💾"
+                )
+            else:
+                return f"Falha ao criar backup: {result.get('error', 'desconhecido')} ❌"
+        except Exception as e:
+            return f"Erro ao criar backup: {e}"
+
+    def _do_restore(self, backup_path: str = None) -> str:
+        """Restore memory from backup."""
+        try:
+            if backup_path:
+                # Find by partial name match
+                backups = self.persistent_memory.list_backups()
+                matched = [b for b in backups if backup_path in b["name"]]
+                if not matched:
+                    return f"Backup '{backup_path}' não encontrado. Use 'backups' para listar."
+                backup_path = matched[0]["path"]
+
+            result = self.persistent_memory.restore(backup_path)
+            if result["success"]:
+                return (
+                    f"═══ Backup Restaurado ═══\n"
+                    f"Fonte: {result['restored_from']}\n"
+                    f"Memórias restauradas: {result['memories']}\n"
+                    f"Restore concluído com sucesso. ✅"
+                )
+            else:
+                return f"Falha ao restaurar: {result.get('error', 'desconhecido')} ❌"
+        except Exception as e:
+            return f"Erro ao restaurar: {e}"
+
+    def _get_backup_status(self) -> str:
+        """Show backup system status."""
+        try:
+            status = self.persistent_memory.backup_status()
+            lines = ["═══ 💾 Status dos Backups ═══"]
+            lines.append(f"Memórias protegidas: {status['memories_protected']}")
+            lines.append(f"Total de backups: {status['total_backups']}")
+            lines.append(f"  Automáticos: {status['auto_backups']}")
+            lines.append(f"  Manuais: {status['manual_backups']}")
+            lines.append(f"Limite: {status['max_backups']} | Intervalo: {status['interval_hours']}h")
+            if status['next_backup']:
+                lines.append(f"Próximo backup: {status['next_backup']}")
+            else:
+                lines.append(f"Auto-backup: {'Ativo ✅' if status['auto_backup_active'] else 'Inativo ❌'}")
+            lines.append(f"Tamanho DB: {status['db_size_bytes'] / 1024:.1f} KB")
+            lines.append(f"Tamanho total backups: {status['total_backup_bytes'] / 1024:.1f} KB")
+            if status['newest']:
+                lines.append(f"Mais recente: {status['newest']}")
+            if status['oldest']:
+                lines.append(f"Mais antigo: {status['oldest']}")
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Erro ao obter status de backups: {e}"
+
     def _get_help(self) -> str:
         """Gera ajuda completa."""
         return """**Comandos do Elívea:**
@@ -780,6 +858,9 @@ class SageEngine:
 • `lembre-se [fato]` — Salvar fato
 • `o que voce lembra` — Ver memorias
 • `limpar memoria` — Limpar historico
+• `backup` — Criar backup manual
+• `restore` — Restaurar ultimo backup
+• `backups` — Status dos backups
 
 **Plugins:**
 • `calcule [expressao]` — Calculadora

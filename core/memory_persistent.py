@@ -13,6 +13,9 @@ import json
 import logging
 import math
 import hashlib
+import shutil
+import threading
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional
@@ -20,6 +23,9 @@ from dataclasses import dataclass
 
 logger = logging.getLogger("elvea.memory")
 DB_PATH = Path(__file__).resolve().parent.parent / "config" / "memory.db"
+BACKUP_DIR = Path(__file__).resolve().parent.parent / "config" / "backups"
+MAX_BACKUPS = 30  # Keep at most 30 snapshots
+BACKUP_INTERVAL_HOURS = 24
 
 # Decay: importância reduz 50% a cada N dias por categoria
 CATEGORY_DECAY_DAYS = {
@@ -61,7 +67,11 @@ class PersistentMemory:
     def __init__(self, db_path: Path = None):
         self.db_path = db_path or DB_PATH
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._backup_timer: Optional[threading.Timer] = None
+        self._backup_lock = threading.Lock()
         self._init_db()
+        # Start auto-backup on first instantiation
+        self.start_auto_backup()
 
     def _init_db(self):
         # Handle corrupted database — backup and recreate
@@ -414,4 +424,244 @@ class PersistentMemory:
             "total_corrections": total,
             "topics_learned": topic_counts,
             "most_corrected": max(topic_counts, key=topic_counts.get) if topic_counts else "none",
+        }
+
+    # ------------------------------------------------------------------
+    # Backup System (v3)
+    # ------------------------------------------------------------------
+
+    def backup(self, label: str = "") -> dict:
+        """Create a timestamped snapshot of the database.
+        Uses SQLite backup API for atomic, consistent copies.
+        Returns dict with backup metadata.
+        """
+        if not self.db_path.exists():
+            return {"success": False, "error": "No database to backup"}
+
+        BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        name = f"memory_{ts}.db" if not label else f"memory_{ts}_{label}.db"
+        backup_path = BACKUP_DIR / name
+
+        try:
+            # SQLite online backup API — safe even while app is running
+            src = sqlite3.connect(str(self.db_path))
+            dst = sqlite3.connect(str(backup_path))
+            src.backup(dst)
+            dst.close()
+            src.close()
+
+            # Also save a metadata sidecar
+            meta = {
+                "timestamp": datetime.now().isoformat(),
+                "source": str(self.db_path),
+                "backup": str(backup_path),
+                "size_bytes": backup_path.stat().st_size,
+                "memories": self.count(),
+                "label": label,
+            }
+            meta_path = backup_path.with_suffix(".meta.json")
+            meta_path.write_text(json.dumps(meta, indent=2, ensure_ascii=False), encoding="utf-8")
+
+            # Prune old backups to stay under MAX_BACKUPS
+            self.prune_backups()
+
+            logger.info(f"[Memory] Backup created: {name} ({meta['size_bytes']} bytes, {meta['memories']} memories)")
+            return {"success": True, **meta}
+
+        except Exception as e:
+            logger.error(f"[Memory] Backup failed: {e}")
+            # Clean up partial backup
+            try:
+                backup_path.unlink(missing_ok=True)
+                (backup_path.with_suffix(".meta.json")).unlink(missing_ok=True)
+            except Exception:
+                pass
+            return {"success": False, "error": str(e)}
+
+    def list_backups(self) -> List[Dict]:
+        """List all available backups, newest first."""
+        if not BACKUP_DIR.exists():
+            return []
+
+        backups = []
+        for db_file in sorted(BACKUP_DIR.glob("memory_*.db"), reverse=True):
+            meta_path = db_file.with_suffix(".meta.json")
+            meta = {}
+            if meta_path.exists():
+                try:
+                    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+                except Exception:
+                    pass
+            backups.append({
+                "path": str(db_file),
+                "name": db_file.name,
+                "size_bytes": db_file.stat().st_size if db_file.exists() else 0,
+                "timestamp": meta.get("timestamp", "unknown"),
+                "memories": meta.get("memories", "?"),
+                "label": meta.get("label", ""),
+            })
+        return backups
+
+    def restore(self, backup_path: str = None) -> dict:
+        """Restore database from a backup.
+        Uses SQLite backup API for atomic, consistent restore.
+        If backup_path is None, restores the most recent backup.
+        """
+        if backup_path:
+            target = Path(backup_path)
+        else:
+            backups = self.list_backups()
+            if not backups:
+                return {"success": False, "error": "No backups available"}
+            target = Path(backups[0]["path"])  # newest
+
+        if not target.exists():
+            return {"success": False, "error": f"Backup not found: {target.name}"}
+
+        try:
+            # Verify backup is healthy before restoring
+            src_conn = sqlite3.connect(str(target))
+            src_count = src_conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0]
+
+            if src_count == 0:
+                tables = [r[0] for r in src_conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'").fetchall()]
+                src_conn.close()
+                if "memories" not in tables:
+                    return {"success": False, "error": "Backup has no memories table"}
+
+            # Attempt to remove stale WAL/SHM (may fail on Windows — non-critical)
+            for ext in ["-wal", "-shm"]:
+                stale = self.db_path.with_suffix(self.db_path.suffix + ext)
+                try:
+                    if stale.exists():
+                        stale.unlink()
+                except OSError:
+                    pass  # Windows file lock — backup API handles this
+
+            # Use SQLite backup API for atomic restore
+            dst_conn = sqlite3.connect(str(self.db_path))
+            dst_conn.execute("PRAGMA journal_mode=WAL")
+            src_conn.backup(dst_conn)
+            dst_conn.close()
+            src_conn.close()
+
+            # Verify restore worked
+            verify = sqlite3.connect(str(self.db_path))
+            new_count = verify.execute("SELECT COUNT(*) FROM memories").fetchone()[0]
+            verify.close()
+
+            logger.info(f"[Memory] Restored from {target.name}: {new_count} memories")
+            return {
+                "success": True,
+                "restored_from": target.name,
+                "memories": new_count,
+            }
+
+        except Exception as e:
+            logger.error(f"[Memory] Restore failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    def prune_backups(self, keep_max: int = MAX_BACKUPS) -> int:
+        """Remove oldest backups, keeping at most keep_max.
+        Returns number of backups removed.
+        """
+        if not BACKUP_DIR.exists():
+            return 0
+
+        db_files = sorted(BACKUP_DIR.glob("memory_*.db"))
+        if len(db_files) <= keep_max:
+            return 0
+
+        to_remove = db_files[:len(db_files) - keep_max]
+        removed = 0
+        for f in to_remove:
+            try:
+                f.unlink(missing_ok=True)
+                # Also remove metadata sidecar
+                meta = f.with_suffix(".meta.json")
+                if meta.exists():
+                    meta.unlink(missing_ok=True)
+                removed += 1
+            except Exception:
+                pass
+
+        if removed:
+            logger.info(f"[Memory] Pruned {removed} old backups (keeping {keep_max})")
+        return removed
+
+    def start_auto_backup(self, interval_hours: float = BACKUP_INTERVAL_HOURS):
+        """Start background auto-backup timer."""
+        with self._backup_lock:
+            if self._backup_timer and self._backup_timer.is_alive():
+                return  # Already running
+            self._backup_timer = threading.Timer(
+                interval_hours * 3600, self._auto_backup_tick
+            )
+            self._backup_timer.daemon = True
+            self._backup_timer.name = "elvea-memory-backup"
+            self._backup_timer.start()
+        logger.info(f"[Memory] Auto-backup scheduled every {interval_hours}h")
+
+    def stop_auto_backup(self):
+        """Stop the background auto-backup timer."""
+        with self._backup_lock:
+            if self._backup_timer:
+                self._backup_timer.cancel()
+                self._backup_timer = None
+        logger.info("[Memory] Auto-backup stopped")
+
+    def _auto_backup_tick(self):
+        """Called by timer thread — performs backup and reschedules."""
+        try:
+            memory_count = self.count()
+            if memory_count > 0:
+                result = self.backup(label="auto")
+                if result["success"]:
+                    logger.info(
+                        f"[Memory] Auto-backup OK: {result['memories']} memories, "
+                        f"{result['size_bytes']} bytes"
+                    )
+                else:
+                    logger.error(f"[Memory] Auto-backup failed: {result.get('error')}")
+            else:
+                logger.debug("[Memory] Auto-backup skipped: no memories yet")
+        except Exception as e:
+            logger.error(f"[Memory] Auto-backup exception: {e}")
+        finally:
+            # Reschedule
+            self.start_auto_backup()
+
+    def backup_status(self) -> Dict:
+        """Get backup system status for dashboard display."""
+        backups = self.list_backups()
+        memory_count = self.count()
+        db_size = self.db_path.stat().st_size if self.db_path.exists() else 0
+
+        total_backup_bytes = sum(b["size_bytes"] for b in backups)
+        auto_backups = [b for b in backups if b.get("label") == "auto"]
+        manual_backups = [b for b in backups if b.get("label") != "auto"]
+
+        next_backup = None
+        if self._backup_timer and self._backup_timer.is_alive():
+            remaining = self._backup_timer.interval - (time.time() - self._backup_timer.start_time)
+            if remaining > 0:
+                h = int(remaining // 3600)
+                m = int((remaining % 3600) // 60)
+                next_backup = f"{h}h {m}min"
+
+        return {
+            "total_backups": len(backups),
+            "auto_backups": len(auto_backups),
+            "manual_backups": len(manual_backups),
+            "db_size_bytes": db_size,
+            "total_backup_bytes": total_backup_bytes,
+            "memories_protected": memory_count,
+            "max_backups": MAX_BACKUPS,
+            "interval_hours": BACKUP_INTERVAL_HOURS,
+            "next_backup": next_backup,
+            "auto_backup_active": self._backup_timer is not None and self._backup_timer.is_alive(),
+            "newest": backups[0]["name"] if backups else None,
+            "oldest": backups[-1]["name"] if backups else None,
         }

@@ -108,6 +108,9 @@ def get_all_commands() -> List[PaletteCommand]:
         # Memory
         PaletteCommand("o que voce lembra", "View Memories", "Show stored memories", "Memory", icon="🔮"),
         PaletteCommand("limpar memória", "Clear Memory", "Clear conversation history", "Memory", icon="🧹"),
+        PaletteCommand("backup", "Create Backup", "Save memory snapshot", "Memory", icon="💾"),
+        PaletteCommand("restore", "Restore Backup", "Restore from latest backup", "Memory", icon="♻️"),
+        PaletteCommand("backup status", "Backup Status", "View backup system status", "Memory", icon="📋"),
 
         # Code
         PaletteCommand("execute print(2+2)", "Execute Code", "Run Python code snippet", "Code", icon="▶️"),
