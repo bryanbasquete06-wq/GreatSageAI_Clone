@@ -66,13 +66,17 @@ class ChatBubbleWidget(QWidget):
         self._fade_timer.start(16)  # 60fps
 
     def _fade_tick(self):
-        self._opacity = min(1.0, self._opacity + 0.06)
-        # Smooth ease-out slide
-        self._slide_x *= 0.85
-        if abs(self._slide_x) < 0.5:
+        # Premium ease-out animation (smooth, not linear)
+        dt = 0.016  # ~60fps
+        # Opacity: smooth ease-out (fast start, slow finish)
+        self._opacity = min(1.0, self._opacity + dt * 3.5 * (1.0 - self._opacity))
+        # Slide: spring-like deceleration
+        self._slide_x *= 0.88
+        if abs(self._slide_x) < 0.3:
             self._slide_x = 0.0
         self.update()
-        if self._opacity >= 1.0 and self._slide_x == 0.0:
+        if self._opacity >= 0.99 and self._slide_x == 0.0:
+            self._opacity = 1.0
             self._fade_timer.stop()
 
     def _compute_size(self):
@@ -125,19 +129,21 @@ class ChatBubbleWidget(QWidget):
 
         by = 4
 
-        # ── Bubble background with texture ──
+        # ── Bubble background (Direction B: premium gold/black) ──
         if self._is_user:
+            # User: warm gold tint on dark
             bg = QLinearGradient(bx, 0, bx + bubble_w, 0)
-            bg.setColorAt(0, _alpha("#2a2000", int(200 * self._opacity)))
-            bg.setColorAt(1, _alpha("#1c1600", int(180 * self._opacity)))
+            bg.setColorAt(0, _alpha("#1a1508", int(220 * self._opacity)))
+            bg.setColorAt(1, _alpha("#141006", int(200 * self._opacity)))
             p.setBrush(QBrush(bg))
-            p.setPen(QPen(_alpha(GOLD, int(40 * self._opacity)), 1))
+            p.setPen(QPen(_alpha("#C9A84C", int(25 * self._opacity)), 1))
         else:
+            # Assistant: subtle cool-dark on void black
             bg = QLinearGradient(bx, 0, bx + bubble_w, 0)
-            bg.setColorAt(0, _alpha("#101828", int(200 * self._opacity)))
-            bg.setColorAt(1, _alpha("#0c1220", int(180 * self._opacity)))
+            bg.setColorAt(0, _alpha("#0d0d12", int(230 * self._opacity)))
+            bg.setColorAt(1, _alpha("#0a0a0f", int(210 * self._opacity)))
             p.setBrush(QBrush(bg))
-            p.setPen(QPen(_alpha("#5599dd", int(30 * self._opacity)), 1))
+            p.setPen(QPen(_alpha("#3A3530", int(40 * self._opacity)), 1))
         p.drawRoundedRect(QRectF(bx, by, bubble_w, bubble_h), 10, 10)
 
         # ── Subtle texture overlay (noise effect) ──
@@ -229,17 +235,17 @@ class TypingIndicator(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         W, H = self.width(), self.height()
 
-        # Background with subtle gradient
+        # Background with Direction B gold palette
         bg = QLinearGradient(0, 0, W, 0)
-        bg.setColorAt(0, _alpha("#0a1020", 180))
-        bg.setColorAt(1, _alpha("#0e1528", 180))
+        bg.setColorAt(0, _alpha("#0d0d12", 200))
+        bg.setColorAt(1, _alpha("#0a0a0f", 200))
         p.fillRect(0, 0, W, H, QBrush(bg))
-        p.setPen(QPen(_alpha("#5599dd", 25), 1))
+        p.setPen(QPen(_alpha("#3A3530", 30), 1))
         p.drawRoundedRect(QRectF(8, 3, W - 16, H - 6), 8, 8)
 
-        # Avatar + Label
+        # Avatar + Label (Direction B gold)
         p.setFont(_font(7))
-        p.setPen(QPen(QColor("#77bbff"), 140))
+        p.setPen(QPen(QColor("#C9A84C"), 160))
         p.drawText(QRectF(16, 5, 120, 12), Qt.AlignmentFlag.AlignLeft, "＜Elívea＞")
 
         # Animated dots with pulse waves

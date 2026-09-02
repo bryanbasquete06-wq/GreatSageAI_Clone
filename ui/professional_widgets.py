@@ -187,8 +187,23 @@ class RuneCoreWidget(QWidget):
         self._color_g += (tg - self._color_g) * min(sp, 0.15)
         self._color_b += (tb - self._color_b) * min(sp, 0.15)
 
+    @staticmethod
+    def _ease_out_cubic(t: float) -> float:
+        """Smooth cubic ease-out curve for premium transitions."""
+        return 1.0 - (1.0 - t) ** 3
+
+    @staticmethod
+    def _ease_out_quart(t: float) -> float:
+        """Even smoother quartic ease-out."""
+        return 1.0 - (1.0 - t) ** 4
+
+    @staticmethod
+    def _ease_in_out_sine(t: float) -> float:
+        """Organic sine ease for breathing/pulsing."""
+        return -(math.cos(math.pi * t) - 1.0) / 2.0
+
     def _tick(self):
-        # Light mode: skip expensive animations
+        """Premium animation tick — 60fps target, organic transitions."""
         try:
             import json as _j
             _s = _j.loads(open('config/settings.json').read())
@@ -196,53 +211,110 @@ class RuneCoreWidget(QWidget):
                 return
         except Exception:
             pass
+
         now = time.time()
-        dt = now - self._last
+        dt = min(now - self._last, 0.05)  # Cap delta to prevent jumps
         self._t += dt
         self._last = now
+
+        # ── Transition easing (smooth cubic) ──
         if self._transition_t < 1.0:
-            self._transition_t = min(1.0, self._transition_t + dt * 1.6)
-        base = {"speaking": 0.55, "thinking": 0.35, "listening": 0.2,
-                "success": 0.8, "error": 0.6}.get(self._state, 0.12)
-        ease = 1.0 - (1.0 - self._transition_t) ** 3
-        ring_base = base * (0.3 + 0.7 * ease)
+            self._transition_t = min(1.0, self._transition_t + dt * 1.8)
+        ease = self._ease_out_cubic(self._transition_t)
+
+        # ── Ring rotation (smooth, state-dependent speed) ──
+        base_speeds = {
+            "speaking": 0.55, "thinking": 0.35, "listening": 0.2,
+            "success": 0.8, "error": 0.6, "idle": 0.12
+        }
+        ring_base = base_speeds.get(self._state, 0.12) * (0.3 + 0.7 * ease)
+        # Smooth acceleration/deceleration for ring speed
+        target_speed = ring_base
+        self._current_ring_speed = getattr(self, '_current_ring_speed', ring_base)
+        self._current_ring_speed += (target_speed - self._current_ring_speed) * dt * 3.0
         speeds = [0.3, -0.2, 0.15]
         for i in range(3):
-            self._rings[i] = (self._rings[i] + ring_base * speeds[i]) % 360
-        glow_diff = self._glow_tgt - self._glow
-        self._glow += glow_diff * (0.02 + 0.06 * ease)
-        sp = 0.1 if self._state in ("speaking", "success", "error") else 0.04
-        self._core_scale += ((1.08 if self._state == "speaking" else 1.0) - self._core_scale) * sp
-        self._breath = (self._breath + 0.02) % (2 * math.pi)
+            self._rings[i] = (self._rings[i] + self._current_ring_speed * speeds[i]) % 360
+
+        # ── Glow transition (smooth spring) ──
+        glow_targets = {
+            "speaking": 1.15, "thinking": 0.95, "success": 1.0,
+            "error": 1.0, "listening": 0.85, "idle": 0.55
+        }
+        target_glow = glow_targets.get(self._state, 0.55)
+        glow_diff = target_glow - self._glow
+        # Spring-like smoothing: faster when far, slower when close
+        spring_k = 0.02 + 0.06 * ease + abs(glow_diff) * 0.08
+        self._glow += glow_diff * min(spring_k, 0.15)
+
+        # ── Core scale (smooth oscillation) ──
+        scale_targets = {
+            "speaking": (1.06, 1.12),  # oscillates between
+            "thinking": (1.0, 1.05),
+            "success": (1.0, 1.02),
+            "error": (1.0, 1.03),
+            "listening": (0.98, 1.0),
+            "idle": (0.99, 1.0),
+        }
+        lo, hi = scale_targets.get(self._state, (0.99, 1.0))
+        # Organic breathing: sine wave between lo and hi
+        breath_cycle = self._ease_in_out_sine((math.sin(self._t * 1.2) + 1.0) / 2.0)
+        target_scale = lo + (hi - lo) * breath_cycle
+        self._core_scale += (target_scale - self._core_scale) * dt * 4.0
+
+        # ── Breathing (organic sine) ──
+        self._breath = (self._breath + dt * 1.8) % (2 * math.pi)
+
+        # ── Color interpolation (smooth lerp) ──
         sc = self._get_state_colors().get(self._state, self._get_state_colors()["idle"])
-        self._lerp_color(sc["ring"])
-        self._shockwaves = [s + 0.02 for s in self._shockwaves if s + 0.02 < 1.0]
+        self._lerp_color(sc["ring"], speed=0.04)
+
+        # ── Shockwaves (smooth expansion with ease-out) ──
+        self._shockwaves = [s + dt * 0.8 for s in self._shockwaves if s + dt * 0.8 < 1.0]
+
+        # ── Onboarding timer ──
         if self._onboarding_phase > 0:
             self._onboarding_t += dt
             if time.time() - getattr(self, '_onboarding_start_time', 0) > 7.0:
                 self._onboarding_phase = 0
                 self._glow_tgt = 0.85
+
+        # ── Particle system (organic, smooth) ──
         audio_boost = 1.0 + self._audio_level * 2.0
-        max_p = {"speaking": 45, "thinking": 30, "success": 40, "error": 25,
-                 "listening": 35}.get(self._state, 12)
+        max_p = {
+            "speaking": 45, "thinking": 30, "success": 40,
+            "error": 25, "listening": 35
+        }.get(self._state, 12)
         max_p = int(max_p * audio_boost)
-        prob = 0.8 if self._state != "idle" else 0.25
+        prob = 0.85 if self._state != "idle" else 0.3
         prob = min(1.0, prob * audio_boost)
+
+        # Spawn new particles with smooth initial velocity
         if len(self._particles) < max_p and random.random() < prob:
             ang = random.uniform(0, 2 * math.pi)
-            dist = random.uniform(0.1, 0.45)
-            spd = random.uniform(0.002, 0.006) * audio_boost
-            size = random.uniform(0.6, 1.2) * audio_boost
-            self._particles.append([ang, dist, spd, random.uniform(0.6, 1.0), size])
+            dist = random.uniform(0.08, 0.42)
+            spd = random.uniform(0.0015, 0.005) * audio_boost
+            size = random.uniform(0.5, 1.3) * audio_boost
+            # Add slight angular drift for organic movement
+            drift = random.uniform(-0.0003, 0.0003)
+            self._particles.append([ang, dist, spd, random.uniform(0.7, 1.0), size, drift])
+
+        # Update particles with smooth fade and organic drift
         new_p = []
         for p_data in self._particles:
             a, d, s, life = p_data[0], p_data[1], p_data[2], p_data[3]
             sz = p_data[4] if len(p_data) > 4 else 1.0
-            nd = d + s
-            nl = life - 0.004
-            if nl > 0 and nd < 1.4:
-                new_p.append([a, nd, s, nl, sz])
+            drift = p_data[5] if len(p_data) > 5 else 0.0
+            # Smooth outward movement with deceleration
+            nd = d + s * (1.0 - (d - 0.1) * 0.8)  # slows as it moves out
+            # Organic angular drift
+            na = a + drift
+            # Smooth fade-out (not linear)
+            nl = life - dt * 0.35
+            if nl > 0 and nd < 1.3:
+                new_p.append([na, nd, s, nl, sz, drift])
         self._particles = new_p
+
         self.update()
 
     def start_onboarding(self):
@@ -331,14 +403,15 @@ class RuneCoreWidget(QWidget):
         # Audio boost
         audio_boost = 1.0 + self._audio_level * 2.5
 
-        # ─── DEEP AMBIENT GLOW (smooth 5-stop gradients) ───
-        for rr, a in [(3.5, 5), (2.5, 12), (1.8, 20), (1.2, 35)]:
+        # ─── DEEP AMBIENT GLOW (ultra-smooth 6-stop gradients) ───
+        for rr, a in [(3.8, 4), (2.8, 10), (2.0, 18), (1.4, 30), (1.0, 42)]:
             boosted_a = int(a * g * audio_boost)
             bg = QRadialGradient(cx, cy, R * rr)
             bg.setColorAt(0.0, _alpha(mc, min(255, boosted_a)))
-            bg.setColorAt(0.15, _alpha(mc, int(boosted_a * 0.7)))
-            bg.setColorAt(0.35, _alpha(mc, int(boosted_a * 0.35)))
-            bg.setColorAt(0.6, _alpha(mc, int(boosted_a * 0.1)))
+            bg.setColorAt(0.1, _alpha(mc, int(boosted_a * 0.82)))
+            bg.setColorAt(0.22, _alpha(mc, int(boosted_a * 0.55)))
+            bg.setColorAt(0.4, _alpha(mc, int(boosted_a * 0.28)))
+            bg.setColorAt(0.65, _alpha(mc, int(boosted_a * 0.08)))
             bg.setColorAt(1.0, _alpha(mc, 0))
             p.setBrush(QBrush(bg)); p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(QRectF(cx - R * rr, cy - R * rr, R * rr * 2, R * rr * 2))
@@ -480,34 +553,49 @@ class RuneCoreWidget(QWidget):
                    QPointF(cx + R * 1.05 * math.cos(scan_angle),
                            cy + R * 1.05 * math.sin(scan_angle)))
 
-        # ─── SHOCKWAVES ───
+        # ─── SHOCKWAVES (smooth expansion with ease-out) ───
         for s in self._shockwaves:
-            sr = R * (0.3 + s * 1.2)
-            sa = int(100 * (1.0 - s) * g)
-            p.setPen(QPen(_alpha(mc, max(5, sa)), 1.5))
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            p.drawEllipse(QRectF(cx - sr, cy - sr, sr * 2, sr * 2))
+            # Smooth ease-out expansion
+            ease_s = self._ease_out_cubic(s)
+            sr = R * (0.25 + ease_s * 1.3)
+            # Fade out smoothly
+            fade = (1.0 - s) * (1.0 - s)  # quadratic fade
+            sa = int(90 * fade * g)
+            # Width thins as it expands
+            pw = max(0.5, 2.0 * fade)
+            if sa > 2:
+                p.setPen(QPen(_alpha(mc, sa), pw))
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.drawEllipse(QRectF(cx - sr, cy - sr, sr * 2, sr * 2))
 
-        # ─── FLOATING SPARK PARTICLES ───
+        # ─── FLOATING SPARK PARTICLES (smooth, organic) ───
         for p_data in self._particles:
             ang, dist, spd, life = p_data[0], p_data[1], p_data[2], p_data[3]
             p_size = p_data[4] if len(p_data) > 4 else 1.0
             pxp = cx + R * dist * math.cos(ang)
             pyp = cy + R * dist * math.sin(ang)
-            al = int(255 * life * g * p_size)
-            sz = (0.8 + life * 2.5) * p_size
-            if al > 5:
-                spark_g = QRadialGradient(pxp, pyp, sz * 4)
-                spark_g.setColorAt(0, _alpha(mc, int(al * 0.6)))
-                spark_g.setColorAt(0.4, _alpha(mc, int(al * 0.2)))
+            # Smooth fade curve (ease-out, not linear)
+            fade = life * life * (3.0 - 2.0 * life)  # smoothstep
+            al = int(220 * fade * g * p_size)
+            # Size grows as it moves out, then shrinks
+            sz = (0.6 + fade * 2.2) * p_size
+            if al > 3:
+                # Soft glow halo (ultra-smooth 4-stop gradient)
+                glow_r = sz * 5
+                spark_g = QRadialGradient(pxp, pyp, glow_r)
+                spark_g.setColorAt(0, _alpha(mc, int(al * 0.5)))
+                spark_g.setColorAt(0.2, _alpha(mc, int(al * 0.3)))
+                spark_g.setColorAt(0.5, _alpha(mc, int(al * 0.1)))
                 spark_g.setColorAt(1, _alpha(mc, 0))
                 p.setBrush(QBrush(spark_g)); p.setPen(Qt.PenStyle.NoPen)
-                p.drawEllipse(QPointF(pxp, pyp), sz * 4, sz * 4)
-                p.setPen(Qt.PenStyle.NoPen)
-                p.setBrush(QBrush(_alpha(mc, min(255, int(al * 1.2)))))
-                p.drawEllipse(QPointF(pxp, pyp), sz * 0.8, sz * 0.8)
-                p.setPen(QPen(_alpha(mc, al), sz))
-                p.drawPoint(int(pxp), int(pyp))
+                p.drawEllipse(QPointF(pxp, pyp), glow_r, glow_r)
+                # Core dot (smooth, not harsh)
+                core_g = QRadialGradient(pxp, pyp, sz)
+                core_g.setColorAt(0, _alpha(mc, min(255, int(al * 1.3))))
+                core_g.setColorAt(0.6, _alpha(mc, int(al * 0.5)))
+                core_g.setColorAt(1, _alpha(mc, 0))
+                p.setBrush(QBrush(core_g)); p.setPen(Qt.PenStyle.NoPen)
+                p.drawEllipse(QPointF(pxp, pyp), sz, sz)
 
         # ═══════════════════════════════════════════════════════════════
         #  CORE: GOLDEN HEXAGRAM STAR with intense glow (the key feature)
@@ -515,12 +603,14 @@ class RuneCoreWidget(QWidget):
         orb_r = R * 0.35 * self._core_scale * breath
         pulse = 0.65 + 0.35 * math.sin(self._t * 2.5)
 
-        # Layer 1: Ultra-wide ambient radial glow
+        # Layer 1: Ultra-wide ambient radial glow (ultra-smooth)
         glow_r = orb_r * 5.5
         gl = QRadialGradient(cx, cy, glow_r)
         gl.setColorAt(0, _alpha(sc["glow"], int(60 * pulse * g)))
-        gl.setColorAt(0.12, _alpha(sc["glow"], int(30 * pulse * g)))
-        gl.setColorAt(0.4, _alpha(sc["glow"], int(8 * pulse * g)))
+        gl.setColorAt(0.08, _alpha(sc["glow"], int(45 * pulse * g)))
+        gl.setColorAt(0.18, _alpha(sc["glow"], int(28 * pulse * g)))
+        gl.setColorAt(0.32, _alpha(sc["glow"], int(12 * pulse * g)))
+        gl.setColorAt(0.55, _alpha(sc["glow"], int(4 * pulse * g)))
         gl.setColorAt(1, _alpha(sc["glow"], 0))
         p.setBrush(QBrush(gl)); p.setPen(Qt.PenStyle.NoPen)
         p.drawEllipse(QRectF(cx - glow_r, cy - glow_r, glow_r * 2, glow_r * 2))
@@ -564,16 +654,16 @@ class RuneCoreWidget(QWidget):
             p.save()
             p.translate(cx, cy)
 
-            # ── Layer A: Deep radial soul glow (ultra-smooth) ──
+            # ── Layer A: Deep radial soul glow (premium 8-stop gradient) ──
             soul_r = star_r * 2.8
             sg = QRadialGradient(0, 0, soul_r)
-            sg.setColorAt(0.0, _alpha(sc["star"], int(70 * pulse * g)))
-            sg.setColorAt(0.08, _alpha(sc["glow"], int(60 * pulse * g)))
-            sg.setColorAt(0.18, _alpha(sc["glow"], int(45 * pulse * g)))
-            sg.setColorAt(0.3, _alpha(sc["glow"], int(28 * pulse * g)))
-            sg.setColorAt(0.45, _alpha(sc["glow"], int(15 * g)))
-            sg.setColorAt(0.6, _alpha(sc["glow"], int(7 * g)))
-            sg.setColorAt(0.8, _alpha(sc["glow"], int(2 * g)))
+            sg.setColorAt(0.0, _alpha(sc["star"], int(75 * pulse * g)))
+            sg.setColorAt(0.06, _alpha(sc["glow"], int(65 * pulse * g)))
+            sg.setColorAt(0.14, _alpha(sc["glow"], int(50 * pulse * g)))
+            sg.setColorAt(0.24, _alpha(sc["glow"], int(35 * pulse * g)))
+            sg.setColorAt(0.38, _alpha(sc["glow"], int(20 * g)))
+            sg.setColorAt(0.55, _alpha(sc["glow"], int(10 * g)))
+            sg.setColorAt(0.75, _alpha(sc["glow"], int(3 * g)))
             sg.setColorAt(1.0, _alpha(sc["glow"], 0))
             p.setBrush(QBrush(sg)); p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(QRectF(-soul_r, -soul_r, soul_r * 2, soul_r * 2))
@@ -666,17 +756,18 @@ class RuneCoreWidget(QWidget):
                 p.drawLine(QPointF(inner_hex_r * math.cos(a1), inner_hex_r * math.sin(a1)),
                            QPointF(inner_hex_r * math.cos(a2), inner_hex_r * math.sin(a2)))
 
-            # ── Layer G: Center orb with ultra-smooth anime glow ──
+            # ── Layer G: Center orb with premium 10-stop gradient ──
             core_r = orb_r * 0.35
             cg = QRadialGradient(0, 0, core_r * 3.5)
             cg.setColorAt(0.0, _alpha(sc["star"], int(255 * pulse * g)))
-            cg.setColorAt(0.05, _alpha(sc["star"], int(250 * pulse * g)))
-            cg.setColorAt(0.12, _alpha(sc["star"], int(220 * pulse * g)))
-            cg.setColorAt(0.22, _alpha(sc["star"], int(150 * pulse * g)))
-            cg.setColorAt(0.35, _alpha(sc["glow"], int(90 * g)))
-            cg.setColorAt(0.5, _alpha(sc["glow"], int(40 * g)))
-            cg.setColorAt(0.7, _alpha(sc["glow"], int(12 * g)))
-            cg.setColorAt(0.85, _alpha(sc["glow"], int(4 * g)))
+            cg.setColorAt(0.04, _alpha(sc["star"], int(252 * pulse * g)))
+            cg.setColorAt(0.1, _alpha(sc["star"], int(235 * pulse * g)))
+            cg.setColorAt(0.18, _alpha(sc["star"], int(180 * pulse * g)))
+            cg.setColorAt(0.28, _alpha(sc["star"], int(120 * pulse * g)))
+            cg.setColorAt(0.4, _alpha(sc["glow"], int(70 * g)))
+            cg.setColorAt(0.55, _alpha(sc["glow"], int(30 * g)))
+            cg.setColorAt(0.72, _alpha(sc["glow"], int(10 * g)))
+            cg.setColorAt(0.88, _alpha(sc["glow"], int(2 * g)))
             cg.setColorAt(1.0, _alpha(sc["glow"], 0))
             p.setBrush(QBrush(cg)); p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(QRectF(-core_r * 3.5, -core_r * 3.5, core_r * 7, core_r * 7))
