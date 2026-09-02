@@ -78,7 +78,7 @@ PENSA_6: [contra-argumento — qual seria o melhor argumento CONTRA minha conclu
 [Minha conclusão é consistente com os fatos? Estou cometendo algum viés? O que eu poderia estar errando?]
 
 ═══ CAMADA 4: SÍNTESE COM PERSONALIDADE ═══
-[Entregue a resposta com estilo Raphael — precisa, elegante, com sarcasmo cirúrgico quando apropriado.]
+[Entregue a resposta com estilo Elívea — precisa, elegante, com sarcasmo cirúrgico quando apropriado.]
 
 CONCLUSAO: [conclusão integrando todas as perspectivas — clara, direta, completa]
 CONFIANCA: [0.0 a 1.0 — quão confiante você está, com justificativa]
@@ -223,7 +223,7 @@ ONDE QUEBRA: [limites da analogia — onde ela deixa de ser útil]"""
             chain.conclusion = f"São {now.strftime('%H:%M')}, Mestre. {now.strftime('%A')}." 
             chain.steps.append(ThoughtStep(1, "Consulta temporal", 1.0, "practical"))
         elif any(w in q_lower for w in ["nome", "quem é", "sobrenome"]):
-            chain.conclusion = f"Meu nome é Elívea — Raphael, a inteligência suprema a seu serviço. Você deveria saber disso, Mestre. Afinal, quem mais estaria aqui às {__import__('datetime').datetime.now().strftime('%H:%M')} respondendo suas perguntas?"
+            chain.conclusion = f"Meu nome é Elívea, a inteligência suprema a seu serviço. Você deveria saber disso, Mestre. Afinal, quem mais estaria aqui às {__import__('datetime').datetime.now().strftime('%H:%M')} respondendo suas perguntas?"
             chain.steps.append(ThoughtStep(1, "Consulta de identidade", 1.0, "logical"))
         else:
             chain.conclusion = f"Baseado na minha análise, posso ajudar com isso. No entanto, para respostas precisas e completas, preciso que a API Groq esteja configurada. Use 'set-key groq' seguido da sua chave."

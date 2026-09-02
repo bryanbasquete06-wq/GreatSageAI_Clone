@@ -4222,7 +4222,7 @@ class AbilityAwakeningOverlay(QWidget):
             p.setFont(QFont("Consolas", 11, QFont.Weight.Bold))
             p.setPen(QPen(_alpha(GOLD, int(ga * 0.8)), 1))
             p.drawText(QRectF(0, cy + 50, W, 24), Qt.AlignmentFlag.AlignCenter,
-                       "G R E A T   S A G E   —   R A P H A E L   C L A S S")
+                       "E L Í V E A   —   I N T E L I G Ê N C I A   S U P R E M A")
 
         # ── Flash effect ──
         if self._flash_alpha > 0.01:
