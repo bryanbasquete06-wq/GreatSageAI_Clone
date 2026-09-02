@@ -554,7 +554,7 @@ class MagicCircleWidget(QWidget):
         p.drawText(QRectF(0, cy + R * 1.02, W, 30), Qt.AlignmentFlag.AlignCenter, "＜Elívea＞")
         p.setFont(font_mono(9))
         p.setPen(QPen(qcol(C.PRI, 200), 1))
-        p.drawText(QRectF(0, cy + R * 1.02 + 28, W, 16), Qt.AlignmentFlag.AlignCenter, "G R E A T   S A G E   —   R A P H A E L")
+        p.drawText(QRectF(0, cy + R * 1.02 + 28, W, 16), Qt.AlignmentFlag.AlignCenter, "E L Í V E A   —   I N T E L I G Ê N C I A")
 
         # ---- state line
         if self.state == "listening":
@@ -1159,7 +1159,7 @@ class BootOverlay(QWidget):
             # Subtitle line
             p.setFont(QFont("Consolas", 10, QFont.Weight.Bold))
             p.setPen(QPen(qcol(GOLD, int(na * 0.85)), 1))
-            p.drawText(QRectF(0, cy + R * 1.2 + 48, W, 20), Qt.AlignmentFlag.AlignCenter, "A E T H E L I S   C L A S S")
+            p.drawText(QRectF(0, cy + R * 1.2 + 48, W, 20), Qt.AlignmentFlag.AlignCenter, "E L Í V E A   C L A S S")
 
         # ── Status cascade ──
         if self._status_shown:
@@ -1561,9 +1561,10 @@ class EliveaMainWindow(QMainWindow):
         from ui.professional_widgets import (
             RuneCoreWidget, TopBarWidget, BG,
             SystemMonitorWidget, QuickActionsWidget, AIStatusWidget, RecentCommandsWidget,
-            CodeScratchpadWidget, StatusBar,
+            CodeScratchpadWidget, StatusBar, FPSCounterOverlay,
         )
         from ui.chat_panel import ChatSidebar
+        from ui.health_dashboard import HealthDashboardPage
         from ui.design_system import (
             BG_DEEP, BG_SURFACE, GOLD_ANCIENT, GOLD_PRIMARY, GOLD_DIM,
             TEXT_BONE, TEXT_STONE, TEXT_RUNE, TEXT_GHOST,
@@ -1699,6 +1700,11 @@ class EliveaMainWindow(QMainWindow):
         self.chat_sidebar.set_on_history_toggle(self.toggle_history_map)
         center_layout.addWidget(self.chat_sidebar, stretch=1)
 
+        # Health Dashboard (hidden by default, shown when 'Dashboard' is clicked)
+        self.health_dashboard = HealthDashboardPage()
+        self.health_dashboard.hide()
+        center_layout.addWidget(self.health_dashboard, stretch=1)
+
         body.addWidget(center, stretch=1)
         self._center_widget = center
 
@@ -1795,6 +1801,18 @@ class EliveaMainWindow(QMainWindow):
         QShortcut(QKeySequence("Ctrl+Shift+P"), self).activated.connect(lambda: self.open_programming_panel())
         QShortcut(QKeySequence("F1"), self).activated.connect(self._show_help)
         QShortcut(QKeySequence("Ctrl+K"), self).activated.connect(self._open_command_palette)
+        QShortcut(QKeySequence("Ctrl+Shift+F"), self).activated.connect(self._toggle_fps_counter)
+
+        # ═══════════ FPS COUNTER OVERLAY ═══════════
+        self.fps_counter = FPSCounterOverlay(self)
+        self.fps_counter.move(self.width() - 220, 10)
+        self.fps_counter.hide()  # Hidden by default — Ctrl+Shift+F to toggle
+
+    def _toggle_fps_counter(self):
+        """Toggle the FPS counter overlay (Ctrl+Shift+F)."""
+        if hasattr(self, 'fps_counter'):
+            self.fps_counter.move(self.width() - 220, 10)
+            self.fps_counter.toggle()
 
     def _make_sidebar_item(self, icon: str, label: str, badge: str = None) -> QWidget:
         """Create a single sidebar navigation item (Direction B style)."""
@@ -1848,13 +1866,12 @@ class EliveaMainWindow(QMainWindow):
         return item
 
     def _set_sidebar_active(self, label: str):
-        """Set the active sidebar item and update visuals."""
+        """Set the active sidebar item and update visuals. Show/hide page overlays."""
         from ui.design_system import GOLD_BRIGHT, TEXT_STONE
         self._sidebar_active = label
         for item_label, item_widget in self._sidebar_items:
             is_active = (item_label == label)
             item_widget.setProperty("is_active", is_active)
-            # Find text label child and update color
             for child in item_widget.findChildren(QLabel):
                 if child.text() == item_label:
                     child.setStyleSheet(f"""
@@ -1863,6 +1880,17 @@ class EliveaMainWindow(QMainWindow):
                         background: transparent; border: none;
                     """)
                     break
+
+        # ── Show/hide overlays based on selected sidebar item ──
+        is_dashboard = (label == "Dashboard")
+        if is_dashboard:
+            self.rune_core.hide()
+            self.chat_sidebar.hide()
+            self.health_dashboard.show()
+        else:
+            self.health_dashboard.hide()
+            self.rune_core.show()
+            self.chat_sidebar.show()
 
     def _detect_theme_by_time(self) -> str:
         """Auto-select theme based on time of day."""

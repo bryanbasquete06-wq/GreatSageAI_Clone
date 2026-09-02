@@ -183,35 +183,21 @@ class DeepDevPanelWidget(QWidget):
         """)
         content_layout.addWidget(self.output_area, stretch=1)
 
-        # Diff area (hidden by default)
-        self.diff_label = QLabel("DIFF")
-        self.diff_label.setFont(_font(8, bold=True, mono=True))
-        self.diff_label.setStyleSheet(f"color: {C.GREEN}; background: transparent; padding: 2px 8px;")
-        self.diff_label.hide()
-        content_layout.addWidget(self.diff_label)
+        # Visual Diff Viewer (hidden by default)
+        from ui.visual_diff_viewer import VisualDiffViewer
+        self.visual_diff = VisualDiffViewer()
+        self.visual_diff.setMaximumHeight(300)
+        self.visual_diff.sig_approve.connect(self._on_approve_clicked)
+        self.visual_diff.sig_discard.connect(self._on_discard_clicked)
+        self.visual_diff.hide()
+        content_layout.addWidget(self.visual_diff, stretch=0)
 
+        # Legacy diff_area kept for backward compatibility (hidden)
+        self.diff_label = QLabel("DIFF")
+        self.diff_label.hide()
         self.diff_area = QTextEdit()
         self.diff_area.setReadOnly(True)
-        self.diff_area.setFont(_font(9, bold=False, mono=True))
-        self.diff_area.setMaximumHeight(200)
-        self.diff_area.setStyleSheet(f"""
-            QTextEdit {{
-                background: rgba(0,20,10,0.6);
-                border: 1px solid rgba({_hex_to_rgb(C.GREEN)},0.3);
-                border-radius: 6px;
-                color: {C.GREEN};
-                padding: 6px;
-            }}
-            QScrollBar:vertical {{
-                width: 4px;
-            }}
-            QScrollBar::handle:vertical {{
-                background: rgba({_hex_to_rgb(C.GREEN)},0.2);
-                border-radius: 2px;
-            }}
-        """)
         self.diff_area.hide()
-        content_layout.addWidget(self.diff_area, stretch=0)
 
         layout.addWidget(content, stretch=1)
 
@@ -288,15 +274,15 @@ class DeepDevPanelWidget(QWidget):
         self._output_text += text
         self.output_area.append(self._md_to_html(text))
 
-    def set_diff(self, diff_text: str, added: int = 0, removed: int = 0):
-        """Show the diff area with changes."""
+    def set_diff(self, diff_text: str, added: int = 0, removed: int = 0, file_path: str = ""):
+        """Show the visual diff viewer with changes."""
         self._diff_text = diff_text
         self._has_changes = bool(diff_text)
-        html = self._diff_to_html(diff_text)
-        self.diff_area.setHtml(html)
-        self.diff_label.setText(f"DIFF  +{added}/-{removed}")
-        self.diff_area.show()
-        self.diff_label.show()
+        # Use the new visual diff viewer
+        self.visual_diff.set_diff(diff_text, file_path)
+        # Hide legacy diff area
+        self.diff_area.hide()
+        self.diff_label.hide()
         self.approve_btn.show()
         self.discard_btn.show()
 
@@ -304,6 +290,7 @@ class DeepDevPanelWidget(QWidget):
         """Hide the diff area."""
         self._diff_text = ""
         self._has_changes = False
+        self.visual_diff.clear()
         self.diff_area.hide()
         self.diff_label.hide()
         self.approve_btn.hide()
