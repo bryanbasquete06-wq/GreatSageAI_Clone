@@ -195,6 +195,14 @@ class RuneCoreWidget(QWidget):
         self._color_b += (tb - self._color_b) * min(sp, 0.15)
 
     def _tick(self):
+        # Light mode: skip expensive animations
+        try:
+            import json as _j
+            _s = _j.loads(open('config/settings.json').read())
+            if _s.get('reduce_motion'):
+                return
+        except Exception:
+            pass
         now = time.time()
         dt = now - self._last
         self._t += dt

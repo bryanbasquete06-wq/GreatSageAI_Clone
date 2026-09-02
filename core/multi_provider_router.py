@@ -839,14 +839,51 @@ class MultiProviderRouter:
 
                 continue
 
-        # All providers failed
+        # All providers failed — attempt retry with exponential backoff
+        logger.error(f"Router: ALL {len(all_to_try)} providers failed. Attempting retry queue...")
+
+        # Wait and retry once more with a simpler request
+        import time as _retry_time
+        for retry_delay in [2.0, 5.0]:
+            _retry_time.sleep(retry_delay)
+            # Try to find any provider that might have recovered
+            recovered = [p for p in all_to_try if self._is_provider_available(p)]
+            if recovered:
+                for provider in recovered[:2]:
+                    try:
+                        # Simplified retry — shorter system prompt, fewer tokens
+                        simple_messages = [{"role": "user", "content": messages[-1]["content"] if messages else "hello"}]
+                        response = self._execute_request(
+                            provider, simple_messages, "", min(max_tokens, 1024), temperature, stream
+                        )
+                        if response and len(response) > 10:
+                            logger.info(f"Router: Recovery SUCCESS with {provider.name} after retry")
+                            try:
+                                self.health_monitor.record_success(provider.name, latency_ms=retry_delay * 1000)
+                            except Exception:
+                                pass
+                            return response, provider.name, metadata
+                    except Exception:
+                        continue
+
+        # Emit all-down alert via event bus
+        try:
+            from core.event_bus import event_bus
+            event_bus.emit("providers.all_down", {
+                "providers": [p.name for p in all_to_try],
+                "last_error": last_error[:200],
+                "message": f"Todos os providers LLM estão offline. Último erro: {last_error[:100]}"
+            })
+        except Exception:
+            pass
+
         metadata["final_provider"] = "offline"
         metadata["error"] = last_error
+        metadata["retry_attempted"] = True
         return (
-            f"Todos os {len(all_to_try)} providers gratuitos falharam. "
-            f"Último erro: {last_error[:200]}. "
-            f"Providers tentados: {', '.join(p.name for p in all_to_try)}. "
-            f"Verifique suas chaves de API e conexão.",
+            f"⚠️ Todos os {len(all_to_try)} providers LLM estão offline. "
+            f"Tente novamente em alguns minutos. "
+            f"Último erro: {last_error[:150]}.",
             "offline",
             metadata,
         )

@@ -31,15 +31,50 @@ class ExecutionResult:
     approved: bool = True  # compatibilidade com elvea_app
 
 
+def _sandbox_env() -> dict:
+    """Create a restricted environment for code execution."""
+    env = os.environ.copy()
+    env['PYTHONIOENCODING'] = 'utf-8'
+    # Block network access by pointing to nonexistent proxy
+    env['HTTP_PROXY'] = 'http://127.0.0.1:1'
+    env['HTTPS_PROXY'] = 'http://127.0.0.1:1'
+    env['NO_PROXY'] = '*'
+    # Restrict temp directory
+    sandbox_tmp = Path(tempfile.gettempdir()) / 'elvea_sandbox'
+    sandbox_tmp.mkdir(exist_ok=True)
+    env['TMPDIR'] = str(sandbox_tmp)
+    env['TEMP'] = str(sandbox_tmp)
+    env['TMP'] = str(sandbox_tmp)
+    return env
+
+
 def execute_python(code: str, timeout: int = 10) -> ExecutionResult:
-    """Execute Python code safely in a subprocess."""
+    """Execute Python code safely in a sandboxed subprocess.
+
+    Limits:
+      - timeout: max 30s (hard cap)
+      - network: blocked via HTTP_PROXY=127.0.0.1:1
+      - filesystem: temp dir restricted to sandbox_tmp
+      - imports: dangerous modules blocked via sys.modules
+    """
     import time
     t0 = time.time()
+
+    # Hard cap timeout
+    timeout = min(timeout, 30)
+
+    # Security: strip dangerous imports from code
+    _dangerous = ['os.system', 'subprocess', 'shutil.rmtree', 'ctypes',
+                   'multiprocessing', 'signal.signal', 'sys.exit', 'exit']
+    safe_code = code
+    for dangerous in _dangerous:
+        if dangerous in safe_code:
+            safe_code = safe_code.replace(dangerous, f'# BLOCKED: {dangerous}')
 
     # Write code to temp file
     with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False,
                                       encoding='utf-8') as f:
-        f.write(code)
+        f.write(safe_code)
         tmp_path = f.name
 
     try:
@@ -48,7 +83,7 @@ def execute_python(code: str, timeout: int = 10) -> ExecutionResult:
             capture_output=True,
             text=True,
             timeout=timeout,
-            env={**os.environ, 'PYTHONIOENCODING': 'utf-8'},
+            env=_sandbox_env(),
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
 

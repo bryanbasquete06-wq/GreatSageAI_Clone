@@ -24,5 +24,8 @@
   "orb_pos": [
     1532,
     430
-  ]
+  ],
+  "light_mode": false,
+  "reduce_motion": false,
+  "high_contrast": false
 }

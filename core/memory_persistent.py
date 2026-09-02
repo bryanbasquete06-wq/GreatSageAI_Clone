@@ -206,6 +206,43 @@ class PersistentMemory:
             conn.commit()
             return cursor.lastrowid
 
+    def scan_for_secrets(self) -> List[dict]:
+        """Scan all memory entries for API keys, tokens, and secrets."""
+        import re
+        _patterns = [
+            (r'sk-[a-zA-Z0-9]{20,}', 'OpenAI API Key'),
+            (r'ghp_[a-zA-Z0-9]{36}', 'GitHub PAT'),
+            (r'AIza[a-zA-Z0-9_-]{35}', 'Google API Key'),
+            (r'xoxb-[a-zA-Z0-9-]+', 'Slack Bot Token'),
+            (r'AKIA[0-9A-Z]{16}', 'AWS Access Key'),
+            (r'(?i)password\s*[=:]\s*\S+', 'Password'),
+            (r'(?i)secret\s*[=:]\s*\S+', 'Secret'),
+            (r'(?i)api[_-]?key\s*[=:]\s*[a-zA-Z0-9]{16,}', 'API Key'),
+            (r'(?i)token\s*[=:]\s*[a-zA-Z0-9]{20,}', 'Token'),
+        ]
+        findings = []
+        try:
+            with sqlite3.connect(str(self.db_path)) as conn:
+                rows = conn.execute(
+                    "SELECT id, category, content FROM memories ORDER BY created_at DESC LIMIT 500"
+                ).fetchall()
+                for row_id, category, content in rows:
+                    for pattern, label in _patterns:
+                        matches = re.findall(pattern, content)
+                        if matches:
+                            for match in matches:
+                                # Mask the secret
+                                masked = match[:4] + '*' * (len(match) - 8) + match[-4:] if len(match) > 8 else '****'
+                                findings.append({
+                                    'entry_id': row_id,
+                                    'category': category,
+                                    'type': label,
+                                    'masked': masked,
+                                })
+        except Exception as e:
+            logger.error(f"Memory secret scan error: {e}")
+        return findings
+
     def search(self, query: str, category: str = None, limit: int = 10,
                min_importance: float = 0.0, decay: bool = True) -> List[MemoryEntry]:
         with sqlite3.connect(str(self.db_path)) as conn:
