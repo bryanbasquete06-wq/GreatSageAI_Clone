@@ -520,18 +520,22 @@ class ChatSidebar(QWidget):
         self._show_typing()
 
     def append_stream(self, delta: str):
-        """Append delta to the last assistant bubble or create one."""
+        """Append delta to the last assistant bubble — throttled to avoid lag."""
         if self._bubbles and self._bubbles[-1]._role == "assistant" and hasattr(self._bubbles[-1], '_streaming') and self._bubbles[-1]._streaming:
-            # Append to existing streaming bubble
             self._bubbles[-1]._text += delta
-            self._bubbles[-1]._compute_size()
-            self._bubbles[-1].setFixedHeight(self._bubbles[-1].heightNeeded())
-            self._bubbles[-1].update()
+            # Throttle: only resize+repaint every 80ms (not every token)
+            now = time.time()
+            last = getattr(self._bubbles[-1], '_last_stream_update', 0)
+            if now - last > 0.08:
+                self._bubbles[-1]._last_stream_update = now
+                self._bubbles[-1]._compute_size()
+                self._bubbles[-1].setFixedHeight(self._bubbles[-1].heightNeeded())
+                self._bubbles[-1].update()
         else:
-            # Remove typing indicator and create new streaming bubble
             self._remove_typing()
             bubble = ChatBubbleWidget("assistant", delta)
             bubble._streaming = True
+            bubble._last_stream_update = time.time()
             self._bubbles.append(bubble)
             count = self._msg_layout.count()
             self._msg_layout.insertWidget(count - 1, bubble)

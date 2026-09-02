@@ -306,6 +306,7 @@ class RuneCoreWidget(QWidget):
     def paintEvent(self, _):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         W, H = self.width(), self.height()
         px = (self._mouse_x - 0.5) * 6
         py = (self._mouse_y - 0.5) * 6
@@ -549,14 +550,16 @@ class RuneCoreWidget(QWidget):
             p.save()
             p.translate(cx, cy)
 
-            # ── Layer A: Deep radial soul glow ──
-            soul_r = star_r * 2.2
+            # ── Layer A: Deep radial soul glow (ultra-smooth) ──
+            soul_r = star_r * 2.8
             sg = QRadialGradient(0, 0, soul_r)
             sg.setColorAt(0.0, _alpha(sc["star"], int(70 * pulse * g)))
-            sg.setColorAt(0.1, _alpha(sc["glow"], int(55 * pulse * g)))
-            sg.setColorAt(0.25, _alpha(sc["glow"], int(35 * pulse * g)))
+            sg.setColorAt(0.08, _alpha(sc["glow"], int(60 * pulse * g)))
+            sg.setColorAt(0.18, _alpha(sc["glow"], int(45 * pulse * g)))
+            sg.setColorAt(0.3, _alpha(sc["glow"], int(28 * pulse * g)))
             sg.setColorAt(0.45, _alpha(sc["glow"], int(15 * g)))
-            sg.setColorAt(0.7, _alpha(sc["glow"], int(5 * g)))
+            sg.setColorAt(0.6, _alpha(sc["glow"], int(7 * g)))
+            sg.setColorAt(0.8, _alpha(sc["glow"], int(2 * g)))
             sg.setColorAt(1.0, _alpha(sc["glow"], 0))
             p.setBrush(QBrush(sg)); p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(QRectF(-soul_r, -soul_r, soul_r * 2, soul_r * 2))
@@ -649,17 +652,20 @@ class RuneCoreWidget(QWidget):
                 p.drawLine(QPointF(inner_hex_r * math.cos(a1), inner_hex_r * math.sin(a1)),
                            QPointF(inner_hex_r * math.cos(a2), inner_hex_r * math.sin(a2)))
 
-            # ── Layer G: Center orb with anime-style glow ──
+            # ── Layer G: Center orb with ultra-smooth anime glow ──
             core_r = orb_r * 0.35
-            cg = QRadialGradient(0, 0, core_r * 2.5)
+            cg = QRadialGradient(0, 0, core_r * 3.5)
             cg.setColorAt(0.0, _alpha(sc["star"], int(255 * pulse * g)))
-            cg.setColorAt(0.08, _alpha(sc["star"], int(240 * pulse * g)))
-            cg.setColorAt(0.2, _alpha(sc["star"], int(180 * pulse * g)))
-            cg.setColorAt(0.4, _alpha(sc["glow"], int(80 * g)))
-            cg.setColorAt(0.65, _alpha(sc["glow"], int(25 * g)))
+            cg.setColorAt(0.05, _alpha(sc["star"], int(250 * pulse * g)))
+            cg.setColorAt(0.12, _alpha(sc["star"], int(220 * pulse * g)))
+            cg.setColorAt(0.22, _alpha(sc["star"], int(150 * pulse * g)))
+            cg.setColorAt(0.35, _alpha(sc["glow"], int(90 * g)))
+            cg.setColorAt(0.5, _alpha(sc["glow"], int(40 * g)))
+            cg.setColorAt(0.7, _alpha(sc["glow"], int(12 * g)))
+            cg.setColorAt(0.85, _alpha(sc["glow"], int(4 * g)))
             cg.setColorAt(1.0, _alpha(sc["glow"], 0))
             p.setBrush(QBrush(cg)); p.setPen(Qt.PenStyle.NoPen)
-            p.drawEllipse(QRectF(-core_r * 2.5, -core_r * 2.5, core_r * 5, core_r * 5))
+            p.drawEllipse(QRectF(-core_r * 3.5, -core_r * 3.5, core_r * 7, core_r * 7))
 
             # White hot center
             hot_r = orb_r * 0.12
