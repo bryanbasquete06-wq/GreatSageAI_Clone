@@ -329,13 +329,15 @@ class RuneCoreWidget(QWidget):
         # Audio boost
         audio_boost = 1.0 + self._audio_level * 2.5
 
-        # ─── DEEP AMBIENT GLOW ───
+        # ─── DEEP AMBIENT GLOW (smooth 5-stop gradients) ───
         for rr, a in [(3.5, 5), (2.5, 12), (1.8, 20), (1.2, 35)]:
             boosted_a = int(a * g * audio_boost)
             bg = QRadialGradient(cx, cy, R * rr)
-            bg.setColorAt(0, _alpha(mc, min(255, boosted_a)))
-            bg.setColorAt(0.4, _alpha(mc, int(boosted_a * 0.3)))
-            bg.setColorAt(1, _alpha(mc, 0))
+            bg.setColorAt(0.0, _alpha(mc, min(255, boosted_a)))
+            bg.setColorAt(0.15, _alpha(mc, int(boosted_a * 0.7)))
+            bg.setColorAt(0.35, _alpha(mc, int(boosted_a * 0.35)))
+            bg.setColorAt(0.6, _alpha(mc, int(boosted_a * 0.1)))
+            bg.setColorAt(1.0, _alpha(mc, 0))
             p.setBrush(QBrush(bg)); p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(QRectF(cx - R * rr, cy - R * rr, R * rr * 2, R * rr * 2))
 
@@ -495,7 +497,7 @@ class RuneCoreWidget(QWidget):
         # ═══════════════════════════════════════════════════════════════
         #  CORE: GOLDEN HEXAGRAM STAR with intense glow (the key feature)
         # ═══════════════════════════════════════════════════════════════
-        orb_r = R * 0.22 * self._core_scale * breath
+        orb_r = R * 0.35 * self._core_scale * breath
         pulse = 0.65 + 0.35 * math.sin(self._t * 2.5)
 
         # Layer 1: Ultra-wide ambient radial glow
@@ -550,10 +552,12 @@ class RuneCoreWidget(QWidget):
             # ── Layer A: Deep radial soul glow ──
             soul_r = star_r * 2.2
             sg = QRadialGradient(0, 0, soul_r)
-            sg.setColorAt(0, _alpha(sc["star"], int(70 * pulse * g)))
-            sg.setColorAt(0.15, _alpha(sc["glow"], int(40 * pulse * g)))
-            sg.setColorAt(0.5, _alpha(sc["glow"], int(12 * g)))
-            sg.setColorAt(1, _alpha(sc["glow"], 0))
+            sg.setColorAt(0.0, _alpha(sc["star"], int(70 * pulse * g)))
+            sg.setColorAt(0.1, _alpha(sc["glow"], int(55 * pulse * g)))
+            sg.setColorAt(0.25, _alpha(sc["glow"], int(35 * pulse * g)))
+            sg.setColorAt(0.45, _alpha(sc["glow"], int(15 * g)))
+            sg.setColorAt(0.7, _alpha(sc["glow"], int(5 * g)))
+            sg.setColorAt(1.0, _alpha(sc["glow"], 0))
             p.setBrush(QBrush(sg)); p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(QRectF(-soul_r, -soul_r, soul_r * 2, soul_r * 2))
 
@@ -648,10 +652,12 @@ class RuneCoreWidget(QWidget):
             # ── Layer G: Center orb with anime-style glow ──
             core_r = orb_r * 0.35
             cg = QRadialGradient(0, 0, core_r * 2.5)
-            cg.setColorAt(0, _alpha(sc["star"], int(255 * pulse * g)))
-            cg.setColorAt(0.15, _alpha(sc["star"], int(220 * pulse * g)))
-            cg.setColorAt(0.4, _alpha(sc["glow"], int(60 * g)))
-            cg.setColorAt(1, _alpha(sc["glow"], 0))
+            cg.setColorAt(0.0, _alpha(sc["star"], int(255 * pulse * g)))
+            cg.setColorAt(0.08, _alpha(sc["star"], int(240 * pulse * g)))
+            cg.setColorAt(0.2, _alpha(sc["star"], int(180 * pulse * g)))
+            cg.setColorAt(0.4, _alpha(sc["glow"], int(80 * g)))
+            cg.setColorAt(0.65, _alpha(sc["glow"], int(25 * g)))
+            cg.setColorAt(1.0, _alpha(sc["glow"], 0))
             p.setBrush(QBrush(cg)); p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(QRectF(-core_r * 2.5, -core_r * 2.5, core_r * 5, core_r * 5))
 

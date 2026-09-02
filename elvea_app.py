@@ -88,46 +88,18 @@ except ImportError:
             from core.llm import LLMEngine as EliveaLLM
         except ImportError:
             from core.llm import LLMEngine as EliveaLLM
+# ═══ CRITICAL PATH: only import what EliveaApp.__init__ needs immediately ═══
 from core.mark_l_bridge import MarkLBridge
 from core.speech_engine import SpeechEngine
 from core.voice_pipeline import VoicePipeline
 from core.autonomous_engine import AutonomousEngine
-from modules.system import SystemModule
-from modules.files import FileModule
-from modules.web import WebModule
-from modules.coder_agent import CoderAgentModule
-from modules.automation import AutomationModule
-from modules.self_improver import SelfImproverModule
-from modules.hardware_controller import HardwareController
-from modules.productivity import ProductivityModule
-from modules.superuser import SuperUser
-from memory.memory_manager import MemoryManager
-from core.intent_engine import IntentEngine
-from ui.qt_ui import EliveaMainWindow
-from core.security import SecurityGuard, SecurityLevel
-from core.ambiance import AmbianceEngine
-from modules.rag import RAGEngine
-from modules.clipboard import ClipboardMonitor
-from modules.screen_context import ScreenContext
-from modules.scheduler import TaskScheduler
-from modules.monitor import SystemMonitor
-from modules.plugin_system import PluginManager
-from core.voice_cloner import VoiceCloner
-from modules.multilang import MultiLang
-from modules.learning import LearningEngine
-from modules.app_integration import AppIntegration
-from ui.dashboard import WebDashboard
-from core.updater import AutoUpdater
-from modules.config_manager import ConfigManager
-
+from core.memory_persistent import PersistentMemory
+from core.nine_router import NineRouterBridge
 from core.logger import get_logger
 from core.event_bus import event_bus
 from core.state_manager import state
 from core.audit_log import audit, ActionLevel
 from core.secret_manager import secrets
-from core.memory_persistent import PersistentMemory
-from core.chain_of_thought import ChainOfThought
-from core.proactive_engine import ProactiveEngine
 from core.smart_improvements import (
     SessionMemory, LearningDashboard, ErrorLearner, CodePatternLearner,
     VoiceCommandLearner, SmartReminders, ConversationSummarizer,
@@ -136,14 +108,51 @@ from core.smart_improvements import (
     AdaptiveResponseLength, PersonalityLearning, KnowledgeGraph,
     SmartAliases, HealthMonitor,
 )
+from core.proactive_engine import ProactiveEngine
+from core.chain_of_thought import ChainOfThought
+from core.autonomous_planner import AutonomousPlanner
+from memory.memory_manager import MemoryManager
+from core.intent_engine import IntentEngine
+from core.security import SecurityGuard, SecurityLevel
+from core.ambiance import AmbianceEngine
+from modules.self_improver import SelfImproverModule
+from modules.rag import RAGEngine
+from modules.clipboard import ClipboardMonitor
+from modules.screen_context import ScreenContext
+from modules.scheduler import TaskScheduler
+from modules.plugin_system import PluginManager
+from modules.multilang import MultiLang
+from modules.learning import LearningEngine
+from modules.app_integration import AppIntegration
+from modules.config_manager import ConfigManager
+from core.updater import AutoUpdater
+from core.usage_tracker import UsageTracker
+from modules.system import SystemModule
+from modules.files import FileModule
+from modules.web import WebModule
+from modules.coder_agent import CoderAgentModule
+from modules.automation import AutomationModule
+from modules.hardware_controller import HardwareController
+from modules.productivity import ProductivityModule
+from modules.superuser import SuperUser
+from core.voice_cloner import VoiceCloner
+from ui.dashboard import WebDashboard
 from core.image_analyzer import analyzer as image_analyzer
 from core.video_analyzer import analyzer as video_analyzer
 from core.link_analyzer import analyzer as link_analyzer
-from core.autonomous_planner import AutonomousPlanner
-from core.code_analyzer import analyze_file, analyze_project, quick_analyze
-from core.nine_router import NineRouterBridge
 from modules.browser_agent import BrowserAgent
-from core.usage_tracker import UsageTracker
+
+# ═══ DEFERRED: imported lazily or in _init_background ═══
+_deferred_imports_cache = {}
+
+def _lazy_import(module_path, attr=None):
+    """Import a module lazily, cache the result."""
+    key = f"{module_path}.{attr}" if attr else module_path
+    if key not in _deferred_imports_cache:
+        import importlib
+        mod = importlib.import_module(module_path)
+        _deferred_imports_cache[key] = getattr(mod, attr) if attr else mod
+    return _deferred_imports_cache[key]
 
 
 # ---------------------------------------------------------------------------
