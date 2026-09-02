@@ -1555,103 +1555,224 @@ class EliveaMainWindow(QMainWindow):
     # ------------------------------------------------------------------- UI
 
     def _build_ui_fast(self):
-        """Build only the essential visible UI — hidden panels are lazy-loaded."""
+        """Build Direction B — Rune Keeper layout.
+        Structure: Header | Sidebar + Center(RuneCore+Chat) + RightPanel | StatusBar
+        """
         from ui.professional_widgets import (
             RuneCoreWidget, TopBarWidget, BG,
             SystemMonitorWidget, QuickActionsWidget, AIStatusWidget, RecentCommandsWidget,
             CodeScratchpadWidget, StatusBar,
         )
         from ui.chat_panel import ChatSidebar
+        from ui.design_system import (
+            BG_DEEP, BG_SURFACE, GOLD_ANCIENT, GOLD_PRIMARY, GOLD_DIM,
+            TEXT_BONE, TEXT_STONE, TEXT_RUNE, TEXT_GHOST,
+            SIDEBAR_WIDTH, RIGHT_PANEL_WIDTH, TITLE_BAR_HEIGHT,
+            RUNE_AREA_HEIGHT, _alpha_hex, SCROLLBAR_STYLE,
+        )
 
         central = QWidget()
-        central.setStyleSheet(f"background: {BG};")
+        central.setStyleSheet(f"background: {BG_DEEP};")
         self.setCentralWidget(central)
         root = QVBoxLayout(central)
         root.setContentsMargins(0, 0, 0, 0)
         root.setSpacing(0)
 
-        # ============ TOP BAR ============
+        # ═══════════ HEADER BAR (Direction B ornate) ═══════════
         self.top_bar = TopBarWidget()
         root.addWidget(self.top_bar)
 
-        # ============ MAIN CONTENT ============
+        # ═══════════ MAIN BODY ═══════════
         body = QHBoxLayout()
         body.setContentsMargins(0, 0, 0, 0)
         body.setSpacing(0)
 
-        # ---- Left: Chat Sidebar ----
-        self.chat_sidebar = ChatSidebar()
-        self.chat_sidebar.set_on_send(self.submit_command)
-        self.chat_sidebar.set_on_history_toggle(self.toggle_history_map)
-        body.addWidget(self.chat_sidebar, stretch=0)
+        # ── LEFT SIDEBAR (Rune Keeper style) ──
+        sidebar = QWidget()
+        sidebar.setFixedWidth(SIDEBAR_WIDTH)
+        sidebar.setStyleSheet(f"""
+            QWidget {{
+                background: {BG_DEEP};
+                border-right: 1px solid {TEXT_GHOST};
+            }}
+        """)
+        sidebar_layout = QVBoxLayout(sidebar)
+        sidebar_layout.setContentsMargins(0, 12, 0, 0)
+        sidebar_layout.setSpacing(0)
 
-        # ---- Center: RuneCore (lightweight) ----
+        # Section: Menu
+        sb_label_style = f"""
+            font-family: 'Cinzel', serif;
+            font-size: 9px;
+            font-weight: 600;
+            color: {GOLD_DIM};
+            letter-spacing: 2px;
+            padding: 0 16px;
+            margin-bottom: 6px;
+        """
+
+        lbl = QLabel("MENU")
+        lbl.setStyleSheet(sb_label_style)
+        sidebar_layout.addWidget(lbl)
+
+        # Sidebar items
+        self._sidebar_items = []
+        self._sidebar_active = "Chat"
+        sidebar_items_data = [
+            ("💬", "Chat"),
+            ("🔮", "Deep Dev", "NEW"),
+            ("⚡", "Programação"),
+            ("🧠", "Knowledge Graph"),
+        ]
+        for icon, label, *badge in sidebar_items_data:
+            item = self._make_sidebar_item(icon, label, badge[0] if badge else None)
+            sidebar_layout.addWidget(item)
+            self._sidebar_items.append((label, item))
+
+        # Rune divider
+        divider = QLabel("ᚠ ᚢ ᚦ ᚨ ᚱ")
+        divider.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        divider.setStyleSheet(f"color: {GOLD_DIM}; font-size: 8px; letter-spacing: 6px; padding: 8px 0; opacity: 0.4;")
+        sidebar_layout.addWidget(divider)
+
+        # Section: Tools
+        lbl2 = QLabel("FERRAMENTAS")
+        lbl2.setStyleSheet(sb_label_style)
+        sidebar_layout.addWidget(lbl2)
+
+        tools_items = [
+            ("📊", "Dashboard"),
+            ("⏱", "Time Machine"),
+            ("📁", "Histórico"),
+            ("🛡", "Segurança"),
+        ]
+        for icon, label in tools_items:
+            item = self._make_sidebar_item(icon, label)
+            sidebar_layout.addWidget(item)
+            self._sidebar_items.append((label, item))
+
+        # Rune divider 2
+        divider2 = QLabel("ᚲ ᚷ ᚹ ᚺ ᚾ")
+        divider2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        divider2.setStyleSheet(f"color: {GOLD_DIM}; font-size: 8px; letter-spacing: 6px; padding: 8px 0; opacity: 0.4;")
+        sidebar_layout.addWidget(divider2)
+
+        # Section: System
+        lbl3 = QLabel("SISTEMA")
+        lbl3.setStyleSheet(sb_label_style)
+        sidebar_layout.addWidget(lbl3)
+
+        sys_items = [
+            ("⚙", "Configurações"),
+            ("📦", "Plugins"),
+        ]
+        for icon, label in sys_items:
+            item = self._make_sidebar_item(icon, label)
+            sidebar_layout.addWidget(item)
+            self._sidebar_items.append((label, item))
+
+        sidebar_layout.addStretch()
+
+        # Sidebar footer: status
+        footer = QLabel("  ● Elívea ativa • v2.0")
+        footer.setStyleSheet(f"font-size: 10px; color: {TEXT_RUNE}; padding: 12px 0; border-top: 1px solid {TEXT_GHOST};")
+        sidebar_layout.addWidget(footer)
+
+        body.addWidget(sidebar)
+
+        # ── CENTER (RuneCore + Chat) ──
         center = QWidget()
-        center.setStyleSheet("background: transparent;")
+        center.setStyleSheet(f"background: {BG_DEEP};")
         center_layout = QVBoxLayout(center)
         center_layout.setContentsMargins(0, 0, 0, 0)
         center_layout.setSpacing(0)
-        self.rune_core = RuneCoreWidget()
-        center_layout.addWidget(self.rune_core, stretch=1)
-        # ProgrammingPanel, DeepDevPanel, CodeWorkspace are lazy — NOT created here
-        body.addWidget(center, stretch=2)
-        self._center_widget = center  # Store ref for lazy panel parenting
 
-        # ---- Right: Useful panels ----
+        # RuneCore area
+        self.rune_core = RuneCoreWidget()
+        self.rune_core.setMinimumHeight(RUNE_AREA_HEIGHT)
+        self.rune_core.setMaximumHeight(RUNE_AREA_HEIGHT)
+        center_layout.addWidget(self.rune_core)
+
+        # Chat area (below rune)
+        self.chat_sidebar = ChatSidebar()
+        self.chat_sidebar.set_on_send(self.submit_command)
+        self.chat_sidebar.set_on_history_toggle(self.toggle_history_map)
+        center_layout.addWidget(self.chat_sidebar, stretch=1)
+
+        body.addWidget(center, stretch=1)
+        self._center_widget = center
+
+        # ── RIGHT PANEL (Ornate cards) ──
         right = QWidget()
-        right.setFixedWidth(340)
+        right.setFixedWidth(RIGHT_PANEL_WIDTH)
+        right.setStyleSheet(f"""
+            QWidget {{
+                background: {BG_DEEP};
+                border-left: 1px solid {TEXT_GHOST};
+            }}
+        """)
         right_scroll = QScrollArea()
         right_scroll.setWidgetResizable(True)
         right_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        right_scroll.setStyleSheet(f"QScrollArea {{ background: transparent; border: none; }} QScrollBar:vertical {{ width: 4px; }} QScrollBar::handle:vertical {{ background: rgba(255,215,0,0.15); border-radius: 2px; }}")
+        right_scroll.setStyleSheet(f"""
+            QScrollArea {{ background: transparent; border: none; }}
+            {SCROLLBAR_STYLE}
+        """)
         right_inner = QWidget()
         right_inner.setStyleSheet("background: transparent;")
         right_layout = QVBoxLayout(right_inner)
-        right_layout.setContentsMargins(4, 4, 4, 4)
-        right_layout.setSpacing(6)
+        right_layout.setContentsMargins(12, 12, 12, 12)
+        right_layout.setSpacing(10)
 
+        # System monitor card
         self.sys_monitor = SystemMonitorWidget()
         self.sys_monitor.setFixedHeight(130)
         right_layout.addWidget(self.sys_monitor)
 
+        # AI status card
         self.ai_status = AIStatusWidget()
         self.ai_status.setFixedHeight(145)
         right_layout.addWidget(self.ai_status)
 
+        # Provider status
         from ui.provider_status_panel import ProviderStatusPanel
         self.provider_status = ProviderStatusPanel()
         self.provider_status.setFixedHeight(340)
         self.provider_status.sig_detail_requested.connect(self._on_provider_detail)
         right_layout.addWidget(self.provider_status)
 
+        # Quick actions
         self.quick_actions = QuickActionsWidget()
         self.quick_actions.setFixedHeight(115)
         self.quick_actions.set_on_action(self._on_quick_action)
         right_layout.addWidget(self.quick_actions)
 
+        # Recent commands
         self.recent_cmds = RecentCommandsWidget()
         self.recent_cmds.setFixedHeight(120)
         right_layout.addWidget(self.recent_cmds)
 
+        # Notifications
         from ui.professional_widgets import NotificationWidget
         self.notifications = NotificationWidget()
         self.notifications.setFixedHeight(140)
         right_layout.addWidget(self.notifications)
 
+        # Code scratchpad
         self.code_scratchpad = CodeScratchpadWidget()
         self.code_scratchpad.setFixedHeight(160)
         right_layout.addWidget(self.code_scratchpad)
 
         right_layout.addStretch()
         right_scroll.setWidget(right_inner)
-        right_layout_main = QVBoxLayout(right)
-        right_layout_main.setContentsMargins(0, 0, 0, 0)
-        right_layout_main.addWidget(right_scroll)
+        right_main = QVBoxLayout(right)
+        right_main.setContentsMargins(0, 0, 0, 0)
+        right_main.addWidget(right_scroll)
 
         body.addWidget(right)
         root.addLayout(body, stretch=1)
 
-        # ============ STATUS BAR ============
+        # ═══════════ STATUS BAR ═══════════
         self.status_bar = StatusBar()
         root.addWidget(self.status_bar)
 
@@ -1674,6 +1795,74 @@ class EliveaMainWindow(QMainWindow):
         QShortcut(QKeySequence("Ctrl+Shift+P"), self).activated.connect(lambda: self.open_programming_panel())
         QShortcut(QKeySequence("F1"), self).activated.connect(self._show_help)
         QShortcut(QKeySequence("Ctrl+K"), self).activated.connect(self._open_command_palette)
+
+    def _make_sidebar_item(self, icon: str, label: str, badge: str = None) -> QWidget:
+        """Create a single sidebar navigation item (Direction B style)."""
+        from ui.design_system import BG_DEEP, GOLD_PRIMARY, GOLD_BRIGHT, TEXT_STONE, TEXT_GHOST
+
+        item = QWidget()
+        item.setFixedHeight(36)
+        item.setCursor(Qt.CursorShape.PointingHandCursor)
+        item.setStyleSheet(f"""
+            QWidget {{ background: transparent; border: none; }}
+            QWidget:hover {{ background: rgba(200,168,76,0.04); }}
+        """)
+
+        layout = QHBoxLayout(item)
+        layout.setContentsMargins(16, 0, 12, 0)
+        layout.setSpacing(10)
+
+        icon_lbl = QLabel(icon)
+        icon_lbl.setStyleSheet(f"font-size: 14px; background: transparent; border: none;")
+        layout.addWidget(icon_lbl)
+
+        text_lbl = QLabel(label)
+        text_lbl.setStyleSheet(f"""
+            font-size: 12px; color: {TEXT_STONE};
+            background: transparent; border: none;
+        """)
+        layout.addWidget(text_lbl)
+
+        if badge:
+            badge_lbl = QLabel(badge)
+            badge_lbl.setStyleSheet(f"""
+                font-size: 9px; font-weight: 600;
+                color: {GOLD_BRIGHT};
+                background: rgba(200,168,76,0.15);
+                padding: 2px 6px; border-radius: 10px;
+                border: none;
+            """)
+            layout.addWidget(badge_lbl)
+        else:
+            layout.addStretch()
+
+        # Store label for active state toggling
+        item.setProperty("nav_label", label)
+        item.setProperty("is_active", label == "Chat")
+
+        # Click handler
+        def on_click(ev, _label=label, _item=item):
+            self._set_sidebar_active(_label)
+        item.mousePressEvent = on_click
+
+        return item
+
+    def _set_sidebar_active(self, label: str):
+        """Set the active sidebar item and update visuals."""
+        from ui.design_system import GOLD_BRIGHT, TEXT_STONE
+        self._sidebar_active = label
+        for item_label, item_widget in self._sidebar_items:
+            is_active = (item_label == label)
+            item_widget.setProperty("is_active", is_active)
+            # Find text label child and update color
+            for child in item_widget.findChildren(QLabel):
+                if child.text() == item_label:
+                    child.setStyleSheet(f"""
+                        font-size: 12px;
+                        color: {GOLD_BRIGHT if is_active else TEXT_STONE};
+                        background: transparent; border: none;
+                    """)
+                    break
 
     def _detect_theme_by_time(self) -> str:
         """Auto-select theme based on time of day."""

@@ -21,15 +21,15 @@ except ImportError:
     from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QScrollArea,
                                   QFrame, QLabel, QLineEdit, QPushButton, QSizePolicy)
 
-# ── Tensura Theme ──
-BG = "#000000"
-PANEL = "#0a0a0a"
-PANEL2 = "#111111"
-GOLD = "#FFD700"
-GOLD_DIM = "#b8960f"
-TEXT = "#ffffff"
-TEXT_DIM = "#666666"
-TEXT_MED = "#999999"
+# ── Direction B: Rune Keeper Theme ──
+BG = "#020204"           # BG_VOID
+PANEL = "#060609"        # BG_DEEP
+PANEL2 = "#0d0d12"       # BG_SURFACE
+GOLD = "#C9A84C"         # GOLD_PRIMARY
+GOLD_DIM = "#8B7A2E"     # GOLD_WEATHERED
+TEXT = "#E8E0D0"         # TEXT_BONE
+TEXT_DIM = "#6B6358"     # TEXT_RUNE
+TEXT_MED = "#9A9080"      # TEXT_STONE
 
 
 def _font(size: int, bold: bool = True) -> QFont:
@@ -307,14 +307,12 @@ class ChatSidebar(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # ── Header (dynamic time-based background) ──
+        # ── Header (Direction B ornate style) ──
         header = QWidget()
         header.setFixedHeight(44)
-        bg1, bg2 = self._get_time_bg()
         header.setStyleSheet(f"""
-            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                stop:0 {bg1}, stop:1 {bg2});
-            border-bottom: 1px solid rgba(255,215,0,0.15);
+            background: #060609;
+            border-bottom: 1px solid rgba(200,168,76,0.15);
         """)
         h_layout = QHBoxLayout(header)
         h_layout.setContentsMargins(14, 0, 14, 0)
@@ -409,12 +407,12 @@ class ChatSidebar(QWidget):
             "Elívea online, Mestre. Todos os sistemas nominais.\n"
             "Pode falar comigo naturalmente — estou te ouvindo.")
 
-        # ── Input area ──
+        # ── Input area (Direction B style) ──
         input_frame = QWidget()
         input_frame.setFixedHeight(54)
         input_frame.setStyleSheet(f"""
-            background: rgba(8,8,14,240);
-            border-top: 1px solid rgba(255,215,0,0.12);
+            background: #060609;
+            border-top: 1px solid rgba(200,168,76,0.12);
         """)
         in_layout = QHBoxLayout(input_frame)
         in_layout.setContentsMargins(10, 6, 10, 6)
@@ -425,41 +423,40 @@ class ChatSidebar(QWidget):
         self._input.setFont(_font_ui(9))
         self._input.setStyleSheet(f"""
             QLineEdit {{
-                background: rgba(16,16,24,220);
+                background: #020204;
                 color: {TEXT};
-                border: 1px solid rgba(255,215,0,0.2);
+                border: 1px solid rgba(58,55,48,0.6);
                 border-radius: 10px;
                 padding: 6px 14px;
-                selection-background-color: rgba(255,215,0,0.3);
+                selection-background-color: rgba(200,168,76,0.3);
             }}
             QLineEdit:focus {{
-                border: 1px solid rgba(255,215,0,0.5);
+                border: 1px solid #C9A84C;
             }}
             QLineEdit::placeholder {{
-                color: rgba(255,255,255,0.25);
+                color: #6B6358;
             }}
         """)
         self._input.returnPressed.connect(self._send)
         in_layout.addWidget(self._input, stretch=1)
 
-        self._send_btn = QPushButton("▶")
+        self._send_btn = QPushButton("→")
         self._send_btn.setFixedSize(36, 36)
-        self._send_btn.setFont(_font_ui(10))
+        self._send_btn.setFont(_font_ui(12))
         self._send_btn.setStyleSheet(f"""
             QPushButton {{
-                background: qradialgradient(cx:0.5, cy:0.5, radius:0.6,
-                    stop:0 rgba(255,215,0,200), stop:1 rgba(184,150,15,180));
-                color: #000000;
-                border: none;
-                border-radius: 18px;
+                background: #6B5A1E;
+                color: #E8C55A;
+                border: 1px solid rgba(200,168,76,0.4);
+                border-radius: 8px;
                 font-weight: bold;
             }}
             QPushButton:hover {{
-                background: qradialgradient(cx:0.5, cy:0.5, radius:0.6,
-                    stop:0 rgba(255,228,77,230), stop:1 rgba(255,215,0,200));
+                background: #C9A84C;
+                color: #020204;
             }}
             QPushButton:pressed {{
-                background: rgba(184,150,15,220);
+                background: #8B7A2E;
             }}
         """)
         self._send_btn.clicked.connect(self._send)

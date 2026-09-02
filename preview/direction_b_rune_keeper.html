@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elívea — Direction B: Rune Keeper</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg-void: #020204;
+    --bg-deep: #060609;
+    --bg-surface: #0d0d12;
+    --bg-elevated: #141419;
+    --bg-card: #1a1a20;
+    --gold-ancient: #6B5A1E;
+    --gold-weathered: #8B7A2E;
+    --gold-primary: #C9A84C;
+    --gold-bright: #E8C55A;
+    --gold-luminous: #FFD966;
+    --gold-white: #FFF3CC;
+    --energy-warm: #D4A020;
+    --energy-hot: #FFD700;
+    --text-bone: #E8E0D0;
+    --text-stone: #9A9080;
+    --text-rune: #6B6358;
+    --text-ghost: #3A3530;
+    --success: #7DB87D;
+    --error: #C45B5B;
+  }
+  
+  body {
+    background: var(--bg-void);
+    color: var(--text-bone);
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  
+  /* === TITLE BAR (Ornate) === */
+  .title-bar {
+    height: 48px;
+    background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-void) 100%);
+    border-bottom: 1px solid var(--gold-ancient);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    position: relative;
+  }
+  .title-bar::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+    opacity: 0.3;
+  }
+  .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-rune {
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--gold-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--gold-bright);
+    position: relative;
+    animation: logo-pulse 3s ease-in-out infinite;
+  }
+  @keyframes logo-pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(200,168,76,0.2); }
+    50% { box-shadow: 0 0 16px rgba(200,168,76,0.4); }
+  }
+  .logo-text {
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold-bright);
+    letter-spacing: 3px;
+  }
+  .logo-subtitle {
+    font-size: 9px;
+    color: var(--gold-weathered);
+    letter-spacing: 2px;
+    margin-top: 1px;
+  }
+  .title-bar .spacer { flex: 1; }
+  .nav-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--bg-deep);
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--text-ghost);
+  }
+  .nav-tab {
+    background: none;
+    border: none;
+    color: var(--text-rune);
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-tab:hover { color: var(--text-stone); }
+  .nav-tab.active {
+    background: rgba(200,168,76,0.1);
+    color: var(--gold-bright);
+    border: 1px solid rgba(200,168,76,0.2);
+  }
+  .header-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .header-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--text-ghost);
+    background: var(--bg-surface);
+    color: var(--text-rune);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13px;
+  }
+  .header-btn:hover {
+    border-color: var(--gold-weathered);
+    color: var(--gold-bright);
+  }
+  
+  /* === MAIN LAYOUT === */
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+  
+  /* === LEFT SIDEBAR (Rune-inscribed) === */
+  .sidebar {
+    width: 240px;
+    background: var(--bg-deep);
+    border-right: 1px solid var(--text-ghost);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .sidebar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -1px;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(180deg, var(--gold-ancient), transparent 30%, transparent 70%, var(--gold-ancient));
+    opacity: 0.4;
+  }
+  .sidebar-content {
+    flex: 1;
+    padding: 16px 0;
+    overflow-y: auto;
+  }
+  .sb-section {
+    margin-bottom: 20px;
+  }
+  .sb-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--gold-weathered);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0 16px;
+    margin-bottom: 8px;
+  }
+  .sb-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 12px;
+    color: var(--text-stone);
+    position: relative;
+  }
+  .sb-item:hover {
+    background: rgba(200,168,76,0.04);
+    color: var(--text-bone);
+  }
+  .sb-item.active {
+    background: rgba(200,168,76,0.08);
+    color: var(--gold-bright);
+  }
+  .sb-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 2px;
+    background: var(--gold-primary);
+    border-radius: 1px;
+  }
+  .sb-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+    opacity: 0.7;
+  }
+  .sb-item.active .sb-icon { opacity: 1; }
+  .sb-badge {
+    margin-left: auto;
+    background: rgba(200,168,76,0.15);
+    color: var(--gold-bright);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--text-ghost);
+  }
+  .sf-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    color: var(--text-rune);
+  }
+  .sf-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 6px rgba(125,184,125,0.4);
+  }
+  
+  /* === CENTER === */
+  .center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-void);
+    position: relative;
+  }
+  
+  /* Rune Area (Ornate) */
+  .rune-area {
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .rune-area::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(200,168,76,0.04) 0%, transparent 60%);
+  }
+  
+  .rune-mandala {
+    width: 240px;
+    height: 240px;
+    position: relative;
+  }
+  .rm-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid;
+  }
+  .rm-ring-1 {
+    inset: 0;
+    border-color: rgba(200,168,76,0.15);
+    animation: spin-cw 30s linear infinite;
+  }
+  .rm-ring-2 {
+    inset: 15px;
+    border-color: rgba(200,168,76,0.25);
+    border-style: dashed;
+    animation: spin-ccw 25s linear infinite;
+  }
+  .rm-ring-3 {
+    inset: 30px;
+    border-color: rgba(200,168,76,0.35);
+    animation: spin-cw 20s linear infinite;
+  }
+  .rm-ring-4 {
+    inset: 45px;
+    border-color: rgba(232,197,90,0.4);
+    border-width: 1.5px;
+    animation: spin-ccw 15s linear infinite;
+  }
+  .rm-rune-band {
+    position: absolute;
+    inset: 8px;
+    animation: spin-cw 40s linear infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .rm-rune-text {
+    position: absolute;
+    font-size: 11px;
+    color: rgba(200,168,76,0.25);
+    letter-spacing: 8px;
+    white-space: nowrap;
+  }
+  @keyframes spin-cw { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes spin-ccw { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+  
+  .rm-hexagram {
+    position: absolute;
+    inset: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .rm-hexagram svg {
+    width: 120px;
+    height: 120px;
+    filter: drop-shadow(0 0 25px rgba(232,197,90,0.25));
+  }
+  .rm-core {
+    position: absolute;
+    inset: 90px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,243,204,0.8) 0%, rgba(232,197,90,0.4) 30%, rgba(139,105,20,0.1) 60%, transparent 80%);
+    animation: core-breathe 4s ease-in-out infinite;
+  }
+  @keyframes core-breathe {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+  }
+  .rm-label {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    color: var(--gold-weathered);
+    letter-spacing: 3px;
+    white-space: nowrap;
+  }
+  
+  /* Chat */
+  .chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 32px;
+    overflow: hidden;
+  }
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .chat-messages::-webkit-scrollbar { width: 3px; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--gold-ancient); border-radius: 2px; }
+  
+  .msg {
+    max-width: 80%;
+    position: relative;
+  }
+  .msg.user { align-self: flex-end; }
+  .msg.assistant { align-self: flex-start; }
+  .msg-bubble {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .msg.user .msg-bubble {
+    background: linear-gradient(135deg, rgba(107,90,30,0.3), rgba(139,122,46,0.15));
+    border: 1px solid rgba(200,168,76,0.2);
+    border-bottom-right-radius: 4px;
+    color: var(--gold-white);
+  }
+  .msg.assistant .msg-bubble {
+    background: var(--bg-surface);
+    border: 1px solid var(--text-ghost);
+    border-bottom-left-radius: 4px;
+    color: var(--text-bone);
+  }
+  .msg-meta {
+    font-size: 9px;
+    color: var(--text-rune);
+    margin-top: 4px;
+    padding: 0 4px;
+  }
+  .msg.user .msg-meta { text-align: right; }
+  
+  /* Input */
+  .input-area {
+    padding: 12px 0 20px;
+  }
+  .input-wrapper {
+    display: flex;
+    align-items: center;
+    background: var(--bg-surface);
+    border: 1px solid var(--text-ghost);
+    border-radius: 12px;
+    padding: 4px 4px 4px 16px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .input-wrapper:focus-within {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 20px rgba(200,168,76,0.08);
+  }
+  .input-wrapper input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-bone);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+  }
+  .input-wrapper input::placeholder { color: var(--text-rune); }
+  .input-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .input-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--text-rune);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    font-size: 14px;
+  }
+  .input-btn:hover { color: var(--gold-bright); background: rgba(200,168,76,0.08); }
+  .input-btn.send {
+    background: var(--gold-ancient);
+    color: var(--gold-bright);
+    border-radius: 8px;
+  }
+  .input-btn.send:hover {
+    background: var(--gold-primary);
+    color: var(--bg-void);
+  }
+  .input-hint {
+    font-size: 9px;
+    color: var(--text-ghost);
+    margin-top: 6px;
+    text-align: center;
+  }
+  .input-hint kbd {
+    background: var(--bg-elevated);
+    border: 1px solid var(--text-ghost);
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-size: 9px;
+    color: var(--text-rune);
+  }
+  
+  /* === RIGHT PANEL (Rune Cards) === */
+  .right-panel {
+    width: 270px;
+    background: var(--bg-deep);
+    border-left: 1px solid var(--text-ghost);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+  }
+  .rune-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--text-ghost);
+    border-radius: 10px;
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rune-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-ancient), transparent);
+    opacity: 0.5;
+  }
+  .rc-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .rc-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: rgba(200,168,76,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .rc-title {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gold-weathered);
+    letter-spacing: 1px;
+  }
+  .rc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 11px;
+  }
+  .rc-label { color: var(--text-stone); }
+  .rc-value { color: var(--gold-bright); font-weight: 500; }
+  .rc-bar {
+    height: 3px;
+    background: var(--bg-elevated);
+    border-radius: 2px;
+    margin-top: 3px;
+  }
+  .rc-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--gold-ancient), var(--gold-primary));
+    transition: width 0.3s;
+  }
+  .provider-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 11px;
+  }
+  .pi-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pi-dot.ok { background: var(--success); box-shadow: 0 0 4px rgba(125,184,125,0.3); }
+  .pi-dot.slow { background: #D4A843; }
+  .pi-dot.err { background: var(--error); }
+  .pi-name { color: var(--text-stone); flex: 1; }
+  .pi-stat { color: var(--text-rune); font-size: 10px; font-family: 'Inter', monospace; }
+  
+  /* Rune decorative elements */
+  .rune-divider {
+    text-align: center;
+    color: var(--gold-ancient);
+    font-size: 8px;
+    letter-spacing: 6px;
+    padding: 4px 0;
+    opacity: 0.4;
+  }
+  
+  *:focus-visible {
+    outline: 2px solid var(--gold-primary);
+    outline-offset: 2px;
+  }
+  
+  .direction-label {
+    position: fixed;
+    top: 56px;
+    right: 290px;
+    background: rgba(107,90,30,0.2);
+    border: 1px solid var(--gold-ancient);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    color: var(--gold-bright);
+    letter-spacing: 1px;
+    z-index: 100;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="direction-label">DIRECTION B — RUNE KEEPER</div>
+
+<div class="title-bar">
+  <div class="logo-mark">
+    <div class="logo-rune">ᚠ</div>
+    <div>
+      <div class="logo-text">ELÍVEA</div>
+      <div class="logo-subtitle">INTELIGÊNCIA SUPREMA</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active">Chat</button>
+    <button class="nav-tab">Código</button>
+    <button class="nav-tab">Deep Dev</button>
+    <button class="nav-tab">Automação</button>
+  </div>
+  <div class="header-actions">
+    <button class="header-btn" title="Command Palette (Ctrl+K)">⌘</button>
+    <button class="header-btn" title="Configurações">⚙</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-content">
+      <div class="sb-section">
+        <div class="sb-label">Menu</div>
+        <div class="sb-item active">
+          <span class="sb-icon">💬</span> Chat
+        </div>
+        <div class="sb-item">
+          <span class="sb-icon">🔮</span> Deep Dev
+          <span class="sb-badge">NEW</span>
+        </div>
+        <div class="sb-item">
+          <span class="sb-icon">⚡</span> Programação
+        </div>
+        <div class="sb-item">
+          <span class="sb-icon">🧠</span> Knowledge Graph
+        </div>
+      </div>
+      <div class="rune-divider">ᚠ ᚢ ᚦ ᚨ ᚱ</div>
+      <div class="sb-section">
+        <div class="sb-label">Ferramentas</div>
+        <div class="sb-item">
+          <span class="sb-icon">📊</span> Dashboard
+        </div>
+        <div class="sb-item">
+          <span class="sb-icon">⏱</span> Time Machine
+        </div>
+        <div class="sb-item">
+          <span class="sb-icon">📁</span> Histórico
+        </div>
+        <div class="sb-item">
+          <span class="sb-icon">🛡</span> Segurança
+        </div>
+      </div>
+      <div class="rune-divider">ᚲ ᚷ ᚹ ᚺ ᚾ</div>
+      <div class="sb-section">
+        <div class="sb-label">Sistema</div>
+        <div class="sb-item">
+          <span class="sb-icon">⚙</span> Configurações
+        </div>
+        <div class="sb-item">
+          <span class="sb-icon">📦</span> Plugins
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sf-row">
+        <div class="sf-dot"></div>
+        <span>Elívea ativa • v2.0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="center">
+    <div class="rune-area">
+      <div class="rune-mandala">
+        <div class="rm-ring rm-ring-1"></div>
+        <div class="rm-ring rm-ring-2"></div>
+        <div class="rm-ring rm-ring-3"></div>
+        <div class="rm-ring rm-ring-4"></div>
+        <div class="rm-rune-band">
+          <span class="rm-rune-text">ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛈᛇᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ</span>
+        </div>
+        <div class="rm-hexagram">
+          <svg viewBox="0 0 100 100" fill="none">
+            <polygon points="50,8 88,68 12,68" stroke="#C9A84C" stroke-width="1" fill="rgba(200,168,76,0.06)"/>
+            <polygon points="50,92 12,32 88,32" stroke="#C9A84C" stroke-width="1" fill="rgba(200,168,76,0.06)"/>
+            <circle cx="50" cy="50" r="18" fill="none" stroke="rgba(200,168,76,0.3)" stroke-width="0.5"/>
+            <circle cx="50" cy="50" r="8" fill="url(#gB)"/>
+            <defs>
+              <radialGradient id="gB" cx="50%" cy="50%">
+                <stop offset="0%" stop-color="#FFF3CC" stop-opacity="0.9"/>
+                <stop offset="50%" stop-color="#E8C55A" stop-opacity="0.5"/>
+                <stop offset="100%" stop-color="#8B6914" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="rm-core"></div>
+      </div>
+      <div class="rm-label">○ EM ESPERA</div>
+    </div>
+
+    <div class="chat-area">
+      <div class="chat-messages">
+        <div class="msg user">
+          <div class="msg-bubble">Olá Elívea, como você está?</div>
+          <div class="msg-meta">14:32</div>
+        </div>
+        <div class="msg assistant">
+          <div class="msg-bubble">Olá, Mestre! Estou funcionando perfeitamente. Todos os sistemas estão nominais — 15 providers configurados, memória persistente ativa, e o motor de código pronto para uso. Como posso ajudá-lo hoje?</div>
+          <div class="msg-meta">Elívea • 2.3s • Groq Llama 3.3</div>
+        </div>
+        <div class="msg user">
+          <div class="msg-bubble">Me ajude a otimizar uma função Python que está lenta</div>
+          <div class="msg-meta">14:33</div>
+        </div>
+        <div class="msg assistant">
+          <div class="msg-bubble">Claro! Para otimizar sua função, preciso analisá-la. Pode compartilhar o código? Vou verificar:<br><br>• Complexidade temporal (Big O)<br>• Possíveis hotspots de memória<br>• Oportunidades de vectorização<br>• Cache e memoização<br><br>Cole o código ou indique o arquivo e eu inicio a análise imediatamente.</div>
+          <div class="msg-meta">Elívea • 3.1s • Gemini 2.0</div>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="input-wrapper">
+          <input type="text" placeholder="Digite sua mensagem..." />
+          <div class="input-actions">
+            <button class="input-btn" title="Comando de voz">🎤</button>
+            <button class="input-btn send" title="Enviar">→</button>
+          </div>
+        </div>
+        <div class="input-hint"><kbd>Ctrl+K</kbd> Command Palette  •  <kbd>Ctrl+Shift+P</kbd> Programação  •  <kbd>/</kbd> Comandos</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="rune-card">
+      <div class="rc-header">
+        <div class="rc-icon">⚡</div>
+        <div class="rc-title">Sistema</div>
+      </div>
+      <div class="rc-row">
+        <span class="rc-label">CPU</span>
+        <span class="rc-value">23%</span>
+      </div>
+      <div class="rc-bar"><div class="rc-bar-fill" style="width:23%"></div></div>
+      <div class="rc-row">
+        <span class="rc-label">Memória</span>
+        <span class="rc-value">1.2 GB</span>
+      </div>
+      <div class="rc-bar"><div class="rc-bar-fill" style="width:45%"></div></div>
+      <div class="rc-row">
+        <span class="rc-label">Tokens Hoje</span>
+        <span class="rc-value">142,380</span>
+      </div>
+    </div>
+    
+    <div class="rune-card">
+      <div class="rc-header">
+        <div class="rc-icon">🌐</div>
+        <div class="rc-title">Providers</div>
+      </div>
+      <div class="provider-item">
+        <div class="pi-dot ok"></div>
+        <span class="pi-name">Groq</span>
+        <span class="pi-stat">180ms</span>
+      </div>
+      <div class="provider-item">
+        <div class="pi-dot ok"></div>
+        <span class="pi-name">Gemini</span>
+        <span class="pi-stat">320ms</span>
+      </div>
+      <div class="provider-item">
+        <div class="pi-dot ok"></div>
+        <span class="pi-name">OpenRouter</span>
+        <span class="pi-stat">410ms</span>
+      </div>
+      <div class="provider-item">
+        <div class="pi-dot slow"></div>
+        <span class="pi-name">Cerebras</span>
+        <span class="pi-stat">limit</span>
+      </div>
+      <div class="provider-item">
+        <div class="pi-dot err"></div>
+        <span class="pi-name">NVIDIA</span>
+        <span class="pi-stat">off</span>
+      </div>
+    </div>
+
+    <div class="rune-card">
+      <div class="rc-header">
+        <div class="rc-icon">💰</div>
+        <div class="rc-title">Economia</div>
+      </div>
+      <div class="rc-row">
+        <span class="rc-label">Tokens usados</span>
+        <span class="rc-value">142K</span>
+      </div>
+      <div class="rc-row">
+        <span class="rc-label">Economizado</span>
+        <span class="rc-value" style="color:var(--success)">$4.82</span>
+      </div>
+      <div class="rc-row">
+        <span class="rc-label">Latência média</span>
+        <span class="rc-value">290ms</span>
+      </div>
+    </div>
+    
+    <div class="rune-card">
+      <div class="rc-header">
+        <div class="rc-icon">🛡</div>
+        <div class="rc-title">Segurança</div>
+      </div>
+      <div class="rc-row">
+        <span class="rc-label">Audit Log</span>
+        <span class="rc-value" style="color:var(--success)">✓ Hash Chain</span>
+      </div>
+      <div class="rc-row">
+        <span class="rc-label">Sandbox</span>
+        <span class="rc-value" style="color:var(--success)">✓ Ativo</span>
+      </div>
+      <div class="rc-row">
+        <span class="rc-label">Secret Scanner</span>
+        <span class="rc-value" style="color:var(--success)">✓ 0 alertas</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -32,21 +32,21 @@ except ImportError:
     _qt = "PyQt6"
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Theme Constants
+# Theme Constants — Direction B: Rune Keeper (Gold + Black Fantasy)
 # ═══════════════════════════════════════════════════════════════════════════
-BG = "#000000"
-PANEL = "#0a0a0a"
-PANEL2 = "#111111"
-BORDER = "#1a1a1a"
-BORDER_GOLD = "#3d3200"
-GOLD = "#FFD700"
-GOLD_DIM = "#b8960f"
-GOLD_BRIGHT = "#ffe44d"
-TEXT = "#ffffff"
-TEXT_DIM = "#666666"
-TEXT_MED = "#999999"
-GREEN = "#4ade80"
-RED = "#f87171"
+BG = "#020204"              # BG_VOID
+PANEL = "#060609"           # BG_DEEP
+PANEL2 = "#0d0d12"          # BG_SURFACE
+BORDER = "#1a1a20"          # BG_CARD
+BORDER_GOLD = "#6B5A1E"     # GOLD_ANCIENT
+GOLD = "#C9A84C"            # GOLD_PRIMARY
+GOLD_DIM = "#8B7A2E"        # GOLD_WEATHERED
+GOLD_BRIGHT = "#E8C55A"     # GOLD_BRIGHT
+TEXT = "#E8E0D0"            # TEXT_BONE
+TEXT_DIM = "#6B6358"         # TEXT_RUNE
+TEXT_MED = "#9A9080"         # TEXT_STONE
+GREEN = "#7DB87D"           # SUCCESS (desaturated)
+RED = "#C45B5B"             # ERROR (desaturated)
 
 RUNES = list("ᚠᚢᚦᚨᚱᚲᚷᚹᚺᚾᛁᛃᛇᛈᛉᛊᛏᛒᛖᛗᛚᛜᛞᛟ")
 
@@ -117,21 +117,14 @@ class RuneCoreWidget(QWidget):
     }
 
     def _get_state_colors(self) -> dict:
-        """Dynamic colors — reads live from theme palette C."""
-        try:
-            import sys
-            _qt_mod = sys.modules.get('EliveaAI_Clone.ui.qt_ui') or sys.modules.get('ui.qt_ui')
-            C = _qt_mod.C
-            pri = C.PRI; gold = C.GOLD; green = C.GREEN; red = C.RED; acc = C.ACC
-        except Exception:
-            pri = "#00e5ff"; gold = "#FFD700"; green = "#4ade80"; red = "#f87171"; acc = "#ffedb0"
+        """Dynamic colors — Direction B: Rune Keeper (Gold + Black fantasy)."""
         return {
-            "idle":      {"ring": pri,  "star": gold, "glow": gold},
-            "thinking":  {"ring": acc,  "star": gold, "glow": pri},
-            "speaking":  {"ring": gold, "star": gold, "glow": gold},
-            "success":   {"ring": green,"star": green,"glow": green},
-            "error":     {"ring": red,  "star": red,  "glow": red},
-            "listening": {"ring": pri,  "star": pri,  "glow": pri},
+            "idle":      {"ring": "#8B7A2E", "star": "#C9A84C", "glow": "#E8C55A"},
+            "thinking":  {"ring": "#C9A84C", "star": "#FFD966", "glow": "#C9A84C"},
+            "speaking":  {"ring": "#E8C55A", "star": "#FFD966", "glow": "#FFD966"},
+            "success":   {"ring": "#7DB87D", "star": "#7DB87D", "glow": "#7DB87D"},
+            "error":     {"ring": "#C45B5B", "star": "#C45B5B", "glow": "#C45B5B"},
+            "listening": {"ring": "#C9A84C", "star": "#E8C55A", "glow": "#C9A84C"},
         }
 
     def __init__(self, parent=None):
@@ -363,6 +356,19 @@ class RuneCoreWidget(QWidget):
             p.setPen(QPen(_alpha(mc, int(al)), pw))
             p.drawLine(QPointF(cx + r1 * math.cos(a), cy + r1 * math.sin(a)),
                        QPointF(cx + r2 * math.cos(a), cy + r2 * math.sin(a)))
+
+        # ─── DASHED OUTER RING (Direction B mandala accent) ───
+        dashed_r = outer_r * 1.08
+        p.save()
+        p.translate(cx, cy)
+        p.rotate(self._rings[0] * 0.3)  # slow rotation
+        dash_pen = QPen(_alpha(mc, int(80 * g)), 0.8)
+        dash_pen.setStyle(Qt.PenStyle.DashLine)
+        dash_pen.setDashPattern([3.0, 5.0])
+        p.setPen(dash_pen)
+        p.setBrush(Qt.BrushStyle.NoBrush)
+        p.drawEllipse(QRectF(-dashed_r, -dashed_r, dashed_r * 2, dashed_r * 2))
+        p.restore()
 
         # ─── OUTER RING: two concentric lines with rune band between ───
         for rr, pw, al in [(outer_r, 1.8, 200), (outer_r * 0.93, 1.0, 140)]:
@@ -1735,76 +1741,143 @@ class _OldChatSidebarRemoved:
 # TopBar Widget
 # ═══════════════════════════════════════════════════════════════════════════
 class TopBarWidget(QWidget):
+    """Direction B — Rune Keeper header bar.
+    Ornate header with Cinzel serif logo, rune accent, nav tabs.
+    """
+    tab_changed = pyqtSignal(str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(48)
         self._connected = True
+        self._active_tab = "Chat"
+        self._tabs = ["Chat", "Programação", "Deep Dev"]
+        self._hover_tab = ""
+        self.setMouseTracking(True)
+        self._on_tab_click = None
+
+    def set_on_tab_click(self, cb):
+        self._on_tab_click = cb
+
+    def mousePressEvent(self, ev):
+        x, y = ev.position().x(), ev.position().y()
+        # Check tab clicks (right area)
+        tab_start = self.width() - 400
+        tab_x = tab_start
+        for tab in self._tabs:
+            tw = 90
+            if tab_x <= x <= tab_x + tw and 8 <= y <= 40:
+                self._active_tab = tab
+                self.tab_changed.emit(tab)
+                if self._on_tab_click:
+                    self._on_tab_click(tab)
+                self.update()
+                return
+            tab_x += tw
+
+    def mouseMoveEvent(self, ev):
+        x, y = ev.position().x(), ev.position().y()
+        tab_start = self.width() - 400
+        tab_x = tab_start
+        self._hover_tab = ""
+        for tab in self._tabs:
+            tw = 90
+            if tab_x <= x <= tab_x + tw and 8 <= y <= 40:
+                self._hover_tab = tab
+                self.setCursor(Qt.CursorShape.PointingHandCursor)
+                self.update()
+                return
+            tab_x += tw
+        self.setCursor(Qt.CursorShape.ArrowCursor)
+        self.update()
 
     def paintEvent(self, _):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         W, H = self.width(), self.height()
 
-        # Background
-        p.fillRect(0, 0, W, H, _alpha(BG, 220))
+        # Background: deep void with subtle gradient
+        p.fillRect(0, 0, W, H, _alpha("#060609", 240))
 
-        # Bottom border
-        p.setPen(QPen(_alpha(BORDER, 100), 1))
+        # Bottom border: gold accent line (ornate)
+        gold_line = QLinearGradient(0, H - 1, W, H - 1)
+        gold_line.setColorAt(0, _alpha(GOLD_DIM, 0))
+        gold_line.setColorAt(0.2, _alpha(GOLD_DIM, 60))
+        gold_line.setColorAt(0.5, _alpha(GOLD, 100))
+        gold_line.setColorAt(0.8, _alpha(GOLD_DIM, 60))
+        gold_line.setColorAt(1, _alpha(GOLD_DIM, 0))
+        p.setPen(QPen(QBrush(gold_line), 1))
         p.drawLine(0, H - 1, W, H - 1)
 
-        # Left: back arrow + "BENTO DASHBOARD"
-        p.setFont(_font(9))
-        p.setPen(QPen(QColor(TEXT_DIM), 150))
-        p.drawText(QRectF(12, 4, 20, H - 8), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, "<")
-        p.setFont(_font(8, bold=False))
-        p.setPen(QPen(QColor(TEXT_DIM), 120))
-        p.drawText(QRectF(36, 4, 120, 14), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, "SESSION")
-        p.setFont(_font(9))
-        p.setPen(QPen(QColor(TEXT_MED), 180))
-        p.drawText(QRectF(36, 18, 120, 14), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, "BENTO DASHBOARD")
-
-        # Center: Logo + Elivea
-        cx = W / 2
-        # Logo circle
-        p.setPen(QPen(_alpha(GOLD, 100), 1.5))
+        # Left: Logo mark (rune circle)
+        logo_r = 12
+        logo_cx, logo_cy = 24, H / 2
+        p.setPen(QPen(_alpha(GOLD, 120), 1.5))
         p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawEllipse(QRectF(cx - 50, 6, 28, 28))
+        p.drawEllipse(QRectF(logo_cx - logo_r, logo_cy - logo_r, logo_r * 2, logo_r * 2))
         p.setFont(_font(10))
         p.setPen(QPen(QColor(GOLD), 200))
-        p.drawText(QRectF(cx - 50, 6, 28, 28), Qt.AlignmentFlag.AlignCenter, "G")
+        p.drawText(QRectF(logo_cx - logo_r, logo_cy - logo_r, logo_r * 2, logo_r * 2),
+                   Qt.AlignmentFlag.AlignCenter, "ᚠ")
 
-        p.setFont(_font(10))
-        p.setPen(QPen(QColor(TEXT), 230))
-        p.drawText(QRectF(cx - 18, 4, 140, 16), Qt.AlignmentFlag.AlignLeft, "Elívea")
+        # Logo text: ELÍVEA (serif-style via bold)
+        p.setFont(_font(14))
+        p.setPen(QPen(QColor(GOLD), 230))
+        p.drawText(QRectF(44, 4, 120, 20), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, "ELÍVEA")
+
+        # Subtitle
         p.setFont(_font(7, bold=False))
         p.setPen(QPen(QColor(GOLD_DIM), 120))
-        p.drawText(QRectF(cx - 18, 22, 140, 12), Qt.AlignmentFlag.AlignLeft, "AI COMMAND CENTER")
+        p.drawText(QRectF(44, 24, 160, 16), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, "INTELIGÊNCIA SUPREMA")
 
-        # Right: status + buttons
-        rx = W - 200
-        # Online dot
-        p.setBrush(QBrush(_alpha(GOLD, 180)))
+        # Center-right: Navigation tabs
+        tab_start = W - 400
+        tab_x = tab_start
+        for tab in self._tabs:
+            tw = 90
+            is_active = (tab == self._active_tab)
+            is_hover = (tab == self._hover_tab)
+
+            # Tab background
+            if is_active:
+                tab_bg = QLinearGradient(tab_x, 8, tab_x + tw, 8)
+                tab_bg.setColorAt(0, _alpha(GOLD_DIM, 15))
+                tab_bg.setColorAt(0.5, _alpha(GOLD_DIM, 25))
+                tab_bg.setColorAt(1, _alpha(GOLD_DIM, 15))
+                p.setBrush(QBrush(tab_bg))
+                p.setPen(QPen(_alpha(GOLD, 40), 1))
+                p.drawRoundedRect(QRectF(tab_x, 8, tw, 32), 6, 6)
+            elif is_hover:
+                p.setBrush(QBrush(_alpha("#1a1a20", 200)))
+                p.setPen(QPen(_alpha(GOLD_DIM, 30), 1))
+                p.drawRoundedRect(QRectF(tab_x, 8, tw, 32), 6, 6)
+
+            # Tab text
+            text_color = GOLD if is_active else TEXT_DIM if not is_hover else TEXT_MED
+            p.setFont(_font(9, bold=is_active))
+            p.setPen(QPen(QColor(text_color), 200 if is_active else 150))
+            p.drawText(QRectF(tab_x, 8, tw, 32), Qt.AlignmentFlag.AlignCenter, tab)
+            tab_x += tw
+
+        # Right: Settings + Command Palette buttons
+        btn_y = 10
+        btn_size = 28
+        for i, (icon, label) in enumerate([("⌘", "Ctrl+K"), ("⚙", "Config")]):
+            bx = W - 70 + i * 34
+            p.setPen(QPen(_alpha(GOLD_DIM, 60), 1))
+            p.setBrush(QBrush(_alpha("#0d0d12", 150)))
+            p.drawRoundedRect(QRectF(bx, btn_y, btn_size, btn_size), 6, 6)
+            p.setFont(_font(11))
+            p.setPen(QPen(QColor(TEXT_DIM), 150))
+            p.drawText(QRectF(bx, btn_y, btn_size, btn_size), Qt.AlignmentFlag.AlignCenter, icon)
+
+        # Status indicator (left of buttons)
+        p.setBrush(QBrush(_alpha("#7DB87D", 180)))
         p.setPen(Qt.PenStyle.NoPen)
-        p.drawEllipse(QPointF(rx, H / 2), 3, 3)
-        p.setFont(_font(8, bold=False))
-        p.setPen(QPen(QColor(TEXT_DIM), 150))
-        p.drawText(QRectF(rx + 8, 4, 50, H - 8), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, "ONLINE")
-
-        # User pill
-        p.setPen(QPen(_alpha(BORDER, 80), 1))
-        p.setBrush(QBrush(_alpha(PANEL2, 150)))
-        p.drawRoundedRect(QRectF(W - 150, 10, 100, 28), 14, 14)
-        p.setFont(_font(8, bold=False))
-        p.setPen(QPen(QColor(TEXT_MED), 180))
-        p.drawText(QRectF(W - 145, 10, 90, 28), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter, "User: sage-owner")
-
-        # Power button
-        p.setPen(QPen(_alpha(RED, 80), 1))
-        p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawRoundedRect(QRectF(W - 40, 10, 28, 28), 6, 6)
-        p.setFont(_font(9))
-        p.setPen(QPen(QColor(RED), 150))
-        p.drawText(QRectF(W - 40, 10, 28, 28), Qt.AlignmentFlag.AlignCenter, "⏻")
+        p.drawEllipse(QPointF(W - 80, H / 2), 3, 3)
+        p.setFont(_font(7, bold=False))
+        p.setPen(QPen(QColor(TEXT_DIM), 120))
+        p.drawText(QRectF(W - 100, 28, 20, 12), Qt.AlignmentFlag.AlignCenter, "ON")
 
 
 # ═══════════════════════════════════════════════════════════════════════════

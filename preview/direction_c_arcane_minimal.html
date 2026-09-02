@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elívea — Direction C: Arcane Minimal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg-0: #030304;
+    --bg-1: #08080b;
+    --bg-2: #0e0e12;
+    --bg-3: #15151a;
+    --bg-4: #1c1c22;
+    --gold-subtle: rgba(200,168,76,0.08);
+    --gold-soft: rgba(200,168,76,0.15);
+    --gold-mid: rgba(200,168,76,0.3);
+    --gold-primary: #C9A84C;
+    --gold-bright: #E8C55A;
+    --gold-glow: rgba(232,197,90,0.12);
+    --text-1: #ECE8E0;
+    --text-2: #9A9488;
+    --text-3: #5E5A52;
+    --text-4: #3A3732;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(200,168,76,0.2);
+    --success: #6BAF6B;
+    --error: #B55555;
+  }
+  
+  body {
+    background: var(--bg-0);
+    color: var(--text-1);
+    font-family: 'Inter', -apple-system, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  /* === TOP BAR (Ultra minimal) === */
+  .topbar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-1);
+  }
+  .tb-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .tb-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold-bright);
+    letter-spacing: 1px;
+  }
+  .tb-tag {
+    font-size: 9px;
+    color: var(--text-3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .tb-spacer { flex: 1; }
+  .tb-nav {
+    display: flex;
+    gap: 1px;
+  }
+  .tb-link {
+    background: none;
+    border: none;
+    color: var(--text-3);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tb-link:hover { color: var(--text-2); background: var(--bg-3); }
+  .tb-link.on {
+    color: var(--gold-bright);
+    background: var(--gold-subtle);
+  }
+  .tb-actions {
+    display: flex;
+    gap: 6px;
+    margin-left: 16px;
+  }
+  .tb-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg-2);
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s;
+  }
+  .tb-btn:hover {
+    border-color: var(--border-hover);
+    color: var(--gold-bright);
+  }
+  
+  /* === MAIN === */
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+  
+  /* === LEFT NAV (Compact) === */
+  .leftnav {
+    width: 52px;
+    background: var(--bg-1);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 4px;
+  }
+  .ln-item {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: none;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .ln-item:hover { color: var(--text-2); background: var(--bg-3); }
+  .ln-item.on {
+    color: var(--gold-bright);
+    background: var(--gold-subtle);
+  }
+  .ln-item.on::after {
+    content: '';
+    position: absolute;
+    left: -8px;
+    width: 3px;
+    height: 16px;
+    background: var(--gold-primary);
+    border-radius: 0 2px 2px 0;
+  }
+  .ln-spacer { flex: 1; }
+  .ln-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+  }
+  
+  /* === CENTER === */
+  .center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-0);
+  }
+  
+  /* Rune (Minimal) */
+  .rune-zone {
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .rune-container {
+    position: relative;
+    width: 180px;
+    height: 180px;
+  }
+  .r-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 0.5px solid var(--gold-mid);
+  }
+  .r-ring.r1 { inset: 0; animation: rspin 40s linear infinite; }
+  .r-ring.r2 { inset: 18px; border-style: dotted; animation: rspin 30s linear infinite reverse; }
+  .r-ring.r3 { inset: 36px; animation: rspin 20s linear infinite; }
+  @keyframes rspin { to { transform: rotate(360deg); } }
+  
+  .r-hex {
+    position: absolute;
+    inset: 52px;
+  }
+  .r-hex svg { width: 100%; height: 100%; filter: drop-shadow(0 0 15px var(--gold-glow)); }
+  .r-center {
+    position: absolute;
+    inset: 76px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,243,204,0.7) 0%, rgba(232,197,90,0.3) 40%, transparent 70%);
+    animation: rbreathe 5s ease-in-out infinite;
+  }
+  @keyframes rbreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+  .r-label {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--text-3);
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+  
+  /* Chat */
+  .chat-zone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 0 40px;
+    overflow: hidden;
+  }
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .messages::-webkit-scrollbar { width: 3px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--text-4); border-radius: 2px; }
+  
+  .bubble {
+    max-width: 72%;
+    font-size: 13.5px;
+    line-height: 1.65;
+  }
+  .bubble.user {
+    align-self: flex-end;
+    background: var(--gold-subtle);
+    border: 1px solid rgba(200,168,76,0.1);
+    border-radius: 14px 14px 4px 14px;
+    padding: 10px 16px;
+    color: var(--gold-bright);
+  }
+  .bubble.asst {
+    align-self: flex-start;
+    color: var(--text-1);
+    padding: 2px 0;
+  }
+  .bubble-meta {
+    font-size: 10px;
+    color: var(--text-3);
+    margin-top: 6px;
+  }
+  .bubble.user .bubble-meta { text-align: right; }
+  .bubble-asst-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .bam-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--gold-mid);
+  }
+  .bam-text {
+    font-size: 10px;
+    color: var(--text-3);
+  }
+  
+  /* Input */
+  .input-zone {
+    padding: 12px 0 24px;
+  }
+  .input-frame {
+    display: flex;
+    align-items: center;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px 6px 4px 16px;
+    transition: all 0.2s;
+  }
+  .input-frame:focus-within {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 0 3px var(--gold-glow);
+  }
+  .input-frame input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text-1);
+    font-size: 13.5px;
+    font-family: 'Inter', sans-serif;
+    padding: 8px 0;
+  }
+  .input-frame input::placeholder { color: var(--text-4); }
+  .inp-send {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: none;
+    background: var(--gold-primary);
+    color: var(--bg-0);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+  .inp-send:hover { background: var(--gold-bright); }
+  .input-hints {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .input-hints span {
+    font-size: 10px;
+    color: var(--text-4);
+  }
+  .input-hints kbd {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: 'Inter', sans-serif;
+    font-size: 9px;
+    color: var(--text-3);
+  }
+  
+  /* === RIGHT PANEL (Minimal Cards) === */
+  .right-panel {
+    width: 260px;
+    background: var(--bg-1);
+    border-left: 1px solid var(--border);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .min-card {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+  .mc-title {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .mc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 11px;
+  }
+  .mc-label { color: var(--text-2); }
+  .mc-val { color: var(--gold-bright); font-weight: 500; }
+  .mc-bar {
+    height: 2px;
+    background: var(--bg-4);
+    border-radius: 1px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .mc-fill {
+    height: 100%;
+    background: var(--gold-primary);
+    border-radius: 1px;
+    transition: width 0.3s;
+  }
+  .prov-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 11px;
+  }
+  .prov-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+  }
+  .prov-dot.g { background: var(--success); }
+  .prov-dot.y { background: #C9A84C; }
+  .prov-dot.r { background: var(--error); }
+  .prov-name { color: var(--text-2); flex: 1; }
+  .prov-ms { color: var(--text-4); font-size: 10px; }
+  
+  .card-highlight {
+    background: var(--gold-subtle);
+    border-color: rgba(200,168,76,0.15);
+  }
+  
+  *:focus-visible {
+    outline: 2px solid var(--gold-primary);
+    outline-offset: 2px;
+  }
+  
+  .direction-label {
+    position: fixed;
+    top: 52px;
+    right: 280px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 9px;
+    color: var(--text-3);
+    letter-spacing: 1px;
+    z-index: 100;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="direction-label">DIRECTION C — ARCANE MINIMAL</div>
+
+<div class="topbar">
+  <div class="tb-brand">
+    <span class="tb-name">Elívea</span>
+    <span class="tb-tag">Inteligência Suprema</span>
+  </div>
+  <div class="tb-spacer"></div>
+  <div class="tb-nav">
+    <button class="tb-link on">Chat</button>
+    <button class="tb-link">Código</button>
+    <button class="tb-link">Deep Dev</button>
+  </div>
+  <div class="tb-actions">
+    <button class="tb-btn" title="Ctrl+K">⌘</button>
+    <button class="tb-btn" title="Config">⚙</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Icon rail -->
+  <div class="leftnav">
+    <button class="ln-item on" title="Chat">💬</button>
+    <button class="ln-item" title="Código">⚡</button>
+    <button class="ln-item" title="Deep Dev">🔮</button>
+    <button class="ln-item" title="Knowledge">🧠</button>
+    <button class="ln-item" title="Dashboard">📊</button>
+    <button class="ln-item" title="Time Machine">⏱</button>
+    <div class="ln-spacer"></div>
+    <button class="ln-item" title="Segurança">🛡</button>
+    <button class="ln-item" title="Config">⚙</button>
+    <div class="ln-dot" title="Elívea ativa"></div>
+  </div>
+
+  <!-- Center -->
+  <div class="center">
+    <div class="rune-zone">
+      <div class="rune-container">
+        <div class="r-ring r1"></div>
+        <div class="r-ring r2"></div>
+        <div class="r-ring r3"></div>
+        <div class="r-hex">
+          <svg viewBox="0 0 100 100" fill="none">
+            <polygon points="50,10 85,70 15,70" stroke="rgba(200,168,76,0.5)" stroke-width="0.8" fill="rgba(200,168,76,0.04)"/>
+            <polygon points="50,90 15,30 85,30" stroke="rgba(200,168,76,0.5)" stroke-width="0.8" fill="rgba(200,168,76,0.04)"/>
+            <circle cx="50" cy="50" r="10" fill="url(#gC)"/>
+            <defs>
+              <radialGradient id="gC" cx="50%" cy="50%">
+                <stop offset="0%" stop-color="#FFF3CC" stop-opacity="0.85"/>
+                <stop offset="50%" stop-color="#E8C55A" stop-opacity="0.4"/>
+                <stop offset="100%" stop-color="#8B6914" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="r-center"></div>
+      </div>
+      <div class="r-label">○ EM ESPERA</div>
+    </div>
+
+    <div class="chat-zone">
+      <div class="messages">
+        <div class="bubble user">
+          Olá Elívea, como você está?
+          <div class="bubble-meta">14:32</div>
+        </div>
+        <div class="bubble asst">
+          Olá, Mestre! Estou funcionando perfeitamente. Todos os sistemas estão nominais — 15 providers configurados, memória persistente ativa, e o motor de código pronto para uso. Como posso ajudá-lo hoje?
+          <div class="bubble-asst-meta">
+            <div class="bam-dot"></div>
+            <span class="bam-text">Elívea • 2.3s • Groq Llama 3.3</span>
+          </div>
+        </div>
+        <div class="bubble user">
+          Me ajude a otimizar uma função Python que está lenta
+          <div class="bubble-meta">14:33</div>
+        </div>
+        <div class="bubble asst">
+          Claro! Para otimizar sua função, preciso analisá-la. Pode compartilhar o código? Vou verificar:<br><br>
+          • Complexidade temporal (Big O)<br>
+          • Possíveis hotspots de memória<br>
+          • Oportunidades de vectorização<br>
+          • Cache e memoização<br><br>
+          Cole o código ou indique o arquivo e eu inicio a análise imediatamente.
+          <div class="bubble-asst-meta">
+            <div class="bam-dot"></div>
+            <span class="bam-text">Elívea • 3.1s • Gemini 2.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="input-zone">
+        <div class="input-frame">
+          <input type="text" placeholder="Mensagem para Elívea..." />
+          <button class="inp-send">→</button>
+        </div>
+        <div class="input-hints">
+          <span><kbd>Ctrl+K</kbd> Comandos</span>
+          <span><kbd>/</kbd> Slash commands</span>
+          <span><kbd>↑</kbd> Histórico</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right -->
+  <div class="right-panel">
+    <div class="min-card card-highlight">
+      <div class="mc-title">Status</div>
+      <div class="mc-row">
+        <span class="mc-label">CPU</span>
+        <span class="mc-val">23%</span>
+      </div>
+      <div class="mc-bar"><div class="mc-fill" style="width:23%"></div></div>
+      <div class="mc-row">
+        <span class="mc-label">RAM</span>
+        <span class="mc-val">1.2 GB</span>
+      </div>
+      <div class="mc-bar"><div class="mc-fill" style="width:45%"></div></div>
+    </div>
+    
+    <div class="min-card">
+      <div class="mc-title">Providers</div>
+      <div class="prov-row">
+        <div class="prov-dot g"></div>
+        <span class="prov-name">Groq</span>
+        <span class="prov-ms">180ms</span>
+      </div>
+      <div class="prov-row">
+        <div class="prov-dot g"></div>
+        <span class="prov-name">Gemini</span>
+        <span class="prov-ms">320ms</span>
+      </div>
+      <div class="prov-row">
+        <div class="prov-dot g"></div>
+        <span class="prov-name">OpenRouter</span>
+        <span class="prov-ms">410ms</span>
+      </div>
+      <div class="prov-row">
+        <div class="prov-dot y"></div>
+        <span class="prov-name">Cerebras</span>
+        <span class="prov-ms">limit</span>
+      </div>
+      <div class="prov-row">
+        <div class="prov-dot r"></div>
+        <span class="prov-name">NVIDIA</span>
+        <span class="prov-ms">off</span>
+      </div>
+    </div>
+
+    <div class="min-card">
+      <div class="mc-title">Economia</div>
+      <div class="mc-row">
+        <span class="mc-label">Tokens hoje</span>
+        <span class="mc-val">142K</span>
+      </div>
+      <div class="mc-row">
+        <span class="mc-label">Economizado</span>
+        <span class="mc-val" style="color:var(--success)">$4.82</span>
+      </div>
+      <div class="mc-row">
+        <span class="mc-label">Latência média</span>
+        <span class="mc-val">290ms</span>
+      </div>
+    </div>
+
+    <div class="min-card">
+      <div class="mc-title">Segurança</div>
+      <div class="mc-row">
+        <span class="mc-label">Audit</span>
+        <span class="mc-val" style="color:var(--success)">✓</span>
+      </div>
+      <div class="mc-row">
+        <span class="mc-label">Sandbox</span>
+        <span class="mc-val" style="color:var(--success)">✓</span>
+      </div>
+      <div class="mc-row">
+        <span class="mc-label">Scanner</span>
+        <span class="mc-val" style="color:var(--success)">0 alertas</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
