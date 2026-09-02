@@ -100,6 +100,7 @@ from core.event_bus import event_bus
 from core.state_manager import state
 from core.audit_log import audit, ActionLevel
 from core.secret_manager import secrets
+from ui.qt_ui import EliveaMainWindow
 from core.smart_improvements import (
     SessionMemory, LearningDashboard, ErrorLearner, CodePatternLearner,
     VoiceCommandLearner, SmartReminders, ConversationSummarizer,
