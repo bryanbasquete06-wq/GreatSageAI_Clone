@@ -297,6 +297,7 @@ class EliveaApp:
         import logging as _bg
         _log = _bg.getLogger("elvea.startup.bg")
         _log.info("Background init starting...")
+        time.sleep(0.3)  # Let animation render first frames
 
         # --- Smart Improvements (20 features) ---
         _smart_modules = {}
@@ -321,11 +322,13 @@ class EliveaApp:
             "smart_aliases": lambda: SmartAliases(),
             "health_monitor": lambda: HealthMonitor(),
         }
-        for name, factory in _smart_init_map.items():
+        for i, (name, factory) in enumerate(_smart_init_map.items()):
             try:
                 _smart_modules[name] = factory()
             except Exception as e:
                 _log.debug(f"Smart module '{name}' init skipped: {e}")
+            if i % 5 == 4:
+                time.sleep(0.05)  # Yield CPU to UI every 5 modules
         for name, obj in _smart_modules.items():
             setattr(self, name, obj)
         for name in _smart_init_map:
@@ -352,6 +355,7 @@ class EliveaApp:
             _log.info("MessageMonitor started")
         except Exception:
             pass
+        time.sleep(0.05)  # Yield CPU to UI
 
         try:
             from core.speed_optimizer import get_tts_cache, get_connection_pool
@@ -363,6 +367,7 @@ class EliveaApp:
             pool.warm_all(self.llm.providers)
         except Exception:
             pass
+        time.sleep(0.05)  # Yield CPU to UI
 
         try:
             self.cot = ChainOfThought(llm=self.llm)
@@ -392,6 +397,7 @@ class EliveaApp:
             _log.info("ClipboardMonitor active")
         except Exception:
             pass
+        time.sleep(0.05)  # Yield CPU to UI
 
         try:
             self.screen_context = ScreenContext()
