@@ -245,21 +245,19 @@ class EliveaApp:
             except Exception as e:
                 _startup_log.warning(f"Speech UI wiring failed: {e}")
 
-        # --- initialize new modules
-        try:
-            TaskScheduler.start()
-        except Exception as e:
-            _startup_log.warning(f"TaskScheduler start failed: {e}")
+        # --- Set deferred modules to None (initialized in background) ---
+        for _d in ("proactive", "session_mem", "learning_dashboard", "error_learner",
+                   "code_patterns", "voice_learner", "smart_reminders", "summarizer",
+                   "mood_tracker", "response_feedback", "smart_defaults", "snippet_cache",
+                   "conversation_branching", "code_review", "file_recs", "adaptive_length",
+                   "personality_learner", "knowledge_graph", "smart_aliases", "health_monitor",
+                   "usage_tracker", "message_monitor", "cot", "autonomous_planner", "code_analyzer",
+                   "clipboard_monitor", "screen_context", "rag", "multilang", "app_integration"):
+            if not hasattr(self, _d):
+                setattr(self, _d, None)
 
-        try:
-            PluginManager.load_all_enabled()
-        except Exception as e:
-            _startup_log.warning(f"PluginManager load failed: {e}")
-
-        try:
-            LearningEngine.record_preference("session_start", __import__("datetime").datetime.now().isoformat())
-        except Exception as e:
-            _startup_log.debug(f"LearningEngine record failed: {e}")
+        # ═══ DEFERRED: all non-critical modules init in background ═══
+        threading.Thread(target=self._init_background, daemon=True, name="elvea-bg-init").start()
 
         # --- Mark-L tools
         try:
@@ -278,14 +276,19 @@ class EliveaApp:
             _startup_log.error(f"PersistentMemory init failed: {e}")
             raise  # Memory is critical
 
-        try:
-            self.proactive = ProactiveEngine(memory=self.persistent_memory)
-        except Exception as e:
-            _startup_log.warning(f"ProactiveEngine init failed: {e}")
-            self.proactive = None
-            self._init_errors.append("ProactiveEngine")
+        # All deferred modules are None now — initialized in _init_background
 
-        # --- Smart Improvements (20 features) — bulk protection ---
+        # ═══ DEFERRED: all non-critical modules init in background ═══
+        threading.Thread(target=self._init_background, daemon=True,
+                         name="elvea-bg-init").start()
+
+    def _init_background(self):
+        """Initialize all non-critical modules in background thread."""
+        import logging as _bg
+        _log = _bg.getLogger("elvea.startup.bg")
+        _log.info("Background init starting...")
+
+        # --- Smart Improvements (20 features) ---
         _smart_modules = {}
         _smart_init_map = {
             "session_mem": lambda: SessionMemory(),
@@ -312,25 +315,23 @@ class EliveaApp:
             try:
                 _smart_modules[name] = factory()
             except Exception as e:
-                _startup_log.debug(f"Smart module '{name}' init skipped: {e}")
-                self._init_errors.append(name)
-        # Set all successful modules as attributes
+                _log.debug(f"Smart module '{name}' init skipped: {e}")
         for name, obj in _smart_modules.items():
             setattr(self, name, obj)
-        # Set failed modules to None so code can check
         for name in _smart_init_map:
             if not hasattr(self, name):
                 setattr(self, name, None)
 
-        # Usage tracker — real-time provider monitoring
+        try:
+            self.proactive = ProactiveEngine(memory=self.persistent_memory)
+        except Exception:
+            self.proactive = None
+
         try:
             self.usage_tracker = UsageTracker()
-        except Exception as e:
-            _startup_log.warning(f"UsageTracker init failed: {e}")
+        except Exception:
             self.usage_tracker = None
-            self._init_errors.append("UsageTracker")
 
-        # Message Monitor — auto-reply to WhatsApp, Telegram, Discord, Email
         try:
             from modules.message_monitor import MessageMonitor, MonitorConfig
             msg_config = MonitorConfig()
@@ -338,20 +339,16 @@ class EliveaApp:
             self.message_monitor.on_message(self._on_incoming_message)
             self.message_monitor.on_reply(self._on_auto_reply)
             self.message_monitor.start()
-            self.log.info("MessageMonitor started — auto-reply active")
-        except Exception as e:
-            self.log.debug(f"MessageMonitor init skipped: {e}")
+            _log.info("MessageMonitor started")
+        except Exception:
+            pass
 
-        # SPEED: pre-warm TTS cache + LLM connections
         try:
             from core.speed_optimizer import get_tts_cache, get_connection_pool
             if self.speech:
                 tts_cache = get_tts_cache()
-                tts_cache.preload(
-                    self.speech.preset.voice_id,
-                    self.speech.preset.rate,
-                    self.speech.preset.pitch,
-                )
+                tts_cache.preload(self.speech.preset.voice_id,
+                                  self.speech.preset.rate, self.speech.preset.pitch)
             pool = get_connection_pool()
             pool.warm_all(self.llm.providers)
         except Exception:
@@ -359,82 +356,76 @@ class EliveaApp:
 
         try:
             self.cot = ChainOfThought(llm=self.llm)
-        except Exception as e:
-            _startup_log.warning(f"ChainOfThought init failed: {e}")
+        except Exception:
             self.cot = None
 
         try:
             self.autonomous_planner = AutonomousPlanner(llm=self.llm)
-        except Exception as e:
-            _startup_log.warning(f"AutonomousPlanner init failed: {e}")
+        except Exception:
             self.autonomous_planner = None
 
-        # Code analyzer uses functions directly
-        self.code_analyzer = None  # Using module functions directly
+        self.code_analyzer = None
 
-        # --- Wire autonomous self-improvement ---
-        # When the autonomous engine detects critical issues,
-        # the self-improver kicks in automatically to fix them.
         if self.autonomous:
             try:
                 self.autonomous.on_issue_detected(
                     lambda health: SelfImproverModule.on_autonomous_diagnostic(
                         health, llm=self.llm,
-                        on_step=lambda text: self.signals.sig_sage_delta.emit(text),
-                    )
-                )
-                self.log.info("Autonomous self-improvement wired")
-            except Exception as e:
-                _startup_log.warning(f"Self-improvement wiring failed: {e}")
+                        on_step=lambda text: self.signals.sig_sage_delta.emit(text)))
+                _log.info("Autonomous self-improvement wired")
+            except Exception:
+                pass
 
-        # ═══════════════════════════════════════════════════════════════
-        # MODULE 1: Clipboard Monitor
-        # ═══════════════════════════════════════════════════════════════
         try:
             self.clipboard_monitor = ClipboardMonitor()
             self.clipboard_monitor.start()
-            self.log.info("ClipboardMonitor active")
-        except Exception as e:
-            self.log.debug(f"ClipboardMonitor skip: {e}")
+            _log.info("ClipboardMonitor active")
+        except Exception:
+            pass
 
-        # ═══════════════════════════════════════════════════════════════
-        # MODULE 2: Screen Context
-        # ═══════════════════════════════════════════════════════════════
         try:
             self.screen_context = ScreenContext()
-            self.log.info("ScreenContext active")
-        except Exception as e:
-            self.log.debug(f"ScreenContext skip: {e}")
+            _log.info("ScreenContext active")
+        except Exception:
+            pass
 
-        # ═══════════════════════════════════════════════════════════════
-        # MODULE 3: RAG Engine
-        # ═══════════════════════════════════════════════════════════════
         try:
             self.rag = RAGEngine()
-            self.log.info("RAGEngine active")
-        except Exception as e:
-            self.log.debug(f"RAGEngine skip: {e}")
+            _log.info("RAGEngine active")
+        except Exception:
+            pass
 
-        # ═══════════════════════════════════════════════════════════════
-        # MODULE 4: MultiLang
-        # ═══════════════════════════════════════════════════════════════
         try:
             self.multilang = MultiLang()
-            self.log.info("MultiLang active")
-        except Exception as e:
-            self.log.debug(f"MultiLang skip: {e}")
+            _log.info("MultiLang active")
+        except Exception:
+            pass
 
-        # ═══════════════════════════════════════════════════════════════
-        # MODULE 5: App Integration
-        # ═══════════════════════════════════════════════════════════════
         try:
             self.app_integration = AppIntegration()
-            self.log.info("AppIntegration active")
-        except Exception as e:
-            self.log.debug(f"AppIntegration skip: {e}")
+            _log.info("AppIntegration active")
+        except Exception:
+            pass
 
-        state.update({"app_state": "initializing"})
-        event_bus.emit("app.starting")
+        try:
+            TaskScheduler.start()
+        except Exception:
+            pass
+
+        try:
+            PluginManager.load_all_enabled()
+        except Exception:
+            pass
+
+        try:
+            LearningEngine.record_preference("session_start",
+                                             __import__("datetime").datetime.now().isoformat())
+        except Exception:
+            pass
+
+        state.update({"app_state": "ready"})
+        event_bus.emit("app.ready")
+        _log.info("Background init complete")
 
     def get_api_key(self, provider: str) -> str:
         """Busca API key do secret manager ou .env."""
@@ -1917,21 +1908,17 @@ def main():
 
     threading.Thread(target=_startup, daemon=True).start()
 
-    # ═══════════════════════════════════════════════════════
-    # MODULE 6: Auto-Updater (checks on startup)
-    # ═══════════════════════════════════════════════════════
-    try:
-        AutoUpdater.check_on_startup()
-    except Exception:
-        pass
-
-    # ═══════════════════════════════════════════════════════
-    # MODULE 7: Config Manager (loads saved preferences)
-    # ═══════════════════════════════════════════════════════
-    try:
-        ConfigManager.load()
-    except Exception:
-        pass
+    # Defer AutoUpdater + ConfigManager to background (avoid blocking UI)
+    def _deferred_startup():
+        try:
+            AutoUpdater.check_on_startup()
+        except Exception:
+            pass
+        try:
+            ConfigManager.load()
+        except Exception:
+            pass
+    threading.Thread(target=_deferred_startup, daemon=True).start()
 
     def _on_close(*_):
         elvea.pipeline.stop()
