@@ -536,23 +536,13 @@ class RuneCoreWidget(QWidget):
             path.closeSubpath()
             p.drawPath(path)
 
-        # Layer 3: Main orb gradient (warm golden radial)
-        og = QRadialGradient(cx, cy, orb_r * 3.0)
-        og.setColorAt(0, _alpha(sc["star"], int(255 * pulse * g)))
-        og.setColorAt(0.08, _alpha(sc["star"], int(230 * pulse * g)))
-        og.setColorAt(0.3, _alpha(sc["glow"], int(80 * g)))
-        og.setColorAt(0.6, _alpha(sc["glow"], int(20 * g)))
-        og.setColorAt(1, _alpha(sc["glow"], 0))
-        p.setBrush(QBrush(og)); p.setPen(Qt.PenStyle.NoPen)
-        p.drawEllipse(QRectF(cx - orb_r * 3.0, cy - orb_r * 3.0, orb_r * 6.0, orb_r * 6.0))
-
         # ═══════════════════════════════════════════════════════════════
-        #  CORE: MYSTICAL ANIME RUNE CIRCLE
-        #  Multi-layered sacred geometry: octagram + hexagon + orbiting arcs
+        #  CORE: ANIME-STYLE MAGIC CIRCLE
+        #  Perfectly symmetric multi-layered sacred geometry
         # ═══════════════════════════════════════════════════════════════
         if self._show_center:
             star_r = orb_r * 1.6
-            sa = int(220 * pulse * g)  # star alpha
+            sa = int(220 * pulse * g)
 
             p.save()
             p.translate(cx, cy)
@@ -567,7 +557,7 @@ class RuneCoreWidget(QWidget):
             p.setBrush(QBrush(sg)); p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(QRectF(-soul_r, -soul_r, soul_r * 2, soul_r * 2))
 
-            # ── Layer B: Lens flare streaks (horizontal + vertical) ──
+            # ── Layer B: Lens flare streaks ──
             flare_len = star_r * 4.0 * pulse * g
             flare_w = star_r * 0.18
             for ang_deg in [0, 90]:
@@ -591,96 +581,72 @@ class RuneCoreWidget(QWidget):
                 path.closeSubpath()
                 p.drawPath(path)
 
-            # ── Layer C: Rotating 8-pointed octagram (two overlapping squares) ──
+            # ── Layer C: Outer magic circle ring (rotating) ──
             p.save()
             p.rotate(self._rings[2] * 0.4)
+            magic_r = star_r * 1.1
+            p.setPen(QPen(_alpha(sc["star"], int(sa * 0.6)), 0.8))
+            p.setBrush(Qt.BrushStyle.NoBrush)
+            p.drawEllipse(QRectF(-magic_r, -magic_r, magic_r * 2, magic_r * 2))
+            # 8 tick marks on the magic circle
+            for i in range(8):
+                a = math.radians(i * 45)
+                t1 = magic_r * 0.95
+                t2 = magic_r * 1.05
+                p.drawLine(QPointF(t1 * math.cos(a), t1 * math.sin(a)),
+                           QPointF(t2 * math.cos(a), t2 * math.sin(a)))
+            p.restore()
 
-            # Outer octagram glow
-            octa_glow = QRadialGradient(0, 0, star_r * 1.3)
-            octa_glow.setColorAt(0, _alpha(sc["star"], int(45 * pulse * g)))
-            octa_glow.setColorAt(0.6, _alpha(sc["star"], int(10 * pulse * g)))
-            octa_glow.setColorAt(1, _alpha(sc["star"], 0))
-            p.setBrush(QBrush(octa_glow)); p.setPen(Qt.PenStyle.NoPen)
-            p.drawEllipse(QRectF(-star_r * 1.3, -star_r * 1.3, star_r * 2.6, star_r * 2.6))
-
-            # Draw two rotated squares → 8-pointed star
-            for offset_deg in (0, 45):
+            # ── Layer D: 6-pointed star (hexagram) — perfectly centered ──
+            p.save()
+            p.rotate(self._rings[2] * 0.2)
+            hex_r = star_r * 0.85
+            # Two overlapping triangles for perfect symmetry
+            for offset in (0, 60):
                 pts = []
-                for k in range(4):
-                    a = math.radians(k * 90 + offset_deg - 90)
-                    pts.append(QPointF(star_r * 0.95 * math.cos(a), star_r * 0.95 * math.sin(a)))
+                for k in range(3):
+                    a = math.radians(k * 120 + offset - 90)
+                    pts.append(QPointF(hex_r * math.cos(a), hex_r * math.sin(a)))
                 path = QPainterPath()
                 path.moveTo(pts[0])
-                for pt in pts[1:]:
-                    path.lineTo(pt)
+                path.lineTo(pts[1])
+                path.lineTo(pts[2])
                 path.closeSubpath()
-                star_fill = QRadialGradient(0, 0, star_r)
-                star_fill.setColorAt(0, _alpha(sc["star"], int(sa * 0.7)))
-                star_fill.setColorAt(0.6, _alpha(sc["star"], int(sa * 0.25)))
+                star_fill = QRadialGradient(0, 0, hex_r)
+                star_fill.setColorAt(0, _alpha(sc["star"], int(sa * 0.8)))
+                star_fill.setColorAt(0.5, _alpha(sc["star"], int(sa * 0.35)))
                 star_fill.setColorAt(1, _alpha(sc["star"], int(sa * 0.05)))
                 p.setBrush(QBrush(star_fill))
-                p.setPen(QPen(_alpha(sc["star"], int(sa * 0.8)), 1.2))
+                p.setPen(QPen(_alpha(sc["star"], int(sa * 0.9)), 1.5))
                 p.drawPath(path)
+            p.restore()
 
-            # ── Layer D: Inner hexagon (sacred geometry) ──
-            hex_r = star_r * 0.55
+            # ── Layer E: Inner hexagon (connecting star points) ──
+            inner_hex_r = star_r * 0.42
             hex_pts = []
             for k in range(6):
                 a = math.radians(k * 60 - 90)
-                hex_pts.append(QPointF(hex_r * math.cos(a), hex_r * math.sin(a)))
+                hex_pts.append(QPointF(inner_hex_r * math.cos(a), inner_hex_r * math.sin(a)))
             hex_path = QPainterPath()
             hex_path.moveTo(hex_pts[0])
             for pt in hex_pts[1:]:
                 hex_path.lineTo(pt)
             hex_path.closeSubpath()
-            hex_fill = QRadialGradient(0, 0, hex_r)
-            hex_fill.setColorAt(0, _alpha(sc["star"], int(sa * 0.95)))
-            hex_fill.setColorAt(0.5, _alpha(sc["star"], int(sa * 0.6)))
-            hex_fill.setColorAt(1, _alpha(sc["star"], int(sa * 0.15)))
-            p.setBrush(QBrush(hex_fill))
-            p.setPen(QPen(_alpha(sc["star"], sa), 1.0))
-            p.drawPath(hex_path)
-
-            # ── Layer E: Inner connecting lines (hexagon vertices to center) ──
-            for k in range(6):
-                a = math.radians(k * 60 - 90)
-                p.setPen(QPen(_alpha(sc["star"], int(sa * 0.4)), 0.5))
-                p.drawLine(QPointF(0, 0), QPointF(hex_r * math.cos(a), hex_r * math.sin(a)))
-
-            # ── Layer F: Inner pentagram inside hexagon ──
-            pent_r = hex_r * 0.65
-            pent_pts = []
-            for k in range(5):
-                a = math.radians(k * 72 - 90)
-                pent_pts.append(QPointF(pent_r * math.cos(a), pent_r * math.sin(a)))
-            # Connect every other vertex → star
-            pent_path = QPainterPath()
-            pent_path.moveTo(pent_pts[0])
-            pent_path.lineTo(pent_pts[2])
-            pent_path.lineTo(pent_pts[4])
-            pent_path.lineTo(pent_pts[1])
-            pent_path.lineTo(pent_pts[3])
-            pent_path.closeSubpath()
             p.setPen(QPen(_alpha(sc["star"], int(sa * 0.7)), 0.8))
             p.setBrush(Qt.BrushStyle.NoBrush)
-            p.drawPath(pent_path)
+            p.drawPath(hex_path)
 
-            # ── Layer G: Orbiting energy arcs ──
-            for arc_idx in range(3):
-                arc_phase = (self._t * (0.5 + arc_idx * 0.2) + arc_idx * 2.094) % (2 * math.pi)
-                arc_span = 0.8  # radians
-                arc_r = star_r * (0.7 + arc_idx * 0.25)
-                arc_al = int(50 * (0.5 + 0.5 * math.sin(self._t + arc_idx)) * g)
-                if arc_al > 3:
-                    pen = QPen(_alpha(sc["star"], arc_al), 1.0)
-                    p.setPen(pen)
-                    p.setBrush(Qt.BrushStyle.NoBrush)
-                    p.drawArc(QRectF(-arc_r, -arc_r, arc_r * 2, arc_r * 2),
-                              int(math.degrees(arc_phase) * 16),
-                              int(math.degrees(arc_span) * 16))
+            # ── Layer F: Inner connecting lines (star of David web) ──
+            # Connect each hexagon vertex to the two opposite ones
+            for k in range(6):
+                a1 = math.radians(k * 60 - 90)
+                a2 = math.radians((k + 3) % 6 * 60 - 90)  # opposite vertex
+                p.setPen(QPen(_alpha(sc["star"], int(sa * 0.25)), 0.4))
+                p.drawLine(QPointF(inner_hex_r * math.cos(a1), inner_hex_r * math.sin(a1)),
+                           QPointF(inner_hex_r * math.cos(a2), inner_hex_r * math.sin(a2)))
 
-            # ── Layer H: Bright golden core orb ──
-            core_r = orb_r * 0.45
+            # ── Layer G: Center orb with anime-style glow ──
+            core_r = orb_r * 0.35
             cg = QRadialGradient(0, 0, core_r * 2.5)
             cg.setColorAt(0, _alpha(sc["star"], int(255 * pulse * g)))
             cg.setColorAt(0.15, _alpha(sc["star"], int(220 * pulse * g)))
@@ -690,12 +656,12 @@ class RuneCoreWidget(QWidget):
             p.drawEllipse(QRectF(-core_r * 2.5, -core_r * 2.5, core_r * 5, core_r * 5))
 
             # White hot center
-            hot_r = orb_r * 0.15
+            hot_r = orb_r * 0.12
             p.setBrush(QBrush(_alpha("#ffffff", int(230 * pulse * g))))
             p.setPen(Qt.PenStyle.NoPen)
             p.drawEllipse(QRectF(-hot_r, -hot_r, hot_r * 2, hot_r * 2))
 
-            # ── Layer I: Pulsing energy rings expanding from center ──
+            # ── Layer H: Pulsing energy rings expanding from center ──
             for ring_idx in range(4):
                 phase = (self._t * 0.7 + ring_idx * 0.25) % 1.0
                 rr = core_r * (0.6 + phase * 1.8)
@@ -705,15 +671,37 @@ class RuneCoreWidget(QWidget):
                     p.setBrush(Qt.BrushStyle.NoBrush)
                     p.drawEllipse(QRectF(-rr, -rr, rr * 2, rr * 2))
 
-            # ── Layer J: 12 tick marks around the star (rune anchor points) ──
-            tick_r1 = star_r * 1.05
-            tick_r2 = star_r * 1.15
-            for i in range(12):
-                a = math.radians(i * 30)
-                tick_al = int(120 * g * (0.5 + 0.5 * math.sin(self._t * 1.5 + i * 0.5)))
-                p.setPen(QPen(_alpha(sc["star"], tick_al), 0.8))
-                p.drawLine(QPointF(tick_r1 * math.cos(a), tick_r1 * math.sin(a)),
-                           QPointF(tick_r2 * math.cos(a), tick_r2 * math.sin(a)))
+            # ── Layer I: Orbiting energy arcs ──
+            for arc_idx in range(3):
+                arc_phase = (self._t * (0.5 + arc_idx * 0.2) + arc_idx * 2.094) % (2 * math.pi)
+                arc_span = 0.8
+                arc_r = star_r * (0.7 + arc_idx * 0.25)
+                arc_al = int(50 * (0.5 + 0.5 * math.sin(self._t + arc_idx)) * g)
+                if arc_al > 3:
+                    p.setPen(QPen(_alpha(sc["star"], arc_al), 1.0))
+                    p.setBrush(Qt.BrushStyle.NoBrush)
+                    p.drawArc(QRectF(-arc_r, -arc_r, arc_r * 2, arc_r * 2),
+                              int(math.degrees(arc_phase) * 16),
+                              int(math.degrees(arc_span) * 16))
+
+            # ── Layer J: 6 rune anchor points (hexagram vertices) ──
+            for k in range(6):
+                a = math.radians(k * 60 - 90)
+                mx = star_r * 0.95 * math.cos(a)
+                my = star_r * 0.95 * math.sin(a)
+                # Glow halo
+                glow_cr = R * 0.03
+                glow_gr = QRadialGradient(mx, my, glow_cr)
+                glow_gr.setColorAt(0, _alpha(sc["star"], int(80 * g * pulse)))
+                glow_gr.setColorAt(0.5, _alpha(sc["star"], int(20 * g * pulse)))
+                glow_gr.setColorAt(1, _alpha(sc["star"], 0))
+                p.setBrush(QBrush(glow_gr)); p.setPen(Qt.PenStyle.NoPen)
+                p.drawEllipse(QRectF(mx - glow_cr, my - glow_cr, glow_cr * 2, glow_cr * 2))
+                # Small marker
+                mr = R * 0.015
+                p.setPen(QPen(_alpha(sc["star"], int(180 * g)), 0.6))
+                p.setBrush(Qt.BrushStyle.NoBrush)
+                p.drawEllipse(QRectF(mx - mr, my - mr, mr * 2, mr * 2))
 
             p.restore()
 
